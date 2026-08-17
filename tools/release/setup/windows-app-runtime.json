@@ -1,0 +1,15 @@
+{
+  "version": "2.3.1",
+  "architectures": {
+    "x64": {
+      "uri": "https://aka.ms/windowsappsdk/2.3/2.3.1/windowsappruntimeinstall-x64.exe",
+      "length": 113192760,
+      "sha256": "4011748ddf472b7e856d909fdfb4e9b19c3d23fcd8121039ac91f99d5ffa65db"
+    },
+    "arm64": {
+      "uri": "https://aka.ms/windowsappsdk/2.3/2.3.1/windowsappruntimeinstall-arm64.exe",
+      "length": 113204064,
+      "sha256": "cc0070b510610944cb1a68021f3485c14067feae73b0f4aaefbdbe5db33e9f69"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "zh-hans-event",
+    "image": "zh-hans-event.png",
+    "languageTag": "zh-Hans",
+    "script": "Hans",
+    "expectedText": "项目评审会议\n7月20日 14:30 会议室A",
+    "expectedFields": ["项目评审会议", "7月20日", "14:30", "会议室A"],
+    "expectedPpOcrSupport": true,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "zh-hant-event",
+    "image": "zh-hant-event.png",
+    "languageTag": "zh-Hant",
+    "script": "Hant",
+    "expectedText": "專案評審會議\n7月20日 14:30 會議室A",
+    "expectedFields": ["專案評審會議", "7月20日", "14:30", "會議室A"],
+    "expectedPpOcrSupport": true,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "en-event",
+    "image": "en-event.png",
+    "languageTag": "en",
+    "script": "Latn",
+    "expectedText": "Project review meeting\nJuly 20 2:30 PM Room A",
+    "expectedFields": ["Project review meeting", "July 20", "2:30 PM", "Room A"],
+    "expectedPpOcrSupport": true,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "vi-latin-extended",
+    "image": "vi-latin-extended.png",
+    "languageTag": "vi",
+    "script": "Latn",
+    "expectedText": "Cuộc họp đánh giá dự án\n20 tháng 7 14:30 Phòng A",
+    "expectedFields": ["Cuộc họp", "20 tháng 7", "14:30", "Phòng A"],
+    "expectedPpOcrSupport": true,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "ja-event",
+    "image": "ja-event.png",
+    "languageTag": "ja",
+    "script": "Jpan",
+    "expectedText": "プロジェクトレビュー会議\n7月20日 14:30 会議室A",
+    "expectedFields": ["プロジェクトレビュー会議", "7月20日", "14:30", "会議室A"],
+    "expectedPpOcrSupport": true,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "ar-unsupported",
+    "image": "ar-unsupported.png",
+    "languageTag": "ar",
+    "script": "Arab",
+    "expectedText": "اجتماع مراجعة المشروع\n20 يوليو 14:30 الغرفة أ",
+    "expectedFields": ["اجتماع", "20 يوليو", "14:30"],
+    "expectedPpOcrSupport": false,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  },
+  {
+    "id": "th-unsupported-no-spaces",
+    "image": "th-unsupported-no-spaces.png",
+    "languageTag": "th",
+    "script": "Thai",
+    "expectedText": "ประชุมทบทวนโครงการ\n20 กรกฎาคม 14:30 ห้อง A",
+    "expectedFields": ["ประชุมทบทวนโครงการ", "20 กรกฎาคม", "14:30"],
+    "expectedPpOcrSupport": false,
+    "source": "Self-authored deterministic PicForLater test fixture",
+    "license": "CC0-1.0"
+  }
+]

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PicForLater.Analysis/PicForLater.Analysis.csproj" />
+    <Project Path="src/PicForLater.App/PicForLater.App.csproj" />
+    <Project Path="src/PicForLater.Core/PicForLater.Core.csproj" />
+    <Project Path="src/PicForLater.Infrastructure/PicForLater.Infrastructure.csproj" />
+    <Project Path="src/PicForLater.LocalInference.Protocol/PicForLater.LocalInference.Protocol.csproj" />
+    <Project Path="src/PicForLater.LocalInference/PicForLater.LocalInference.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PicForLater.Core.Tests/PicForLater.Core.Tests.csproj" />
+    <Project Path="tests/PicForLater.Analysis.Tests/PicForLater.Analysis.Tests.csproj" />
+    <Project Path="tests/PicForLater.IntegrationTests/PicForLater.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

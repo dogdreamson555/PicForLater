@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="PicForLater.App.Pages.RemindersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:PicForLater.App.Pages"
+    xmlns:models="using:PicForLater.App.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="768"
+    d:DesignWidth="1024"
+    mc:Ignorable="d">
+
+    <Grid
+        x:Name="LayoutRoot"
+        Padding="{StaticResource AppPrimaryPagePaddingNarrow}"
+        AutomationProperties.AutomationId="RemindersPage"
+        Background="{ThemeResource AppPageBackgroundBrush}"
+        SizeChanged="RemindersPage_SizeChanged">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WindowWidthStates">
+                <VisualState x:Name="Narrow" />
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource AppBreakpointMedium}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="LayoutRoot.Padding" Value="{StaticResource AppPrimaryPagePaddingMedium}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource AppBreakpointExpanded}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="LayoutRoot.Padding" Value="{StaticResource AppPrimaryPagePaddingWide}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,14" Spacing="{StaticResource AppSpacingXs}">
+            <TextBlock x:Uid="RemindersPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" />
+            <TextBlock
+                x:Uid="RemindersPageSubtitle"
+                Style="{StaticResource AppPageSubtitleTextBlockStyle}" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,0,0,12"
+            Spacing="{StaticResource AppSpacingSm}"
+            Visibility="{x:Bind local:RemindersPage.StatusPanelVisibility(ViewModel.NotificationsUnavailable, ViewModel.HasStatusMessage, ViewModel.HasErrorMessage), Mode=OneWay}">
+            <InfoBar
+                x:Uid="ReminderNotificationsUnavailableInfo"
+                AutomationProperties.AutomationId="ReminderNotificationsUnavailableInfo"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.NotificationsUnavailable, Mode=OneWay}"
+                Severity="Warning" />
+            <InfoBar
+                x:Uid="ReminderStatusInfo"
+                AutomationProperties.AutomationId="ReminderStatusInfo"
+                IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
+                Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                Severity="Success" />
+            <InfoBar
+                x:Uid="ReminderErrorInfo"
+                AutomationProperties.AutomationId="ReminderErrorInfo"
+                IsOpen="{x:Bind ViewModel.HasErrorMessage, Mode=OneWay}"
+                Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                Severity="Error" />
+        </StackPanel>
+
+        <Grid Grid.Row="2">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="RemindersLoadingState"
+                Spacing="{StaticResource AppSpacingMd}"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsLoading), Mode=OneWay}">
+                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                <TextBlock x:Uid="RemindersLoadingText" />
+            </StackPanel>
+
+            <StackPanel
+                MaxWidth="440"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="RemindersEmptyState"
+                Spacing="{StaticResource AppSpacingSm}"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsEmpty), Mode=OneWay}">
+                <FontIcon
+                    FontSize="{StaticResource AppEmptyStateIconSize}"
+                    AutomationProperties.AccessibilityView="Raw"
+                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                    Glyph="{StaticResource AppRemindersIconGlyph}" />
+                <TextBlock
+                    x:Uid="RemindersEmptyTitle"
+                    AutomationProperties.AutomationId="RemindersEmptyTitle"
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    x:Uid="RemindersEmptyMessage"
+                    HorizontalAlignment="Center"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel
+                MaxWidth="480"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="RemindersErrorState"
+                Spacing="{StaticResource AppSpacingMd}"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasError), Mode=OneWay}">
+                <TextBlock x:Uid="RemindersErrorTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock x:Uid="RemindersErrorMessage" TextWrapping="Wrap" />
+                <Button
+                    x:Uid="RemindersRetryButton"
+                    AutomationProperties.AutomationId="RemindersRetryButton"
+                    Command="{x:Bind ViewModel.RetryCommand, Mode=OneWay}" />
+            </StackPanel>
+
+            <StackPanel
+                MaxWidth="480"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="RemindersPermissionState"
+                Spacing="{StaticResource AppSpacingSm}"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsPermissionDenied), Mode=OneWay}">
+                <TextBlock x:Uid="RemindersPermissionTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock x:Uid="RemindersPermissionMessage" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel
+                MaxWidth="480"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="RemindersUnsupportedState"
+                Spacing="{StaticResource AppSpacingSm}"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsUnsupported), Mode=OneWay}">
+                <TextBlock x:Uid="RemindersUnsupportedTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock x:Uid="RemindersUnsupportedMessage" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Grid
+                x:Name="ReminderWorkspace"
+                Margin="0"
+                AutomationProperties.AutomationId="ReminderWorkspace"
+                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsReady), Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="MasterColumn" Width="480" />
+                    <ColumnDefinition x:Name="DividerColumn" Width="1" />
+                    <ColumnDefinition x:Name="EditorColumn" Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid
+                    x:Name="ReminderMasterPane"
+                    Grid.Column="0"
+                    AutomationProperties.AutomationId="ReminderMasterPane">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        x:Uid="ReminderCandidatesHeading"
+                        Margin="0,0,16,8"
+                        Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                    <Grid
+                        Grid.Row="1"
+                        Margin="0,0,16,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            x:Uid="ReminderCandidatesEmpty"
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.HasCandidates), Mode=OneWay}" />
+                        <ListView
+                            x:Name="ReminderCandidatesList"
+                            x:Uid="ReminderCandidatesList"
+                            AutomationProperties.AutomationId="ReminderCandidatesList"
+                            IsItemClickEnabled="True"
+                            ItemClick="ReminderCandidatesList_ItemClick"
+                            ItemsSource="{x:Bind ViewModel.Candidates, Mode=OneWay}"
+                            SelectionMode="None"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasCandidates), Mode=OneWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:ReminderCandidateItem">
+                                    <Grid
+                                        MinHeight="96"
+                                        Padding="8"
+                                        ColumnSpacing="{StaticResource AppSpacingMd}"
+                                        AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateRowAutomationId(Candidate.Id), Mode=OneTime}">
+                                        <Grid.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextOpenImageMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateContextOpenAutomationId(Candidate.Id), Mode=OneTime}"
+                                                    Click="OpenImageMenuItem_Click"
+                                                    Tag="{x:Bind Candidate.ImageItemId, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Pictures" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextReviewCandidateMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateContextReviewAutomationId(Candidate.Id), Mode=OneTime}"
+                                                    Click="ReviewCandidateMenuItem_Click"
+                                                    Tag="{x:Bind Candidate.Id, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Edit" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutSeparator />
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextDismissCandidateMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateContextDismissAutomationId(Candidate.Id), Mode=OneTime}"
+                                                    Click="DismissCandidateMenuItem_Click"
+                                                    Tag="{x:Bind Candidate.Id, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Cancel" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                            </MenuFlyout>
+                                        </Grid.ContextFlyout>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Uid="ReminderCandidateThumbnailButton"
+                                            Width="96"
+                                            Height="72"
+                                            Padding="0"
+                                            VerticalAlignment="Top"
+                                            AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateImageAutomationId(Candidate.Id), Mode=OneTime}"
+                                            Click="ReminderCandidateThumbnailButton_Click"
+                                            DoubleTapped="OpenImageButton_DoubleTapped"
+                                            Tag="{x:Bind Candidate.ImageItemId, Mode=OneTime}">
+                                            <Image
+                                                Source="{x:Bind local:RemindersPage.ToImageSource(ThumbnailUri), Mode=OneTime}"
+                                                Stretch="UniformToFill" />
+                                        </Button>
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock
+                                                FontWeight="SemiBold"
+                                                Text="{x:Bind DisplayTitle, Mode=OneTime}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Text="{x:Bind SuggestedDateText, Mode=OneTime}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                                Text="{x:Bind LocationText, Mode=OneTime}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Style="{StaticResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind SourceText, Mode=OneTime}" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                Style="{StaticResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind AmbiguityText, Mode=OneTime}"
+                                                TextWrapping="Wrap"
+                                                Visibility="{x:Bind local:RemindersPage.StringToVisibility(AmbiguityText), Mode=OneTime}" />
+                                        </StackPanel>
+                                        <Button
+                                            Grid.Column="2"
+                                            x:Uid="ReviewReminderCandidateButton"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateAutomationId(Candidate.Id), Mode=OneTime}"
+                                            Click="ReviewReminderCandidateButton_Click" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <Button
+                            Grid.Row="1"
+                            x:Uid="LoadMoreReminderCandidatesButton"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Center"
+                            AutomationProperties.AutomationId="LoadMoreReminderCandidatesButton"
+                            Command="{x:Bind ViewModel.LoadMoreCandidatesCommand, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasMoreCandidates), Mode=OneWay}" />
+                    </Grid>
+
+                    <Grid
+                        Grid.Row="2"
+                        Margin="0,0,16,4">
+                        <TextBlock
+                            x:Uid="ConfirmedRemindersHeading"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}" />
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            AutomationProperties.AutomationId="ReminderSelectionSummary"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Text="{x:Bind ViewModel.SelectionSummary, Mode=OneWay}"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}" />
+                        <CommandBar
+                            HorizontalAlignment="Right"
+                            AutomationProperties.AutomationId="ReminderSelectionCommandBar"
+                            Background="Transparent"
+                            DefaultLabelPosition="Right"
+                            IsDynamicOverflowEnabled="True">
+                            <AppBarButton
+                                x:Name="ReminderSelectionModeButton"
+                                x:Uid="ReminderSelectionModeButton"
+                                AutomationProperties.AutomationId="ReminderSelectionModeButton"
+                                Click="ReminderSelectionModeButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Name="ReminderSelectAllButton"
+                                x:Uid="ReminderSelectAllButton"
+                                AutomationProperties.AutomationId="ReminderSelectAllButton"
+                                Click="ReminderSelectAllButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="{StaticResource AppSelectAllIconGlyph}" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Name="ReminderDeleteSelectedButton"
+                                x:Uid="ReminderDeleteSelectedButton"
+                                AutomationProperties.AutomationId="ReminderDeleteSelectedButton"
+                                Click="ReminderDeleteSelectedButton_Click"
+                                IsEnabled="{x:Bind ViewModel.HasSelectedReminders, Mode=OneWay}"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <SymbolIcon Symbol="Delete" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Name="ReminderCancelSelectionButton"
+                                x:Uid="ReminderCancelSelectionButton"
+                                AutomationProperties.AutomationId="ReminderCancelSelectionButton"
+                                Click="ReminderCancelSelectionButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <SymbolIcon Symbol="Cancel" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                        </CommandBar>
+                    </Grid>
+
+                    <Grid Grid.Row="3" Margin="0,0,16,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            x:Uid="ConfirmedRemindersEmpty"
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.HasReminders), Mode=OneWay}" />
+                        <ListView
+                            x:Name="ConfirmedRemindersList"
+                            x:Uid="ConfirmedRemindersList"
+                            AutomationProperties.AutomationId="ConfirmedRemindersList"
+                            IsItemClickEnabled="True"
+                            ItemClick="ConfirmedRemindersList_ItemClick"
+                            ItemsSource="{x:Bind ViewModel.Reminders, Mode=OneWay}"
+                            SelectionChanged="ConfirmedRemindersList_SelectionChanged"
+                            SelectionMode="None"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasReminders), Mode=OneWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:ReminderListItem">
+                                    <Grid
+                                        MinHeight="96"
+                                        Padding="8"
+                                        ColumnSpacing="{StaticResource AppSpacingMd}"
+                                        AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderRowAutomationId(Reminder.Id), Mode=OneTime}">
+                                        <Grid.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextOpenImageMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderContextOpenAutomationId(Reminder.Id), Mode=OneTime}"
+                                                    Click="OpenImageMenuItem_Click"
+                                                    Tag="{x:Bind Reminder.ImageItemId, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Pictures" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextEditMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderContextEditAutomationId(Reminder.Id), Mode=OneTime}"
+                                                    Click="EditReminderMenuItem_Click"
+                                                    Tag="{x:Bind Reminder.Id, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Edit" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextSelectMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderContextSelectAutomationId(Reminder.Id), Mode=OneTime}"
+                                                    Click="SelectReminderMenuItem_Click"
+                                                    Tag="{x:Bind Reminder.Id, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                                <MenuFlyoutSeparator />
+                                                <MenuFlyoutItem
+                                                    x:Uid="ReminderContextDeleteMenuItem"
+                                                    AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderContextDeleteAutomationId(Reminder.Id), Mode=OneTime}"
+                                                    Click="DeleteReminderMenuItem_Click"
+                                                    Tag="{x:Bind Reminder.Id, Mode=OneTime}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <SymbolIcon Symbol="Delete" />
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                            </MenuFlyout>
+                                        </Grid.ContextFlyout>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Uid="ReminderThumbnailButton"
+                                            Width="96"
+                                            Height="72"
+                                            Padding="0"
+                                            VerticalAlignment="Top"
+                                            AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderImageAutomationId(Reminder.Id), Mode=OneTime}"
+                                            Click="ConfirmedReminderThumbnailButton_Click"
+                                            DoubleTapped="OpenImageButton_DoubleTapped"
+                                            Tag="{x:Bind Reminder.ImageItemId, Mode=OneTime}">
+                                            <Image
+                                                Source="{x:Bind local:RemindersPage.ToImageSource(ThumbnailUri), Mode=OneTime}"
+                                                Stretch="UniformToFill" />
+                                        </Button>
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock
+                                                FontWeight="SemiBold"
+                                                Text="{x:Bind Reminder.ImageTitle, Mode=OneTime}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Text="{x:Bind DueText, Mode=OneTime}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                                Text="{x:Bind LocationText, Mode=OneTime}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                                Style="{StaticResource CaptionTextBlockStyle}"
+                                                Text="{x:Bind NotificationStateText, Mode=OneTime}" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Margin="12,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Text="{x:Bind StateText, Mode=OneTime}" />
+                                        <Button
+                                            Grid.Column="2"
+                                            x:Uid="EditConfirmedReminderButton"
+                                            VerticalAlignment="Bottom"
+                                            AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderAutomationId(Reminder.Id), Mode=OneTime}"
+                                            Click="EditConfirmedReminderButton_Click" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <Button
+                            Grid.Row="1"
+                            x:Uid="LoadMoreConfirmedRemindersButton"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Center"
+                            AutomationProperties.AutomationId="LoadMoreConfirmedRemindersButton"
+                            Command="{x:Bind ViewModel.LoadMoreRemindersCommand, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasMoreReminders), Mode=OneWay}" />
+                    </Grid>
+                </Grid>
+
+                <Border
+                    x:Name="ReminderPaneDivider"
+                    Grid.Column="1"
+                    Background="{ThemeResource AppDividerBrush}" />
+
+                <Grid
+                    x:Name="ReminderEditorPane"
+                    Grid.Column="2"
+                    AutomationProperties.AutomationId="ReminderEditorPane"
+                    SizeChanged="ReminderEditorPane_SizeChanged">
+                    <StackPanel
+                        MaxWidth="440"
+                        Margin="24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}"
+                        Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.IsEditorOpen), Mode=OneWay}">
+                        <FontIcon
+                            AutomationProperties.AccessibilityView="Raw"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            Glyph="&#xE8A5;" />
+                        <TextBlock
+                            x:Uid="ReminderEditorPlaceholderTitle"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock
+                            x:Uid="ReminderEditorPlaceholderMessage"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid
+                        x:Name="ReminderEditorContent"
+                        HorizontalAlignment="Center"
+                        Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsEditorOpen), Mode=OneWay}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid
+                            Padding="16,0,16,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                x:Name="ReminderEditorBackButton"
+                                x:Uid="ReminderEditorBackButton"
+                                Margin="0,0,16,0"
+                                Style="{StaticResource AppBackButtonStyle}"
+                                VerticalAlignment="Center"
+                                AutomationProperties.AutomationId="ReminderEditorBackButton"
+                                Command="{x:Bind ViewModel.CloseEditorCommand, Mode=OneWay}">
+                                <Button.KeyboardAccelerators>
+                                    <KeyboardAccelerator Key="Left" Modifiers="Menu" />
+                                </Button.KeyboardAccelerators>
+                                <FontIcon
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    FontSize="20"
+                                    Glyph="{StaticResource AppBackIconGlyph}" />
+                            </Button>
+                            <Button
+                                Grid.Column="1"
+                                x:Uid="ReminderEditorImageButton"
+                                Width="96"
+                                Height="72"
+                                Margin="0,0,16,0"
+                                Padding="0"
+                                AutomationProperties.AutomationId="ReminderEditorImageButton"
+                                Click="ReminderEditorImageButton_Click">
+                                <Image
+                                    Source="{x:Bind local:RemindersPage.ToImageSource(ViewModel.EditorThumbnailUri), Mode=OneWay}"
+                                    Stretch="UniformToFill" />
+                            </Button>
+                            <TextBox
+                                Grid.Column="2"
+                                x:Uid="ReminderTitleTextBox"
+                                VerticalAlignment="Center"
+                                Padding="10,4,6,5"
+                                AutomationProperties.AutomationId="ReminderTitleTextBox"
+                                Loaded="EditorTextBox_Loaded"
+                                MaxLength="300"
+                                TextChanging="EditorTextBox_TextChanging"
+                                Text="{x:Bind ViewModel.EditorTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <ScrollViewer
+                            Grid.Row="1"
+                            AutomationProperties.AutomationId="ReminderEditorScrollViewer"
+                            HorizontalScrollBarVisibility="Disabled"
+                            HorizontalScrollMode="Disabled"
+                            VerticalScrollBarVisibility="Auto"
+                            VerticalScrollMode="Enabled">
+                            <StackPanel Padding="16,8,16,16" Spacing="{StaticResource AppSpacingMd}">
+
+                            <StackPanel
+                                Spacing="{StaticResource AppSpacingXs}"
+                                Visibility="{x:Bind local:RemindersPage.StringToVisibility(ViewModel.EditorSummary), Mode=OneWay}">
+                                <TextBlock
+                                    x:Uid="ReminderSummaryHeading"
+                                    FontWeight="SemiBold" />
+                                <TextBlock
+                                    AutomationProperties.AutomationId="ReminderSummaryText"
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    Text="{x:Bind ViewModel.EditorSummary, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <InfoBar
+                                x:Uid="ReminderAmbiguityInfo"
+                                AutomationProperties.AutomationId="ReminderAmbiguityInfo"
+                                IsClosable="False"
+                                IsOpen="{x:Bind ViewModel.HasEditorAmbiguity, Mode=OneWay}"
+                                Message="{x:Bind ViewModel.EditorAmbiguity, Mode=OneWay}"
+                                Severity="Warning" />
+
+                            <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                <TextBlock
+                                    x:Uid="ReminderEvidenceHeading"
+                                    FontWeight="SemiBold" />
+                                <TextBlock
+                                    AutomationProperties.AutomationId="ReminderEvidenceText"
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    Text="{x:Bind ViewModel.EditorEvidence, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <Grid
+                                RowSpacing="{StaticResource AppSpacingXs}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="216" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="216" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    x:Uid="ReminderDateLabel"
+                                    VerticalAlignment="Bottom" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    x:Uid="ReminderTimeLabel"
+                                    VerticalAlignment="Bottom" />
+                                <CalendarDatePicker
+                                    Grid.Row="1"
+                                    x:Uid="ReminderDatePicker"
+                                    Width="216"
+                                    Height="32"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    AutomationProperties.AutomationId="ReminderDatePicker"
+                                    Date="{x:Bind ViewModel.EditorDate, Mode=TwoWay}" />
+                                <TimePicker
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    x:Uid="ReminderTimePicker"
+                                    Width="216"
+                                    Height="32"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    AutomationProperties.AutomationId="ReminderTimePicker"
+                                    ClockIdentifier="24HourClock"
+                                    Loaded="ReminderTimePicker_Loaded"
+                                    SelectedTime="{x:Bind ViewModel.EditorTime, Mode=TwoWay}" />
+                            </Grid>
+
+                            <ComboBox
+                                x:Uid="ReminderTimeZoneComboBox"
+                                AutomationProperties.AutomationId="ReminderTimeZoneComboBox"
+                                DisplayMemberPath="DisplayName"
+                                ItemsSource="{x:Bind ViewModel.TimeZones, Mode=OneWay}"
+                                SelectedItem="{x:Bind ViewModel.SelectedTimeZone, Mode=TwoWay}" />
+
+                            <TextBox
+                                x:Uid="ReminderLocationTextBox"
+                                Padding="10,4,6,5"
+                                AutomationProperties.AutomationId="ReminderLocationTextBox"
+                                Loaded="EditorTextBox_Loaded"
+                                MaxLength="300"
+                                TextChanging="EditorTextBox_TextChanging"
+                                Text="{x:Bind ViewModel.EditorLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <TextBlock
+                                x:Uid="ReminderDeliveryLimitation"
+                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                TextWrapping="Wrap" />
+
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Border
+                            Grid.Row="2">
+                            <StackPanel
+                                Padding="16,12,16,0"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Spacing="{StaticResource AppSpacingSm}">
+                                <Button
+                                    x:Uid="ReminderDismissCandidateButton"
+                                    AutomationProperties.AutomationId="ReminderDismissCandidateButton"
+                                    Command="{x:Bind ViewModel.DismissCandidateCommand, Mode=OneWay}"
+                                    IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                                    Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsCandidateEditor), Mode=OneWay}" />
+                                <Button
+                                    x:Uid="ReminderCancelButton"
+                                    AutomationProperties.AutomationId="ReminderCancelButton"
+                                    Command="{x:Bind ViewModel.CancelReminderCommand, Mode=OneWay}"
+                                    IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                                    Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.EditorReminderCanBeCancelled), Mode=OneWay}" />
+                                <Button
+                                    x:Uid="ReminderDeleteEditorButton"
+                                    AutomationProperties.AutomationId="ReminderDeleteEditorButton"
+                                    Click="ReminderDeleteEditorButton_Click"
+                                    IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                                    Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsReminderEditor), Mode=OneWay}" />
+                                <Button
+                                    AutomationProperties.AutomationId="ReminderSaveButton"
+                                    AutomationProperties.Name="{x:Bind ViewModel.EditorPrimaryActionAutomationName, Mode=OneWay}"
+                                    Command="{x:Bind ViewModel.SaveEditorCommand, Mode=OneWay}"
+                                    Content="{x:Bind ViewModel.EditorPrimaryActionText, Mode=OneWay}"
+                                    IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
+                                    Style="{StaticResource AccentButtonStyle}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

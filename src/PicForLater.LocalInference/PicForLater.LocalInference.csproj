@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <Configurations>Debug;Release;UiTest</Configurations>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifiers>
+    <Platform Condition="'$(Platform)' == '' Or '$(Platform)' == 'AnyCPU'">x64</Platform>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <DefineConstants>$(DefineConstants);PICFORLATER_CUDA_RUNTIME</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Cuda" Version="0.14.1"
+                      Condition="'$(RuntimeIdentifiers)' == 'win-x64'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.DirectML" Version="0.14.1"
+                      Condition="'$(RuntimeIdentifiers)' == 'win-arm64'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.26.0"
+                      Condition="'$(RuntimeIdentifiers)' == 'win-x64'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.26.0"
+                      Condition="'$(RuntimeIdentifiers)' == 'win-x64'" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.8249" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PicForLater.Core\PicForLater.Core.csproj" />
+    <ProjectReference Include="..\PicForLater.Analysis\PicForLater.Analysis.csproj" />
+    <ProjectReference Include="..\PicForLater.Infrastructure\PicForLater.Infrastructure.csproj" />
+    <ProjectReference Include="..\PicForLater.LocalInference.Protocol\PicForLater.LocalInference.Protocol.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PicForLater.App\Services\WindowsImageContentProcessor.cs"
+             Link="Runtime\WindowsImageContentProcessor.cs" />
+    <Compile Include="..\PicForLater.App\Services\WindowsMediaOcrProvider.cs"
+             Link="Runtime\WindowsMediaOcrProvider.cs" />
+    <Compile Include="..\PicForLater.App\Services\WindowsOcrImageDecoder.cs"
+             Link="Runtime\WindowsOcrImageDecoder.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\LICENSE.txt" Link="LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\**\*.*"
+             Link="licenses\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

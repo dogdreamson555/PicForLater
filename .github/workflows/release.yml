@@ -1,0 +1,148 @@
+name: Build release candidates
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-candidate
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Release build and tests
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Restore locked dependencies
+        shell: pwsh
+        run: dotnet restore .\PicForLater.slnx --locked-mode
+
+      - name: Build Release
+        shell: pwsh
+        run: dotnet build .\PicForLater.slnx -c Release --no-restore
+
+      - name: Run automated tests
+        shell: pwsh
+        run: dotnet test .\PicForLater.slnx -c Release --no-build --no-restore --logger "trx;LogFilePrefix=release"
+
+  package:
+    name: Setup ${{ matrix.artifact_arch }}
+    needs: validate
+    runs-on: windows-2025
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            artifact_arch: x64
+            rid: win-x64
+          - platform: ARM64
+            artifact_arch: arm64
+            rid: win-arm64
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        with:
+          dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Resolve version and Inno Setup compiler
+        shell: pwsh
+        run: |
+          $versionOutput = & dotnet msbuild .\src\PicForLater.App\PicForLater.App.csproj '-getProperty:Version' '-p:Configuration=Release'
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not read the application version.'
+          }
+          $version = ($versionOutput | Select-Object -Last 1).Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
+            throw "Invalid Setup version: $version"
+          }
+
+          $candidates = @(
+            (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1),
+            (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
+            (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+          ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+          $compiler = $candidates |
+            Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+            Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($compiler)) {
+            throw 'The GitHub runner does not provide Inno Setup 6.'
+          }
+
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "INNO_COMPILER=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Restore locked App dependencies
+        shell: pwsh
+        run: dotnet restore .\src\PicForLater.App\PicForLater.App.csproj --locked-mode -p:Platform=${{ matrix.platform }} -p:RuntimeIdentifier=${{ matrix.rid }}
+
+      - name: Build unpackaged publish and Setup
+        shell: pwsh
+        run: |
+          $outputRoot = Join-Path $env:RUNNER_TEMP 'PicForLater-release'
+          $runtimeCache = Join-Path $env:RUNNER_TEMP 'PicForLater-runtime'
+          .\tools\release\Build-Setup.ps1 `
+            -Platform '${{ matrix.platform }}' `
+            -Version $env:APP_VERSION `
+            -OutputRoot $outputRoot `
+            -RuntimeCacheRoot $runtimeCache `
+            -InnoCompilerPath $env:INNO_COMPILER `
+            -NoRestore
+
+      - name: Verify and collect release files
+        shell: pwsh
+        run: |
+          $arch = '${{ matrix.artifact_arch }}'
+          $fileName = "PicForLater-Setup-$env:APP_VERSION-$arch.exe"
+           $sourceRoot = Join-Path $env:RUNNER_TEMP "PicForLater-release\$env:APP_VERSION\$arch\installer"
+           $setupPath = Join-Path $sourceRoot $fileName
+           if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
+             throw "Expected Setup outputs were not produced under $sourceRoot."
+           }
+
+           $destination = Join-Path $PWD "artifacts\github\$arch"
+           New-Item -ItemType Directory -Path $destination -Force | Out-Null
+           Copy-Item -LiteralPath $setupPath -Destination $destination
+           $collected = @(Get-ChildItem -LiteralPath $destination -File)
+           if ($collected.Count -ne 1 -or $collected[0].Name -ne $fileName) {
+             throw "Expected exactly one Setup.exe, found $($collected.Name -join ', ')."
+           }
+
+      - name: Upload Setup candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: PicForLater-Setup-${{ matrix.artifact_arch }}
+          path: artifacts/github/${{ matrix.artifact_arch }}/*
+          if-no-files-found: error
+          retention-days: 14

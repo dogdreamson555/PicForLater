@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Microsoft.Recognizers.Text.DateTime": {
+        "type": "Direct",
+        "requested": "[1.8.13, )",
+        "resolved": "1.8.13",
+        "contentHash": "ikMlINWa8Z+MB4UVHwxvjuUVUz5pjRqIAJL8kysf5Eldh1LPWglUggfNkrF9Apgu36UKzGksXpqPE21xpBit0Q==",
+        "dependencies": {
+          "Microsoft.Recognizers.Definitions": "1.8.13",
+          "Microsoft.Recognizers.Text": "1.8.13",
+          "Microsoft.Recognizers.Text.DataTypes.TimexExpression": "1.8.13",
+          "Microsoft.Recognizers.Text.Number": "1.8.13",
+          "Microsoft.Recognizers.Text.NumberWithUnit": "1.8.13"
+        }
+      },
+      "NuGet.CommandLine": {
+        "type": "Direct",
+        "requested": "[7.6.0, )",
+        "resolved": "7.6.0",
+        "contentHash": "F2YmEH3zbuG80LSoK/kwHIEp8HoC0T4BE6TH/SHX+eo9uNma+GWC187GY6Nlg8fGCtzq4fEkwM36XZI2QmcR1g=="
+      },
+      "Microsoft.Extensions.Caching.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "spsJkYo8gGJapaxTSQFN/wqA+ghpJMLwB4ZyTB+fSdpd7AmMFP/YSpIcGmczcw4KggpxLGhLk7lCkSIlgvHaqQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "2.2.0"
+        }
+      },
+      "Microsoft.Extensions.Caching.Memory": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "yFs44RzB2Pzfoj4uk+mEz3MTTQKyeWb8gDhv5GyVPfHnLv0eQhGwzbw/5WpxAcVyOgG/H3/0ULY6g0/7/B+r7w==",
+        "dependencies": {
+          "Microsoft.Extensions.Caching.Abstractions": "2.2.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.2.0",
+          "Microsoft.Extensions.Options": "2.2.0"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "f9hstgjVmr6rmrfGSpfsVOl2irKAgr1QjrSi3FgnS7kulxband50f2brRLwySAQTADPZeTdow0mpSMcoAdadCw=="
+      },
+      "Microsoft.Extensions.Options": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "UpZLNLBpIZ0GTebShui7xXYh6DmBHjWM8NxGxZbdQh/bPZ5e6YswqI+bru6BnEL5eWiOdodsXtEz3FROcgi/qg==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.2.0",
+          "Microsoft.Extensions.Primitives": "2.2.0",
+          "System.ComponentModel.Annotations": "4.5.0"
+        }
+      },
+      "Microsoft.Extensions.Primitives": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "azyQtqbm4fSaDzZHD/J+V6oWMFaf2tWP4WEGIYePLCMw3+b2RQdj9ybgbQyjCshcitQKQ4lEDOZjmSlTTrHxUg=="
+      },
+      "Microsoft.Recognizers.Definitions": {
+        "type": "Transitive",
+        "resolved": "1.8.13",
+        "contentHash": "+DBm3ncxQBwTdaWfLjQ4f/5ROLUmYrJAtZ4ENje1neDjb0FVYpTB9hkc/4w+RJybJoMn/KvE97fcH4HxVEVscg=="
+      },
+      "Microsoft.Recognizers.Text": {
+        "type": "Transitive",
+        "resolved": "1.8.13",
+        "contentHash": "9mxJIoLasKFadZfB/1kH0m85SmnUlNk8DRsHoW/QLKx0k/Sbx0RUlP58YV9tGur4V6vJhgGgMKMN+WiSpvndhQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Caching.Memory": "2.2.0",
+          "NuGet.CommandLine": "5.11.5",
+          "vswhere": "2.8.4"
+        }
+      },
+      "Microsoft.Recognizers.Text.DataTypes.TimexExpression": {
+        "type": "Transitive",
+        "resolved": "1.8.13",
+        "contentHash": "45f033ESC7LaWUi9sUdzASu42xS/+EcbNcVPQddaCP/DE1Z7tLApcp8PdFjijeB1MEETs3wdEMpvWMDtJMx5CQ=="
+      },
+      "Microsoft.Recognizers.Text.Number": {
+        "type": "Transitive",
+        "resolved": "1.8.13",
+        "contentHash": "bl8otsQkmh8qosgafmjdrjr9bDU6wOCkoU+ni+uPCPP2F0Rv5/9hYXqvwlW1499TqExH58j9PP8egwVw/MzoAg==",
+        "dependencies": {
+          "Microsoft.Recognizers.Definitions": "1.8.13",
+          "Microsoft.Recognizers.Text": "1.8.13"
+        }
+      },
+      "Microsoft.Recognizers.Text.NumberWithUnit": {
+        "type": "Transitive",
+        "resolved": "1.8.13",
+        "contentHash": "x6b7fYeow9j3UKe0d95t7lSPqBRni2JVBbNLk+urZ3qN4CDbQ0YMzFf+BXwWPZ/v0MtsP0H1rgH/bSGq8Mg+mQ==",
+        "dependencies": {
+          "Microsoft.Recognizers.Definitions": "1.8.13",
+          "Microsoft.Recognizers.Text": "1.8.13",
+          "Microsoft.Recognizers.Text.Number": "1.8.13"
+        }
+      },
+      "System.ComponentModel.Annotations": {
+        "type": "Transitive",
+        "resolved": "4.5.0",
+        "contentHash": "UxYQ3FGUOtzJ7LfSdnYSFd7+oEv6M8NgUatatIN2HxNtDdlcvFAf+VIq4Of9cDMJEJC0aSRv/x898RYhB4Yppg=="
+      },
+      "vswhere": {
+        "type": "Transitive",
+        "resolved": "2.8.4",
+        "contentHash": "vnprpt1NycD1CrUecoj+EQHY3LGqGvCrSK9NrhORiT9TnZ2J1Ve9qYYddLBaX207uyBWImDv8QuMv/95Bd3V6w=="
+      },
+      "picforlater.core": {
+        "type": "Project"
+      }
+    },
+    "net10.0/win-arm64": {},
+    "net10.0/win-x64": {}
+  }
+}

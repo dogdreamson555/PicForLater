@@ -1,0 +1,871 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppDisplayName" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="UiTestAppDisplayName" xml:space="preserve"><value>PicForLater UI 测试</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>在本机保存、整理并稍后回看图片。</value></data>
+  <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主导航</value></data>
+  <data name="LibraryNavItem.Content" xml:space="preserve"><value>资料库</value></data>
+  <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>资料库</value></data>
+  <data name="LibraryNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>打开资料库</value></data>
+  <data name="RemindersNavItem.Content" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersNavItem.AutomationProperties.Name" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>打开提醒</value></data>
+  <data name="RecycleBinNavItem.Content" xml:space="preserve"><value>回收站</value></data>
+  <data name="RecycleBinNavItem.AutomationProperties.Name" xml:space="preserve"><value>回收站</value></data>
+  <data name="RecycleBinNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>打开回收站</value></data>
+  <data name="LibraryPageTitle.Text" xml:space="preserve"><value>资料库</value></data>
+  <data name="LibraryPageSubtitle.Text" xml:space="preserve"><value>保存在此设备上的图片会显示在这里。</value></data>
+  <data name="SelectionInfoBar.Title" xml:space="preserve"><value>已选择项目</value></data>
+  <data name="SelectionCountLabel.Text" xml:space="preserve"><value>数量：</value></data>
+  <data name="LibraryGridView.AutomationProperties.Name" xml:space="preserve"><value>图片资料库</value></data>
+  <data name="LibraryLoadingTitle.Text" xml:space="preserve"><value>正在读取资料库</value></data>
+  <data name="LibraryLoadingMessage.Text" xml:space="preserve"><value>正在从本地存储载入图片信息。</value></data>
+  <data name="LibraryEmptyTitle.Text" xml:space="preserve"><value>资料库为空</value></data>
+  <data name="LibraryEmptyMessage.Text" xml:space="preserve"><value>拖入图片，或使用“导入”和 Ctrl+V 将图片可靠保存到此设备。</value></data>
+  <data name="LibraryErrorTitle.Text" xml:space="preserve"><value>无法读取资料库</value></data>
+  <data name="LibraryErrorMessage.Text" xml:space="preserve"><value>本地数据暂时无法读取。重新打开应用后仍有问题时，请保留数据并查看诊断信息。</value></data>
+  <data name="LibraryRetryButton.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="LibraryRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重试读取本地资料库</value></data>
+  <data name="LibraryPermissionDeniedTitle.Text" xml:space="preserve"><value>无法访问本地存储</value></data>
+  <data name="LibraryPermissionDeniedMessage.Text" xml:space="preserve"><value>应用没有读取受管图片目录所需的权限。请检查 Windows 应用权限后重试。</value></data>
+  <data name="LibraryUnsupportedTitle.Text" xml:space="preserve"><value>当前内容不受支持</value></data>
+  <data name="LibraryUnsupportedMessage.Text" xml:space="preserve"><value>资料库包含当前版本无法显示的数据。原始文件不会被修改或删除。</value></data>
+  <data name="LibraryStateLoadingAnnouncement" xml:space="preserve"><value>正在读取资料库。</value></data>
+  <data name="LibraryStateEmptyAnnouncement" xml:space="preserve"><value>资料库已读取，目前为空。</value></data>
+  <data name="LibraryStateReadyAnnouncement" xml:space="preserve"><value>资料库已读取，图片列表可用。</value></data>
+  <data name="LibraryStateErrorAnnouncement" xml:space="preserve"><value>无法读取资料库，可以重试。</value></data>
+  <data name="LibraryStatePermissionDeniedAnnouncement" xml:space="preserve"><value>无法访问本地存储，请检查权限后重试。</value></data>
+  <data name="LibraryStateUnsupportedAnnouncement" xml:space="preserve"><value>资料库包含当前版本不支持的内容。</value></data>
+  <data name="RemindersPageTitle.Text" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersPageSubtitle.Text" xml:space="preserve"><value>核对图片中的日期和地点证据；只有你确认后才会创建本地提醒。</value></data>
+  <data name="RemindersEmptyTitle.Text" xml:space="preserve"><value>没有待处理的候选或提醒</value></data>
+  <data name="RemindersEmptyMessage.Text" xml:space="preserve"><value>从图片中识别出的日期和地点只会作为候选；经你确认后，提醒才会显示在这里。</value></data>
+  <data name="RecycleBinPageTitle.Text" xml:space="preserve"><value>回收站</value></data>
+  <data name="RecycleBinPageSubtitle.Text" xml:space="preserve"><value>已删除的图片会保留在应用内，直到你明确永久删除。</value></data>
+  <data name="RecycleBinEmptyTitle.Text" xml:space="preserve"><value>回收站为空</value></data>
+  <data name="RecycleBinEmptyMessage.Text" xml:space="preserve"><value>从资料库删除的图片会出现在这里，并可恢复其原有信息。</value></data>
+  <data name="SettingsPageTitle.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>偏好设置保存在此设备的应用数据中；API 密钥单独保存在 Windows 凭据保险箱。</value></data>
+  <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>外观</value></data>
+  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>选择应用界面跟随 Windows，或固定使用浅色或深色主题。高对比度由 Windows 控制。</value></data>
+  <data name="ThemeOptions.AutomationProperties.Name" xml:space="preserve"><value>应用主题</value></data>
+  <data name="SystemThemeOption.Content" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="SystemThemeOption.AutomationProperties.Name" xml:space="preserve"><value>跟随系统主题</value></data>
+  <data name="LightThemeOption.Content" xml:space="preserve"><value>浅色</value></data>
+  <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>浅色主题</value></data>
+  <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
+  <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
+  <data name="SettingsEmptyState.Title" xml:space="preserve"><value>暂无其他设置</value></data>
+  <data name="SettingsEmptyState.Message" xml:space="preserve"><value>相关功能加入后，它们的本地设置会显示在这里。</value></data>
+  <data name="AnalysisStatePending" xml:space="preserve"><value>等待分析</value></data>
+  <data name="AnalysisStateRunning" xml:space="preserve"><value>分析中</value></data>
+  <data name="AnalysisStateNeedsAttention" xml:space="preserve"><value>需要处理</value></data>
+  <data name="AnalysisStateCompleted" xml:space="preserve"><value>完成</value></data>
+  <data name="ImportButton.Label" xml:space="preserve"><value>导入</value></data>
+  <data name="ImportButton.AutomationProperties.Name" xml:space="preserve"><value>导入图片</value></data>
+  <data name="ImportButton.ToolTipService.ToolTip" xml:space="preserve"><value>从文件选择图片</value></data>
+  <data name="PasteButton.Label" xml:space="preserve"><value>粘贴</value></data>
+  <data name="PasteButton.AutomationProperties.Name" xml:space="preserve"><value>粘贴剪贴板图片</value></data>
+  <data name="PasteButton.ToolTipService.ToolTip" xml:space="preserve"><value>粘贴剪贴板图片 (Ctrl+V)</value></data>
+  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜索标题、简介、文字、分类或地点</value></data>
+  <data name="LibrarySearchBox.AutomationProperties.Name" xml:space="preserve"><value>搜索资料库</value></data>
+  <data name="CategoryFilterComboBox.AutomationProperties.Name" xml:space="preserve"><value>按分类筛选</value></data>
+  <data name="ClearFiltersButton.AutomationProperties.Name" xml:space="preserve"><value>清空搜索和筛选</value></data>
+  <data name="ClearFiltersButton.ToolTipService.ToolTip" xml:space="preserve"><value>清空搜索和筛选</value></data>
+  <data name="LibraryStatusInfoBar.Title" xml:space="preserve"><value>资料库状态</value></data>
+  <data name="EmptyImportButton.Content" xml:space="preserve"><value>导入图片</value></data>
+  <data name="EmptyImportButton.AutomationProperties.Name" xml:space="preserve"><value>从文件导入图片</value></data>
+  <data name="EmptyPasteButton.Content" xml:space="preserve"><value>粘贴图片</value></data>
+  <data name="EmptyPasteButton.AutomationProperties.Name" xml:space="preserve"><value>粘贴剪贴板图片</value></data>
+  <data name="LoadMoreButton.Content" xml:space="preserve"><value>加载更多</value></data>
+  <data name="LoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>加载更多图片</value></data>
+  <data name="DetailPlaceholderTitle.Text" xml:space="preserve"><value>选择一张图片</value></data>
+  <data name="DetailPlaceholderMessage.Text" xml:space="preserve"><value>选择资料库中的项目以查看和编辑详情。</value></data>
+  <data name="DetailBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回资料库</value></data>
+  <data name="DetailBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回资料库</value></data>
+  <data name="DetailPaneTitle.Text" xml:space="preserve"><value>图片详情</value></data>
+  <data name="DeleteImageButton.AutomationProperties.Name" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="DeleteImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>将这张图片移到回收站</value></data>
+  <data name="DetailTitleLabel.Text" xml:space="preserve"><value>标题</value></data>
+  <data name="DetailTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>图片标题</value></data>
+  <data name="DetailSummaryTextBox.Header" xml:space="preserve"><value>简介</value></data>
+  <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>添加便于回看的说明</value></data>
+  <data name="DetailSummaryTextBox.AutomationProperties.Name" xml:space="preserve"><value>图片简介</value></data>
+  <data name="DetailContentSourceInfoBar.Title" xml:space="preserve"><value>内容来源</value></data>
+  <data name="DetailContentSourcePending" xml:space="preserve"><value>本地分析完成后会在这里填入可编辑的标题和简介。</value></data>
+  <data name="DetailContentSourceOcr" xml:space="preserve"><value>已根据本地 OCR 事实生成可编辑草稿；视觉增强失败也不会丢失此结果。</value></data>
+  <data name="DetailContentSourceModel" xml:space="preserve"><value>标题和简介由本地视觉模型生成，属于可编辑候选。</value></data>
+  <data name="DetailContentSourceUser" xml:space="preserve"><value>标题或简介已由你保存，重新分析不会静默覆盖。</value></data>
+  <data name="DetailContentSourceUnsaved" xml:space="preserve"><value>存在尚未保存的人工修改；后台分析刷新不会覆盖当前输入。</value></data>
+  <data name="DetailContentSourceNeedsAttention" xml:space="preserve"><value>本地分析未完成。原图和已有内容已保留，可选择重新分析。</value></data>
+  <data name="CategoriesSectionTitle.Text" xml:space="preserve"><value>分类</value></data>
+  <data name="AddCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>新建分类</value></data>
+  <data name="AddCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>新建自定义分类</value></data>
+  <data name="DetailCategoriesRepeater.AutomationProperties.Name" xml:space="preserve"><value>图片分类</value></data>
+  <data name="RenameCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>重命名分类</value></data>
+  <data name="RenameCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>重命名分类</value></data>
+  <data name="DeleteCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>删除分类</value></data>
+  <data name="DeleteCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>删除分类但保留图片</value></data>
+  <data name="SaveDetailsButton.Content" xml:space="preserve"><value>保存更改</value></data>
+  <data name="SaveDetailsButton.AutomationProperties.Name" xml:space="preserve"><value>保存图片详情</value></data>
+  <data name="ContextAddReminderMenuItem.Text" xml:space="preserve"><value>添加提醒</value></data>
+  <data name="ContextAddReminderMenuItem.AutomationProperties.Name" xml:space="preserve"><value>为此图片添加提醒</value></data>
+  <data name="ContextReanalyzeMenuItem.Text" xml:space="preserve"><value>重新分析</value></data>
+  <data name="ContextReanalyzeMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用当前分析设置重新分析图片</value></data>
+  <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>添加提醒</value></data>
+  <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>为当前图片添加提醒</value></data>
+  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>保存未保存的详情后打开提醒确认</value></data>
+  <data name="DropOverlayTitle.Text" xml:space="preserve"><value>松开即可导入</value></data>
+  <data name="DropOverlayMessage.Text" xml:space="preserve"><value>每张图片将独立保存；损坏文件不会影响其他图片。</value></data>
+  <data name="RestoreButton.Label" xml:space="preserve"><value>恢复</value></data>
+  <data name="RestoreButton.AutomationProperties.Name" xml:space="preserve"><value>恢复选中的图片</value></data>
+  <data name="RestoreButton.ToolTipService.ToolTip" xml:space="preserve"><value>恢复图片及其原有分类和信息</value></data>
+  <data name="PermanentDeleteButton.Label" xml:space="preserve"><value>永久删除</value></data>
+  <data name="PermanentDeleteButton.AutomationProperties.Name" xml:space="preserve"><value>永久删除选中的图片</value></data>
+  <data name="PermanentDeleteButton.ToolTipService.ToolTip" xml:space="preserve"><value>永久删除选中的图片</value></data>
+  <data name="RecycleBinStatusInfoBar.Title" xml:space="preserve"><value>回收站状态</value></data>
+  <data name="RecycleBinLoadingTitle.Text" xml:space="preserve"><value>正在读取回收站</value></data>
+  <data name="RecycleBinErrorTitle.Text" xml:space="preserve"><value>无法读取回收站</value></data>
+  <data name="RecycleBinErrorMessage.Text" xml:space="preserve"><value>本地数据暂时不可用。现有图片不会被自动删除。</value></data>
+  <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>回收站图片</value></data>
+  <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
+  <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个回收站图片</value></data>
+  <data name="RecycleBinSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>进入回收站多选模式</value></data>
+  <data name="RecycleBinSelectAllButton.Label" xml:space="preserve"><value>全选</value></data>
+  <data name="RecycleBinSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>选择全部回收站图片</value></data>
+  <data name="RecycleBinSelectAllButton.ToolTipService.ToolTip" xml:space="preserve"><value>选择当前已加载的全部回收站图片</value></data>
+  <data name="RecycleBinCancelSelectionButton.Label" xml:space="preserve"><value>取消选择</value></data>
+  <data name="RecycleBinCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>退出回收站多选模式</value></data>
+  <data name="RecycleBinCancelSelectionButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除选择并退出回收站多选模式</value></data>
+  <data name="RecycleBinSelectionCountFormat" xml:space="preserve"><value>已选择 {0} 张图片</value></data>
+  <data name="RecycleBinContextPermanentDeleteMenuItem.Text" xml:space="preserve"><value>永久删除</value></data>
+  <data name="RecycleBinContextPermanentDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>永久删除图片</value></data>
+  <data name="RecycleBinContextRestoreMenuItem.Text" xml:space="preserve"><value>恢复</value></data>
+  <data name="RecycleBinContextRestoreMenuItem.AutomationProperties.Name" xml:space="preserve"><value>恢复图片</value></data>
+  <data name="RecycleBinContextSelectMenuItem.Text" xml:space="preserve"><value>选择</value></data>
+  <data name="RecycleBinContextSelectMenuItem.AutomationProperties.Name" xml:space="preserve"><value>选择图片并进入多选模式</value></data>
+  <data name="AllCategories" xml:space="preserve"><value>全部分类</value></data>
+  <data name="Uncategorized" xml:space="preserve"><value>未分类</value></data>
+  <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}，{2}</value></data>
+  <data name="DetailsSavedStatus" xml:space="preserve"><value>图片详情已保存。</value></data>
+  <data name="RestoreCompletedStatus" xml:space="preserve"><value>图片已恢复；未来提醒需要重新确认后才会安排。</value></data>
+  <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已恢复 {0}/{1} 张图片；未来提醒需要重新确认后才会安排。</value></data>
+  <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>图片及无其他引用的受管文件已永久删除。</value></data>
+  <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>永久删除尚未完成，应用已保留删除计划以便安全重试。</value></data>
+  <data name="PermanentDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已永久删除 {0} 张图片及无其他引用的受管文件。</value></data>
+  <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>已永久删除 {0}/{1} 张图片；未完成的删除保留了可安全重试的计划。</value></data>
+  <data name="ImportPickerCommitText" xml:space="preserve"><value>导入</value></data>
+  <data name="ClipboardFileNameFormat" xml:space="preserve"><value>剪贴板图片 {0:yyyyMMdd-HHmmss}.png</value></data>
+  <data name="ClipboardImportFailedStatus" xml:space="preserve"><value>无法读取或保存剪贴板图片。</value></data>
+  <data name="ClipboardNoImageStatus" xml:space="preserve"><value>剪贴板中没有可导入的图片。</value></data>
+  <data name="DropCaption" xml:space="preserve"><value>复制到 PicForLater</value></data>
+  <data name="ImportBatchStatusFormat" xml:space="preserve"><value>已导入 {0} 张，发现 {1} 张重复，{2} 张失败。</value></data>
+  <data name="ImportCompletedStatus" xml:space="preserve"><value>图片已保存并加入等待分析队列。</value></data>
+  <data name="ImportDuplicateStatus" xml:space="preserve"><value>这张图片已存在，已打开现有项目。</value></data>
+  <data name="ImportFailedStatus" xml:space="preserve"><value>图片未能导入；现有资料库没有被修改。</value></data>
+  <data name="CategoryUpdateFailedStatus" xml:space="preserve"><value>无法更新分类，原有分类保持不变。</value></data>
+  <data name="AddCategoryDialogTitle" xml:space="preserve"><value>新建分类</value></data>
+  <data name="AddCategoryDialogPrimary" xml:space="preserve"><value>创建</value></data>
+  <data name="RenameCategoryDialogTitle" xml:space="preserve"><value>重命名分类</value></data>
+  <data name="RenameCategoryDialogPrimary" xml:space="preserve"><value>重命名</value></data>
+  <data name="CategoryNameFieldHeader" xml:space="preserve"><value>分类名称</value></data>
+  <data name="CategoryNameConflictStatus" xml:space="preserve"><value>分类名称为空、过长或已存在。</value></data>
+  <data name="DeleteCategoryDialogTitle" xml:space="preserve"><value>删除分类？</value></data>
+  <data name="DeleteCategoryDialogMessageFormat" xml:space="preserve"><value>将删除分类“{0}”，图片本身不会被删除。</value></data>
+  <data name="DeleteCategoryDialogPrimary" xml:space="preserve"><value>删除分类</value></data>
+  <data name="SoftDeleteDialogTitle" xml:space="preserve"><value>移到回收站？</value></data>
+  <data name="SoftDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}”将进入应用内回收站，并可恢复。</value></data>
+  <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>移到回收站</value></data>
+  <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>图片已移到回收站。</value></data>
+  <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>永久删除图片？</value></data>
+  <data name="PermanentDeleteDialogMessageFormat" xml:space="preserve"><value>将永久删除“{0}”及无其他引用的受管文件。此操作无法从应用内恢复。</value></data>
+  <data name="PermanentDeleteBatchDialogTitle" xml:space="preserve"><value>永久删除所选图片？</value></data>
+  <data name="PermanentDeleteBatchDialogMessageFormat" xml:space="preserve"><value>将永久删除所选的 {0} 张图片及无其他引用的受管文件。此操作无法从应用内恢复。</value></data>
+  <data name="PermanentDeleteDialogPrimary" xml:space="preserve"><value>永久删除</value></data>
+  <data name="CancelButtonText" xml:space="preserve"><value>取消</value></data>
+  <data name="ByteUnitBytes" xml:space="preserve"><value>B</value></data>
+  <data name="ByteUnitKilobytes" xml:space="preserve"><value>KB</value></data>
+  <data name="ByteUnitMegabytes" xml:space="preserve"><value>MB</value></data>
+  <data name="ByteUnitGigabytes" xml:space="preserve"><value>GB</value></data>
+  <data name="SelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
+  <data name="SelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个图片</value></data>
+  <data name="SelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>进入或退出多选模式</value></data>
+  <data name="SortButton.Label" xml:space="preserve"><value>排序</value></data>
+  <data name="SortButton.AutomationProperties.Name" xml:space="preserve"><value>更改资料库排序</value></data>
+  <data name="SortButton.ToolTipService.ToolTip" xml:space="preserve"><value>按时间、名称、大小或分类排序</value></data>
+  <data name="GridViewModeButton.Label" xml:space="preserve"><value>网格</value></data>
+  <data name="GridViewModeButton.AutomationProperties.Name" xml:space="preserve"><value>使用网格视图</value></data>
+  <data name="GridViewModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>以网格显示图片</value></data>
+  <data name="ListViewModeButton.Label" xml:space="preserve"><value>列表</value></data>
+  <data name="ListViewModeButton.AutomationProperties.Name" xml:space="preserve"><value>使用列表视图</value></data>
+  <data name="ListViewModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>以紧凑列表显示图片</value></data>
+  <data name="SelectionSummaryFormat" xml:space="preserve"><value>已选择 {0} 项</value></data>
+  <data name="SelectAllLoadedButton.Label" xml:space="preserve"><value>全选已加载项</value></data>
+  <data name="SelectAllLoadedButton.AutomationProperties.Name" xml:space="preserve"><value>选择全部已加载图片</value></data>
+  <data name="SelectAllLoadedButton.ToolTipService.ToolTip" xml:space="preserve"><value>选择当前已加载的图片</value></data>
+  <data name="DeleteSelectedButton.Label" xml:space="preserve"><value>删除</value></data>
+  <data name="DeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>把所选图片移到回收站</value></data>
+  <data name="DeleteSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>把所选图片移到回收站</value></data>
+  <data name="CancelSelectionButton.Label" xml:space="preserve"><value>取消选择</value></data>
+  <data name="CancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>退出多选模式</value></data>
+  <data name="CancelSelectionButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除选择并退出多选模式</value></data>
+  <data name="LibraryListView.AutomationProperties.Name" xml:space="preserve"><value>图片资料库列表</value></data>
+  <data name="ContextOpenImageMenuItem.Text" xml:space="preserve"><value>打开图片</value></data>
+  <data name="ContextOpenImageMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用默认应用打开图片</value></data>
+  <data name="ContextViewDetailsMenuItem.Text" xml:space="preserve"><value>查看详情</value></data>
+  <data name="ContextViewDetailsMenuItem.AutomationProperties.Name" xml:space="preserve"><value>查看图片详情</value></data>
+  <data name="ContextSelectMenuItem.Text" xml:space="preserve"><value>选择</value></data>
+  <data name="ContextSelectMenuItem.AutomationProperties.Name" xml:space="preserve"><value>选择此图片</value></data>
+  <data name="ContextDeleteMenuItem.Text" xml:space="preserve"><value>删除</value></data>
+  <data name="ContextDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>把图片移到回收站</value></data>
+  <data name="DetailImageButton.AutomationProperties.Name" xml:space="preserve"><value>使用默认应用打开原图</value></data>
+  <data name="DetailImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>打开原图</value></data>
+  <data name="OpenImageFailedStatus" xml:space="preserve"><value>无法使用 Windows 默认图片应用打开这张图片。受管原图没有被修改。</value></data>
+  <data name="SortByTimeSubItem.Text" xml:space="preserve"><value>时间</value></data>
+  <data name="SortNewestMenuItem.Text" xml:space="preserve"><value>最新优先</value></data>
+  <data name="SortOldestMenuItem.Text" xml:space="preserve"><value>最早优先</value></data>
+  <data name="SortByNameSubItem.Text" xml:space="preserve"><value>名称</value></data>
+  <data name="SortNameAscendingMenuItem.Text" xml:space="preserve"><value>A 到 Z</value></data>
+  <data name="SortNameDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
+  <data name="SortBySizeSubItem.Text" xml:space="preserve"><value>图片大小</value></data>
+  <data name="SortSizeDescendingMenuItem.Text" xml:space="preserve"><value>从大到小</value></data>
+  <data name="SortSizeAscendingMenuItem.Text" xml:space="preserve"><value>从小到大</value></data>
+  <data name="SortByCategorySubItem.Text" xml:space="preserve"><value>分类</value></data>
+  <data name="SortCategoryAscendingMenuItem.Text" xml:space="preserve"><value>A 到 Z</value></data>
+  <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
+  <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>把所选图片移到回收站？</value></data>
+  <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>将把所选的 {0} 张图片移到应用内回收站，并可分别恢复。</value></data>
+  <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已将 {0}/{1} 张图片移到回收站。</value></data>
+  <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>图片未能移到回收站，现有数据保持不变。</value></data>
+  <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>
+  <data name="AnalysisSectionDescription.Text" xml:space="preserve"><value>分析策略只影响新导入和新建的重新分析任务；已有结果不会被自动重跑。</value></data>
+  <data name="OcrOnlyAnalysisOption.Content" xml:space="preserve"><value>仅 OCR — 不加载视觉模型</value></data>
+  <data name="BalancedAnalysisOption.Content" xml:space="preserve"><value>平衡 — 始终运行 OCR；按需运行视觉模型，并合并两者的提醒候选</value></data>
+  <data name="AlwaysEnhanceAnalysisOption.Content" xml:space="preserve"><value>始终增强 — 始终运行 OCR 和已选择的本地视觉模型，并合并两者的提醒候选</value></data>
+  <data name="InferenceAccelerationSectionTitle.Text" xml:space="preserve"><value>推理加速</value></data>
+  <data name="InferenceAccelerationSectionDescription.Text" xml:space="preserve"><value>为本地模型选择执行设备。自动会使用当前模型包已验证的设备；x64 可在下方检测 NVIDIA 环境。</value></data>
+  <data name="InferenceAccelerationOptions.AutomationProperties.Name" xml:space="preserve"><value>本地模型推理设备</value></data>
+  <data name="AutomaticAccelerationOption.Content" xml:space="preserve"><value>自动（推荐）</value></data>
+  <data name="AutomaticAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>自动选择推理设备</value></data>
+  <data name="DirectMlGpuAccelerationOption.Content" xml:space="preserve"><value>DirectML GPU</value></data>
+  <data name="DirectMlGpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>使用 DirectML GPU</value></data>
+  <data name="CpuAccelerationOption.Content" xml:space="preserve"><value>CPU</value></data>
+  <data name="CpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>仅使用 CPU</value></data>
+  <data name="CudaGpuAccelerationOption.Content" xml:space="preserve"><value>NVIDIA CUDA GPU</value></data>
+  <data name="CudaGpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>使用 CUDA GPU</value></data>
+  <data name="InferenceAccelerationSavedStatus" xml:space="preserve"><value>推理设备偏好已保存，将用于后续模型任务。</value></data>
+  <data name="InferenceAccelerationSaveFailedStatus" xml:space="preserve"><value>无法保存推理设备偏好。</value></data>
+  <data name="InferenceAccelerationNotRunStatus" xml:space="preserve"><value>本次启动后尚未运行本地模型。</value></data>
+  <data name="InferenceWorkloadPpOcr" xml:space="preserve"><value>PP-OCRv6-small</value></data>
+  <data name="InferenceWorkloadQwen3Vl" xml:space="preserve"><value>Qwen3-VL-2B-Instruct</value></data>
+  <data name="InferenceDeviceDirectMlGpu" xml:space="preserve"><value>DirectML GPU</value></data>
+  <data name="InferenceDeviceCudaGpu" xml:space="preserve"><value>CUDA GPU</value></data>
+  <data name="InferenceDeviceCpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="InferenceExecutionStatusFormat" xml:space="preserve"><value>上次执行：{0} · {1}</value></data>
+  <data name="InferenceExecutionFallbackStatusFormat" xml:space="preserve"><value>上次执行：{0} · {1}（GPU 不兼容后自动回退）</value></data>
+  <data name="InferenceExecutionFailedStatusFormat" xml:space="preserve"><value>上次尝试：{0} · {1}（任务未完成）</value></data>
+  <data name="NvidiaEnvironmentInfoBar.Title" xml:space="preserve"><value>NVIDIA 环境</value></data>
+  <data name="DetectNvidiaEnvironmentButton.Content" xml:space="preserve"><value>重新检测</value></data>
+  <data name="DetectNvidiaEnvironmentButton.AutomationProperties.Name" xml:space="preserve"><value>重新检测 NVIDIA 环境</value></data>
+  <data name="InstallNvidiaRuntimeButton.Content" xml:space="preserve"><value>安装运行库</value></data>
+  <data name="InstallNvidiaRuntimeButton.AutomationProperties.Name" xml:space="preserve"><value>安装 NVIDIA CUDA 与 cuDNN 运行库</value></data>
+  <data name="OpenNvidiaDriverPageButton.Content" xml:space="preserve"><value>打开 NVIDIA 驱动页面</value></data>
+  <data name="OpenNvidiaDriverPageButton.AutomationProperties.Name" xml:space="preserve"><value>在浏览器中打开 NVIDIA 官方驱动下载页面</value></data>
+  <data name="NvidiaEnvironmentReadyStatusFormat" xml:space="preserve"><value>已就绪：{0}，显存 {1}，计算能力 {2}，驱动支持 CUDA {3}；运行库来源：{4}。最终仍以模型自检为准。</value></data>
+  <data name="NvidiaEnvironmentUnsupportedStatus" xml:space="preserve"><value>当前应用架构不支持 NVIDIA CUDA；请使用 CPU 模型。</value></data>
+  <data name="NvidiaDriverMissingStatus" xml:space="preserve"><value>未检测到可用的 NVIDIA 显卡驱动。请先通过 NVIDIA 官方渠道安装或更新驱动，然后重新检测。</value></data>
+  <data name="NvidiaCudaDeviceMissingStatus" xml:space="preserve"><value>驱动已加载，但没有检测到可用的 NVIDIA CUDA GPU；请使用 CPU 模型。</value></data>
+  <data name="NvidiaDriverTooOldStatus" xml:space="preserve"><value>NVIDIA 驱动不满足 CUDA 12.x 要求，请先通过 NVIDIA 官方渠道更新驱动。</value></data>
+  <data name="NvidiaDriverTooOldStatusFormat" xml:space="preserve"><value>已检测到 {0}，但驱动只支持 CUDA {1}；请先通过 NVIDIA 官方渠道更新驱动。</value></data>
+  <data name="NvidiaInsufficientVramStatus" xml:space="preserve"><value>CUDA 模型需要标称 8 GB 档显卡（检测值至少 7.5 GiB）；请使用 CPU 模型。</value></data>
+  <data name="NvidiaInsufficientVramStatusFormat" xml:space="preserve"><value>已检测到 {0}（显存 {1}），低于标称 8 GB 显卡的兼容门槛（检测值 7.5 GiB）；请使用 CPU 模型。</value></data>
+  <data name="NvidiaRuntimeMissingStatusFormat" xml:space="preserve"><value>已检测到 {0}（显存 {1}，驱动支持 CUDA {2}），但缺少 CUDA/cuDNN 用户态运行库。可由 PicForLater 安装到应用私有目录，无需完整 CUDA Toolkit 或修改 PATH。</value></data>
+  <data name="NvidiaRuntimeIncompleteStatusFormat" xml:space="preserve"><value>已检测到 {0}（显存 {1}，驱动支持 CUDA {2}），但应用私有 CUDA/cuDNN 运行库不完整。可重新下载安装修复。</value></data>
+  <data name="NvidiaEnvironmentDetectionFailedStatus" xml:space="preserve"><value>无法完成 NVIDIA 环境检测；未修改模型与现有数据。</value></data>
+  <data name="NvidiaUnknownDeviceName" xml:space="preserve"><value>NVIDIA GPU</value></data>
+  <data name="NvidiaRuntimeSourceApp" xml:space="preserve"><value>PicForLater 私有目录</value></data>
+  <data name="NvidiaRuntimeSourceSystem" xml:space="preserve"><value>现有系统安装</value></data>
+  <data name="NvidiaRuntimeSourceNone" xml:space="preserve"><value>未安装</value></data>
+  <data name="NvidiaRuntimeInstallDialogTitle" xml:space="preserve"><value>安装 NVIDIA 运行库？</value></data>
+  <data name="NvidiaRuntimeInstallAction" xml:space="preserve"><value>下载并安装</value></data>
+  <data name="NvidiaRuntimeAndModelInstallAction" xml:space="preserve"><value>安装运行库和模型</value></data>
+  <data name="NvidiaRuntimeInstallConfirmationFormat" xml:space="preserve"><value>PicForLater 将从 NVIDIA 官方 HTTPS 再分发源下载固定版本 CUDA {0} 与 cuDNN {1}。准确下载大小：{2}；应用私有安装最多占用 {3}。归档会校验大小和 SHA-256，只提取白名单 DLL，不安装完整 Toolkit、不运行安装器、不修改系统 PATH。继续即表示你同意 NVIDIA CUDA 许可（{4}）和 cuDNN 许可（{5}）。来源：{6}</value></data>
+  <data name="NvidiaRuntimeAndModelConfirmationFormat" xml:space="preserve"><value>{0}&#x0A;&#x0A;随后：{1}</value></data>
+  <data name="NvidiaRuntimePreparingStatus" xml:space="preserve"><value>正在准备 NVIDIA 运行库下载并检查磁盘空间…</value></data>
+  <data name="NvidiaRuntimeDownloadingStatus" xml:space="preserve"><value>正在从 NVIDIA 官方来源下载运行库；已完成的归档可用于重试…</value></data>
+  <data name="NvidiaRuntimeVerifyingStatus" xml:space="preserve"><value>正在校验 NVIDIA 归档的大小和 SHA-256…</value></data>
+  <data name="NvidiaRuntimeInstallingStatus" xml:space="preserve"><value>正在提取白名单 DLL 并原子安装到应用私有目录…</value></data>
+  <data name="NvidiaRuntimeCompletingStatus" xml:space="preserve"><value>NVIDIA 运行库已安装，正在重新检测环境…</value></data>
+  <data name="NvidiaRuntimeInstalledStatus" xml:space="preserve"><value>NVIDIA CUDA/cuDNN 运行库已安装并通过本地检测。</value></data>
+  <data name="NvidiaRuntimeAlreadyAvailableStatus" xml:space="preserve"><value>现有 NVIDIA CUDA/cuDNN 运行库已经可用，无需重复下载。</value></data>
+  <data name="NvidiaRuntimeInstallFailedStatus" xml:space="preserve"><value>NVIDIA 运行库未能安装；现有模型和数据保持不变。</value></data>
+  <data name="NvidiaRuntimeUnsupportedStatus" xml:space="preserve"><value>当前 NVIDIA 环境不能使用该 CUDA 模型；请按检测结果处理或改用 CPU 模型。</value></data>
+  <data name="ModelSlotsSectionTitle.Text" xml:space="preserve"><value>能力槽位与模型包</value></data>
+  <data name="ModelSlotsSectionDescription.Text" xml:space="preserve"><value>为视觉理解和标题简介选择已安装的本地模型；未通过兼容性检查的模型包不会被启用。</value></data>
+  <data name="ImportModelPackageButton.Content" xml:space="preserve"><value>导入本地模型包</value></data>
+  <data name="ImportModelPackageButton.AutomationProperties.Name" xml:space="preserve"><value>选择受支持本地模型包的 manifest.json</value></data>
+  <data name="OcrSlotTitle.Text" xml:space="preserve"><value>OCR 事实层</value></data>
+  <data name="OcrSlotDescription.Text" xml:space="preserve"><value>保留原文、行词和边界框</value></data>
+  <data name="OcrSlotCurrentValue.Text" xml:space="preserve"><value>PP-OCRv6-small，失败时回退到已安装的 Windows OCR</value></data>
+  <data name="VisionSlotTitle.Text" xml:space="preserve"><value>视觉描述</value></data>
+  <data name="VisionSlotDescription.Text" xml:space="preserve"><value>对象、场景和版面关系候选</value></data>
+  <data name="VisionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>视觉描述模型</value></data>
+  <data name="TextCompositionSlotTitle.Text" xml:space="preserve"><value>标题与简介</value></data>
+  <data name="TextCompositionSlotDescription.Text" xml:space="preserve"><value>严格结构化的标题、简介和分类草稿</value></data>
+  <data name="TextCompositionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>标题与简介模型</value></data>
+  <data name="EntitySlotTitle.Text" xml:space="preserve"><value>实体候选</value></data>
+  <data name="EntitySlotDescription.Text" xml:space="preserve"><value>日期、时间、地点等证据候选</value></data>
+  <data name="EntitySlotCurrentValue.Text" xml:space="preserve"><value>本地确定性解析；模型候选必须带可核对证据</value></data>
+  <data name="InstalledModelsSectionTitle.Text" xml:space="preserve"><value>已安装的模型包</value></data>
+  <data name="InstalledModelsEmptyState.Title" xml:space="preserve"><value>尚未安装可选的本地视觉模型</value></data>
+  <data name="InstalledModelsSummaryEmpty" xml:space="preserve"><value>尚未安装本地模型包</value></data>
+  <data name="InstalledModelsSummaryFormat" xml:space="preserve"><value>已安装 {0} 个模型包</value></data>
+  <data name="ModelManagementStatusInfoBar.Title" xml:space="preserve"><value>模型管理</value></data>
+  <data name="VisionBuiltInOptionName" xml:space="preserve"><value>不使用视觉模型</value></data>
+  <data name="VisionBuiltInOptionDescription" xml:space="preserve"><value>保持 OCR-only 视觉槽位</value></data>
+  <data name="TextComposerBuiltInOptionName" xml:space="preserve"><value>本地抽取式标题与简介</value></data>
+  <data name="TextComposerBuiltInOptionDescription" xml:space="preserve"><value>不加载生成模型</value></data>
+  <data name="ModelManagementUnavailableStatus" xml:space="preserve"><value>本地存储尚未就绪，暂时无法管理模型包。</value></data>
+  <data name="AnalysisModeSavedStatus" xml:space="preserve"><value>分析策略已保存，只影响之后创建的任务。</value></data>
+  <data name="AnalysisModeSaveFailedStatus" xml:space="preserve"><value>分析策略未能保存，原设置保持不变。</value></data>
+  <data name="ModelImportCompletedStatusFormat" xml:space="preserve"><value>模型包 {0} 已通过本地自检并安装。</value></data>
+  <data name="ModelImportFailedStatus" xml:space="preserve"><value>模型包未通过导入校验，当前模型和已有数据保持不变。</value></data>
+  <data name="ModelOperationErrorCodeFormat" xml:space="preserve"><value>{0}（错误代码：{1}）</value></data>
+  <data name="LocalModelPackageContractFailedStatus" xml:space="preserve"><value>模型清单或文件结构与当前应用支持的本地模型包协议不一致；当前模型和已有数据保持不变。</value></data>
+  <data name="LocalModelExecutionProviderUnavailableStatus" xml:space="preserve"><value>模型包声明的执行 Provider 未包含在当前应用构建中；请使用 x64 CUDA 构建导入 CUDA 包，或改用 CPU 包。</value></data>
+  <data name="LocalModelPackageConflictStatus" xml:space="preserve"><value>相同模型 ID 和版本已存在，但文件内容或安装目录不一致；请保留已安装版本，或为重新导出的包使用新版本号。</value></data>
+  <data name="LocalModelFileIoFailedStatus" xml:space="preserve"><value>复制或安装模型文件时发生本地磁盘读写错误；请确认源文件未被占用、目标磁盘空间充足后重试。</value></data>
+  <data name="LocalModelFileAccessDeniedStatus" xml:space="preserve"><value>应用没有读取源模型或写入模型安装目录的权限；请选择当前账户可访问的本地模型目录后重试。</value></data>
+  <data name="LocalModelInsufficientMemoryStatus" xml:space="preserve"><value>验证模型时可用内存不足；请关闭占用内存较高的程序后重试，原模型和已有数据保持不变。</value></data>
+  <data name="ModelSwitchCompletedStatus" xml:space="preserve"><value>能力槽位已切换，只影响之后创建的任务。</value></data>
+  <data name="ModelSwitchFailedStatus" xml:space="preserve"><value>模型自检或切换失败，原能力槽位保持不变。</value></data>
+  <data name="ImportModelPickerCommitText" xml:space="preserve"><value>选择清单</value></data>
+  <data name="ModelSwitchDialogTitle" xml:space="preserve"><value>切换本地模型？</value></data>
+  <data name="ModelSwitchDialogMessageFormat" xml:space="preserve"><value>将切换到“{0}”。切换前会再次执行本地自检；已有任务和结果继续使用原 profile。</value></data>
+  <data name="ModelSwitchDialogPrimary" xml:space="preserve"><value>验证并切换</value></data>
+  <data name="ReanalyzeSelectedButton.Label" xml:space="preserve"><value>重新分析</value></data>
+  <data name="ReanalyzeSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>使用当前本地模型重新分析所选图片</value></data>
+  <data name="ReanalyzeSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>选择性重新分析</value></data>
+  <data name="ReanalysisDialogTitle" xml:space="preserve"><value>重新分析所选图片？</value></data>
+  <data name="ReanalysisDialogMessageFormat" xml:space="preserve"><value>将为所选的 {0} 张图片分别创建持久化任务，并锁定当前分析策略和模型版本。人工标题、简介和分类不会被覆盖。</value></data>
+  <data name="ReanalysisDialogPrimary" xml:space="preserve"><value>排队重新分析</value></data>
+  <data name="ReanalysisQueuedStatusFormat" xml:space="preserve"><value>已排队 {0} 项；跳过 {1} 项（已排队、已删除或不可用）。</value></data>
+  <data name="ReanalysisFailedStatus" xml:space="preserve"><value>未能创建重新分析任务，现有结果保持不变。</value></data>
+  <data name="ModelPackageDetailsFormat" xml:space="preserve"><value>{0} · {1} · 下载 {2} · 安装 {3}</value></data>
+  <data name="ModelPackageCapabilitiesFormat" xml:space="preserve"><value>能力：{0}</value></data>
+  <data name="ModelPackageLanguagesFormat" xml:space="preserve"><value>输入：{0} · 输出：{1} · 文字体系：{2}</value></data>
+  <data name="ModelPackageHardwareFormat" xml:space="preserve"><value>最低内存：{0} · 硬件建议：{1} · 已验证执行设备：{2}</value></data>
+  <data name="ModelPackageLicenseSourceFormat" xml:space="preserve"><value>许可证：{0} · 来源：{1}</value></data>
+  <data name="ModelPackageSelfTestPassedStatus" xml:space="preserve"><value>本地推理自检已通过；真实样本基准待完成</value></data>
+  <data name="ModelPackageBenchmarkStatusFormat" xml:space="preserve"><value>基准状态：{0}</value></data>
+  <data name="ModelCapabilityOcrName" xml:space="preserve"><value>OCR</value></data>
+  <data name="ModelCapabilityVisionCaptionName" xml:space="preserve"><value>视觉描述</value></data>
+  <data name="ModelCapabilityTextCompositionName" xml:space="preserve"><value>标题与简介整理</value></data>
+  <data name="ModelCapabilityEntityExtractionName" xml:space="preserve"><value>实体提取</value></data>
+  <data name="RecommendedModelsSectionTitle.Text" xml:space="preserve"><value>推荐的本地模型</value></data>
+  <data name="RecommendedModelsSectionDescription.Text" xml:space="preserve"><value>仅在你确认后下载固定版本的模型文件。请求不包含图片、OCR 文本或其他用户内容；安装完成后的分析不需要网络。</value></data>
+  <data name="RecommendedPpOcrDescription" xml:space="preserve"><value>提高多语言文字识别质量；不可用时仍会回退到 Windows OCR。</value></data>
+  <data name="RecommendedQwenCpuDescription" xml:space="preserve"><value>使用 CPU 生成视觉描述和标题简介，不要求独立显卡。</value></data>
+  <data name="RecommendedQwenCudaDescription" xml:space="preserve"><value>使用受支持的 NVIDIA 显卡加速视觉描述和标题简介。</value></data>
+  <data name="RecommendedModelDetailsFormat" xml:space="preserve"><value>版本：{0} · 下载：{1} · 安装：{2}</value></data>
+  <data name="RecommendedModelHardwareFormat" xml:space="preserve"><value>最低内存：{0} · {1}</value></data>
+  <data name="RecommendedPpOcrHardwareGuidance" xml:space="preserve"><value>支持 x64/ARM64 CPU 基线</value></data>
+  <data name="RecommendedQwenCpuHardwareGuidance" xml:space="preserve"><value>仅 CPU；建议 16 GiB 系统内存，Windows x64 实测峰值工作集约 6.43 GiB</value></data>
+  <data name="RecommendedQwenCudaHardwareGuidance" xml:space="preserve"><value>仅 CUDA；需要标称 8 GB 档 NVIDIA GPU（驱动检测值至少 7.5 GiB）与支持 CUDA 12.x 的驱动；缺少的 CUDA/cuDNN 用户态运行库可由应用私有安装，无需修改 PATH；建议 12 GiB 系统内存</value></data>
+  <data name="RecommendedQwenCpuBenchmarkStatus" xml:space="preserve"><value>Windows x64 的简体中文、英文、日文真实样本与严格结构化输出已通过；完整黄金样本基准待完成</value></data>
+  <data name="RecommendedQwenCudaBenchmarkStatus" xml:space="preserve"><value>Windows x64 CUDA 的简体中文、英文、日文真实样本与严格结构化输出已通过；完整黄金样本基准待完成</value></data>
+  <data name="RecommendedModelExperimentalStatus" xml:space="preserve"><value>可选实验包：固定文件哈希已核验，Windows 真实样本基准尚待完成</value></data>
+  <data name="RecommendedModelArtifactPinnedStatus" xml:space="preserve"><value>官方模型文件和哈希已固定；Windows 真实样本基准尚待完成</value></data>
+  <data name="RecommendedModelDownloadAction" xml:space="preserve"><value>下载、导入并启用</value></data>
+  <data name="RecommendedModelEnableAction" xml:space="preserve"><value>验证并启用</value></data>
+  <data name="RecommendedModelEnabledAction" xml:space="preserve"><value>已启用</value></data>
+  <data name="RecommendedModelConfirmationTitleFormat" xml:space="preserve"><value>下载并启用 {0}？</value></data>
+  <data name="RecommendedModelDownloadConfirmationFormat" xml:space="preserve"><value>将从固定的 HTTPS 来源下载“{0}”。下载大小：{1}；安装大小：{2}。许可证：{3}。来源：{4}。最低内存：{5}；{6}。下载后会校验文件大小和 SHA-256、执行本地推理自检，再原子安装并启用。取消或失败时保留当前模型；不会上传用户内容。</value></data>
+  <data name="RecommendedModelEnableConfirmationFormat" xml:space="preserve"><value>“{0}”已安装，将重新校验并启用。安装大小：{2}。许可证：{3}。来源：{4}。最低内存：{5}；{6}。切换失败时继续使用当前模型，已有分析结果不会自动重跑。</value></data>
+  <data name="CancelModelOperationButton.Content" xml:space="preserve"><value>取消</value></data>
+  <data name="CancelModelOperationButton.AutomationProperties.Name" xml:space="preserve"><value>取消模型下载或安装</value></data>
+  <data name="RecommendedModelPreparingStatus" xml:space="preserve"><value>正在检查磁盘空间并准备安全暂存目录…</value></data>
+  <data name="RecommendedModelDownloadingStatus" xml:space="preserve"><value>正在下载模型文件…</value></data>
+  <data name="RecommendedModelVerifyingStatus" xml:space="preserve"><value>正在核对文件大小和 SHA-256…</value></data>
+  <data name="RecommendedModelInstallingStatus" xml:space="preserve"><value>正在执行本地推理自检并安装…</value></data>
+  <data name="RecommendedModelEnablingStatus" xml:space="preserve"><value>正在原子更新能力槽位…</value></data>
+  <data name="RecommendedModelCompletingStatus" xml:space="preserve"><value>模型操作即将完成…</value></data>
+  <data name="RecommendedModelInstalledStatusFormat" xml:space="preserve"><value>{0} 已通过校验和本地自检，并已启用。</value></data>
+  <data name="RecommendedModelEnabledStatusFormat" xml:space="preserve"><value>{0} 已验证并启用。</value></data>
+  <data name="RecommendedModelCanceledStatus" xml:space="preserve"><value>模型操作已取消，已安装模型和当前能力槽位保持不变；已通过校验的下载文件可供下次重试复用。</value></data>
+  <data name="RecommendedModelInsufficientSpaceStatus" xml:space="preserve"><value>可用磁盘空间不足。下载没有开始，当前模型保持不变。</value></data>
+  <data name="RecommendedModelDownloadTimedOutStatus" xml:space="preserve"><value>模型下载长时间没有收到数据，操作已停止；未完成文件已清理，已校验文件可供下次重试复用。</value></data>
+  <data name="RecommendedModelNetworkFailedStatus" xml:space="preserve"><value>多次重试后仍无法下载模型文件；未完成文件已清理，已校验文件可供下次重试复用。请在网络稳定后重试。</value></data>
+  <data name="RecommendedModelVerificationFailedStatus" xml:space="preserve"><value>下载来源、文件大小或 SHA-256 校验失败；无效文件已清理，先前已校验文件可供下次重试复用。</value></data>
+  <data name="RecommendedModelInstallFailedStatus" xml:space="preserve"><value>模型未能完成下载、导入或启用；未完成文件已清理，已校验下载可供下次重试复用，当前模型和已有数据保持不变。</value></data>
+  <data name="RecommendedQwenConfigurationFailedStatus" xml:space="preserve"><value>Qwen 文件已完整下载并通过哈希，但 GenAI 配置与受支持的包清单不一致；模型未安装，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenSelfTestFailedStatus" xml:space="preserve"><value>Qwen 文件已完整下载并通过哈希，但本地多模态推理自检失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenSelfTestOutputMismatchStatus" xml:space="preserve"><value>Qwen 已完成本地推理，但没有按固定自检内容返回结构化结果；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenModelLoadFailedStatus" xml:space="preserve"><value>Qwen 文件已完整下载并通过哈希，但 ONNX Runtime GenAI 无法加载模型图；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>CUDA Qwen 文件已通过哈希，但 CUDA Provider 无法加载。请确认已安装 CUDA 12.x 与 cuDNN 9.x，并将两者的 bin 目录加入 PATH 后重启应用；模型未启用，原能力槽位保持不变。</value></data>
+  <data name="RecommendedQwenDirectMlUnavailableStatus" xml:space="preserve"><value>DirectML Qwen 包与当前应用内置运行时不匹配；模型未启用，当前能力槽位保持不变。</value></data>
+  <data name="RecommendedQwenModelInspectionFailedStatus" xml:space="preserve"><value>Qwen 模型已加载，但运行时报告的模型类型不兼容；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenProcessorFailedStatus" xml:space="preserve"><value>Qwen 模型图已加载，但多模态处理器或 tokenizer 初始化失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenImageInputFailedStatus" xml:space="preserve"><value>Qwen 运行时无法读取内置自检图片；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenParametersFailedStatus" xml:space="preserve"><value>Qwen 模型已加载，但结构化生成参数不受当前运行时支持；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenInputProcessingFailedStatus" xml:space="preserve"><value>Qwen 模型已加载，但视觉输入预处理失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenGeneratorFailedStatus" xml:space="preserve"><value>Qwen 输入已处理，但本地生成器创建失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenInputBindingFailedStatus" xml:space="preserve"><value>Qwen 生成器已创建，但视觉 patch 张量与模型输入签名不兼容；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenTokenizerFailedStatus" xml:space="preserve"><value>Qwen 生成器已创建，但 tokenizer 输出流初始化失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenTokenLimitFailedStatus" xml:space="preserve"><value>Qwen 本地生成未能在受控 token 预算内完成结构化结果；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenStructuredOutputFailedStatus" xml:space="preserve"><value>Qwen 已完成本地生成，但结果未通过严格 JSON Schema 与证据校验；模型未启用，已校验文件已保留。</value></data>
+  <data name="RecommendedQwenGenerationFailedStatus" xml:space="preserve"><value>Qwen 自检已进入本地生成阶段，但生成或严格结构化输出校验失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="ReminderNotificationsUnavailableInfo.Title" xml:space="preserve"><value>系统通知当前不可用</value></data>
+  <data name="ReminderNotificationsUnavailableInfo.Message" xml:space="preserve"><value>提醒仍保存在本机，但 Windows 通知被关闭或当前环境不支持通知。启用通知后重新打开本页即可重试调度。</value></data>
+  <data name="ReminderStatusInfo.Title" xml:space="preserve"><value>提醒已更新</value></data>
+  <data name="ReminderErrorInfo.Title" xml:space="preserve"><value>无法完成提醒操作</value></data>
+  <data name="RemindersLoadingText.Text" xml:space="preserve"><value>正在读取候选并对账系统通知…</value></data>
+  <data name="RemindersErrorTitle.Text" xml:space="preserve"><value>无法读取提醒</value></data>
+  <data name="RemindersErrorMessage.Text" xml:space="preserve"><value>本地提醒数据暂时不可用。不会删除候选或已经确认的提醒。</value></data>
+  <data name="RemindersRetryButton.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="RemindersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重试加载提醒</value></data>
+  <data name="RemindersPermissionTitle.Text" xml:space="preserve"><value>无法访问本地提醒数据</value></data>
+  <data name="RemindersPermissionMessage.Text" xml:space="preserve"><value>请检查应用的数据目录权限，然后重试。</value></data>
+  <data name="RemindersUnsupportedTitle.Text" xml:space="preserve"><value>当前环境不支持提醒存储</value></data>
+  <data name="RemindersUnsupportedMessage.Text" xml:space="preserve"><value>图片仍会保留；在受支持的 Windows 环境中可继续确认提醒。</value></data>
+  <data name="ReminderCandidatesHeading.Text" xml:space="preserve"><value>待确认候选</value></data>
+  <data name="ReminderCandidatesDescription.Text" xml:space="preserve"><value>日期、时间、时区和地点都需要人工核对。</value></data>
+  <data name="ReminderCandidatesEmpty.Text" xml:space="preserve"><value>没有待确认的日期候选。</value></data>
+  <data name="ReminderCandidatesList.AutomationProperties.Name" xml:space="preserve"><value>待确认提醒候选</value></data>
+  <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>已确认提醒</value></data>
+  <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>确认候选后，提醒会显示在这里。</value></data>
+  <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>已确认提醒</value></data>
+  <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
+  <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个已确认提醒</value></data>
+  <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>进入多选</value></data>
+  <data name="ReminderSelectAllButton.Label" xml:space="preserve"><value>全选</value></data>
+  <data name="ReminderSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>选择全部已确认提醒</value></data>
+  <data name="ReminderDeleteSelectedButton.Label" xml:space="preserve"><value>删除</value></data>
+  <data name="ReminderDeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>删除选中的提醒</value></data>
+  <data name="ReminderCancelSelectionButton.Label" xml:space="preserve"><value>取消选择</value></data>
+  <data name="ReminderCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>退出提醒多选</value></data>
+  <data name="ReminderSelectionCountFormat" xml:space="preserve"><value>已选择 {0} 条提醒</value></data>
+  <data name="ReminderEditorPlaceholderTitle.Text" xml:space="preserve"><value>选择候选或提醒</value></data>
+  <data name="ReminderEditorPlaceholderMessage.Text" xml:space="preserve"><value>在这里核对原始证据、日期、时间、时区和地点。</value></data>
+  <data name="ReminderEditorBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回提醒列表</value></data>
+  <data name="ReminderEditorBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回提醒列表</value></data>
+  <data name="ReminderEditorImageButton.AutomationProperties.Name" xml:space="preserve"><value>打开对应图片详情</value></data>
+  <data name="ReminderEditorImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>在资料库中打开这张图片</value></data>
+  <data name="ReminderTitleTextBox.Header" xml:space="preserve"><value>提醒标题</value></data>
+  <data name="ReminderTitleTextBox.PlaceholderText" xml:space="preserve"><value>输入便于识别的标题</value></data>
+  <data name="ReminderTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>提醒标题</value></data>
+  <data name="ReminderAmbiguityInfo.Title" xml:space="preserve"><value>需要核对</value></data>
+  <data name="ReminderSummaryHeading.Text" xml:space="preserve"><value>简介</value></data>
+  <data name="ReminderEvidenceHeading.Text" xml:space="preserve"><value>识别依据</value></data>
+  <data name="ReminderDateLabel.Text" xml:space="preserve"><value>日期</value></data>
+  <data name="ReminderDatePicker.PlaceholderText" xml:space="preserve"><value>选择日期</value></data>
+  <data name="ReminderDatePicker.AutomationProperties.Name" xml:space="preserve"><value>提醒日期</value></data>
+  <data name="ReminderTimeLabel.Text" xml:space="preserve"><value>时间</value></data>
+  <data name="ReminderTimePicker.AutomationProperties.Name" xml:space="preserve"><value>提醒时间</value></data>
+  <data name="ReminderTimeZoneComboBox.Header" xml:space="preserve"><value>时区</value></data>
+  <data name="ReminderTimeZoneComboBox.AutomationProperties.Name" xml:space="preserve"><value>提醒时区</value></data>
+  <data name="ReminderLocationTextBox.Header" xml:space="preserve"><value>地点（可选）</value></data>
+  <data name="ReminderLocationTextBox.PlaceholderText" xml:space="preserve"><value>核对或编辑地点</value></data>
+  <data name="ReminderLocationTextBox.AutomationProperties.Name" xml:space="preserve"><value>提醒地点</value></data>
+  <data name="ReminderDeliveryLimitation.Text" xml:space="preserve"><value>Windows 通知可能延迟约 5 分钟；关机期间错过时会在下次启动后标记。</value></data>
+  <data name="ReminderDismissCandidateButton.Content" xml:space="preserve"><value>忽略候选</value></data>
+  <data name="ReminderDismissCandidateButton.AutomationProperties.Name" xml:space="preserve"><value>忽略当前提醒候选</value></data>
+  <data name="ReminderCancelButton.Content" xml:space="preserve"><value>取消提醒</value></data>
+  <data name="ReminderCancelButton.AutomationProperties.Name" xml:space="preserve"><value>取消当前提醒</value></data>
+  <data name="ReminderDeleteEditorButton.Content" xml:space="preserve"><value>删除提醒</value></data>
+  <data name="ReminderDeleteEditorButton.AutomationProperties.Name" xml:space="preserve"><value>删除当前提醒记录</value></data>
+  <data name="ReminderSaveButton.Content" xml:space="preserve"><value>确认提醒</value></data>
+  <data name="ReminderSaveButton.AutomationProperties.Name" xml:space="preserve"><value>确认并保存提醒</value></data>
+  <data name="ReminderPrimaryConfirmText" xml:space="preserve"><value>确认提醒</value></data>
+  <data name="ReminderPrimaryConfirmAutomationName" xml:space="preserve"><value>确认并保存提醒</value></data>
+  <data name="ReminderPrimarySaveChangesText" xml:space="preserve"><value>保存更改</value></data>
+  <data name="ReminderPrimarySaveChangesAutomationName" xml:space="preserve"><value>保存提醒更改</value></data>
+  <data name="ReminderPrimaryRestoreText" xml:space="preserve"><value>恢复提醒</value></data>
+  <data name="ReminderPrimaryRestoreAutomationName" xml:space="preserve"><value>恢复并重新安排提醒</value></data>
+  <data name="ReviewReminderCandidateButton.Content" xml:space="preserve"><value>核对</value></data>
+  <data name="ReviewReminderCandidateButton.AutomationProperties.Name" xml:space="preserve"><value>核对提醒候选</value></data>
+  <data name="EditConfirmedReminderButton.Content" xml:space="preserve"><value>编辑</value></data>
+  <data name="EditConfirmedReminderButton.AutomationProperties.Name" xml:space="preserve"><value>编辑已确认提醒</value></data>
+  <data name="ReminderCandidateThumbnailButton.AutomationProperties.Name" xml:space="preserve"><value>打开候选对应的图片详情</value></data>
+  <data name="ReminderCandidateThumbnailButton.ToolTipService.ToolTip" xml:space="preserve"><value>在资料库中打开图片</value></data>
+  <data name="ReminderThumbnailButton.AutomationProperties.Name" xml:space="preserve"><value>打开提醒对应的图片详情</value></data>
+  <data name="ReminderThumbnailButton.ToolTipService.ToolTip" xml:space="preserve"><value>在资料库中打开图片</value></data>
+  <data name="ReminderContextOpenImageMenuItem.Text" xml:space="preserve"><value>图片详情</value></data>
+  <data name="ReminderContextReviewCandidateMenuItem.Text" xml:space="preserve"><value>编辑</value></data>
+  <data name="ReminderContextEditMenuItem.Text" xml:space="preserve"><value>编辑</value></data>
+  <data name="ReminderContextSelectMenuItem.Text" xml:space="preserve"><value>选择</value></data>
+  <data name="ReminderContextDismissCandidateMenuItem.Text" xml:space="preserve"><value>忽略</value></data>
+  <data name="ReminderContextDeleteMenuItem.Text" xml:space="preserve"><value>删除</value></data>
+  <data name="ReminderDeleteDialogTitle" xml:space="preserve"><value>删除提醒？</value></data>
+  <data name="ReminderDeleteDialogMessageFormat" xml:space="preserve"><value>将删除“{0}”的提醒记录并取消对应的系统通知。图片和识别结果不会被删除。</value></data>
+  <data name="ReminderDeleteBatchDialogTitle" xml:space="preserve"><value>删除选中的提醒？</value></data>
+  <data name="ReminderDeleteBatchDialogMessageFormat" xml:space="preserve"><value>将删除 {0} 条提醒记录并取消对应的系统通知。图片和识别结果不会被删除。</value></data>
+  <data name="ReminderDeleteDialogPrimary" xml:space="preserve"><value>删除提醒</value></data>
+  <data name="ReminderDeletedStatusFormat" xml:space="preserve"><value>已删除 {0} 条提醒；{1} 条未能删除。</value></data>
+  <data name="NotificationReminderBody" xml:space="preserve"><value>该回看这张图片了。</value></data>
+  <data name="NotificationOpenButton" xml:space="preserve"><value>打开图片</value></data>
+  <data name="NotificationLocationFormat" xml:space="preserve"><value>地点：{0}</value></data>
+  <data name="ReminderConfirmedEvidence" xml:space="preserve"><value>已确认提醒；保存修改后将重新安排通知。</value></data>
+  <data name="ReminderCancelledEvidence" xml:space="preserve"><value>该提醒已取消；恢复后将重新安排通知。</value></data>
+  <data name="ReminderManualEvidence" xml:space="preserve"><value>此提醒由你从资料库手动创建。请确认日期、时间、时区和地点。</value></data>
+  <data name="ReminderManualImageUnavailableError" xml:space="preserve"><value>无法为已删除或不存在的图片创建提醒。</value></data>
+  <data name="ReminderDateLocationEvidenceFormat" xml:space="preserve"><value>日期依据：{0}&#xA;地点依据：{1}</value></data>
+  <data name="ReminderDateTimeRequiredError" xml:space="preserve"><value>请同时选择日期和时间；应用不会替你猜测缺失的时间。</value></data>
+  <data name="ReminderUpdatedStatus" xml:space="preserve"><value>提醒已更新，系统通知正在重新调度。</value></data>
+  <data name="ReminderRestoredStatus" xml:space="preserve"><value>提醒已恢复，系统通知正在重新调度。</value></data>
+  <data name="ReminderConfirmedStatus" xml:space="preserve"><value>提醒已确认，系统通知正在调度。</value></data>
+  <data name="ReminderCandidateDismissedStatus" xml:space="preserve"><value>候选已忽略；普通重新分析不会把同一证据静默加回。</value></data>
+  <data name="ReminderCandidateDismissFailedError" xml:space="preserve"><value>无法忽略该候选，请重试。</value></data>
+  <data name="ReminderCancelledStatus" xml:space="preserve"><value>提醒已取消，已提交系统通知取消任务。</value></data>
+  <data name="ReminderCancelFailedError" xml:space="preserve"><value>无法取消提醒，请重试。</value></data>
+  <data name="ReminderSaveFailedError" xml:space="preserve"><value>无法保存提醒；原候选和已有提醒没有被覆盖。</value></data>
+  <data name="MissedReminderReconciledFormat" xml:space="preserve"><value>启动对账发现 {0} 条已经错过投递窗口的提醒。</value></data>
+  <data name="ReminderLoadFailedError" xml:space="preserve"><value>读取或对账提醒失败，请重试。</value></data>
+  <data name="ReminderLoadMoreFailedError" xml:space="preserve"><value>无法加载更多提醒，请重试。</value></data>
+  <data name="LoadMoreReminderCandidatesButton.Content" xml:space="preserve"><value>加载更多候选</value></data>
+  <data name="LoadMoreReminderCandidatesButton.AutomationProperties.Name" xml:space="preserve"><value>加载更多提醒候选</value></data>
+  <data name="LoadMoreConfirmedRemindersButton.Content" xml:space="preserve"><value>加载更多提醒</value></data>
+  <data name="LoadMoreConfirmedRemindersButton.AutomationProperties.Name" xml:space="preserve"><value>加载更多已确认提醒</value></data>
+  <data name="ReminderCandidateSourceMetadata" xml:space="preserve"><value>图片元数据证据</value></data>
+  <data name="ReminderCandidateSourceOcr" xml:space="preserve"><value>OCR 原文证据</value></data>
+  <data name="ReminderCandidateSourceModel" xml:space="preserve"><value>本地模型候选</value></data>
+  <data name="ReminderAmbiguousDateOrder" xml:space="preserve"><value>数字日期的月/日顺序不明确，请手动选择。</value></data>
+  <data name="ReminderMissingYear" xml:space="preserve"><value>原文缺少年份，已使用参考时区中的分析当年预填；请核对。</value></data>
+  <data name="ReminderMissingMonthAndDay" xml:space="preserve"><value>原文只明确到年份，已暂填 1 月 1 日以便编辑；确认前请改为实际日期。</value></data>
+  <data name="ReminderMissingDay" xml:space="preserve"><value>原文只明确到月份，已暂填该月 1 日以便编辑；确认前请改为实际日期。</value></data>
+  <data name="ReminderDefaultTime" xml:space="preserve"><value>原文未识别到具体时间，已暂填上午 10:00；确认前请核对。</value></data>
+  <data name="ReminderMissingDate" xml:space="preserve"><value>只识别到了时间。请选择提醒日期后再确认。</value></data>
+  <data name="ReminderAmbiguousTimeOfDay" xml:space="preserve"><value>原文缺少明确的上午、下午或 24 小时制线索，请核对时间。</value></data>
+  <data name="ReminderRelativeDate" xml:space="preserve"><value>原文使用了“今晚/明天”等相对日期，已按图片分析时的本地日期预填；请核对。</value></data>
+  <data name="ReminderModelInterpretation" xml:space="preserve"><value>此日期由已安装的本地模型解释，仍需结合原文证据核对。</value></data>
+  <data name="ReminderModelOnlyInterpretation" xml:space="preserve"><value>此日期仅由已安装的本地视觉模型从图片中识别，OCR 未能复核；请重点对照原图。</value></data>
+  <data name="ReminderRemoteVisionNoLocalOcrEvidence" xml:space="preserve"><value>此候选由远程视觉模型从图片中推断，没有本地 OCR 定位证据；请重点对照原图核对。</value></data>
+  <data name="ReminderCandidateNeedsReview" xml:space="preserve"><value>此候选存在歧义，请核对后再确认。</value></data>
+  <data name="ReminderTitleRequiredError" xml:space="preserve"><value>请输入提醒标题。</value></data>
+  <data name="ReminderTitleTooLongError" xml:space="preserve"><value>提醒标题不能超过 300 个字符。</value></data>
+  <data name="ReminderNoLocation" xml:space="preserve"><value>未确认地点</value></data>
+  <data name="ReminderDueWithZoneFormat" xml:space="preserve"><value>{0:g} · {1}</value></data>
+  <data name="ReminderStateActive" xml:space="preserve"><value>待提醒</value></data>
+  <data name="ReminderStateCompleted" xml:space="preserve"><value>已完成</value></data>
+  <data name="ReminderStateCancelled" xml:space="preserve"><value>已取消</value></data>
+  <data name="ReminderStateSuspendedByDeletion" xml:space="preserve"><value>已随图片暂停</value></data>
+  <data name="ReminderStateMissed" xml:space="preserve"><value>已错过</value></data>
+  <data name="ReminderStateNeedsReconfirmation" xml:space="preserve"><value>需要重新确认</value></data>
+  <data name="ReminderNotificationStatePending" xml:space="preserve"><value>等待系统调度</value></data>
+  <data name="ReminderNotificationStateScheduled" xml:space="preserve"><value>系统通知已调度</value></data>
+  <data name="ReminderNotificationStateFailed" xml:space="preserve"><value>系统通知调度失败</value></data>
+  <data name="ReminderNotificationStateCancelled" xml:space="preserve"><value>系统通知已取消</value></data>
+  <data name="ReminderNotificationStateActivated" xml:space="preserve"><value>已从系统通知打开</value></data>
+  <data name="ReminderDueTimeFutureError" xml:space="preserve"><value>提醒时间必须晚于当前时间。</value></data>
+  <data name="ReminderDstInvalidError" xml:space="preserve"><value>该本地时间处于夏令时跳转空档，请选择其他时间。</value></data>
+  <data name="ReminderDstAmbiguousError" xml:space="preserve"><value>该本地时间在夏令时切换中出现两次，请选择明确的其他时间。</value></data>
+  <data name="ReminderTimeZoneError" xml:space="preserve"><value>所选时区在当前 Windows 中不可用，请重新选择。</value></data>
+  <data name="ReminderLocationTooLongError" xml:space="preserve"><value>地点文本过长，请缩短到 300 个字符以内。</value></data>
+  <data name="ReminderCandidateUnavailableError" xml:space="preserve"><value>该候选已被处理或来自已删除图片，请刷新后重试。</value></data>
+  <data name="SettingsNavigation.PaneTitle" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsHomeNavigationItem.Content" xml:space="preserve"><value>概览</value></data>
+  <data name="SettingsHomeNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>设置概览</value></data>
+  <data name="LocalAnalysisSettingsNavigationItem.Content" xml:space="preserve"><value>本地分析</value></data>
+  <data name="LocalAnalysisSettingsNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>本地分析设置</value></data>
+  <data name="ApiAnalysisSettingsNavigationItem.Content" xml:space="preserve"><value>API 分析</value></data>
+  <data name="ApiAnalysisSettingsNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>API 分析设置</value></data>
+  <data name="SettingsBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回设置概览</value></data>
+  <data name="SettingsBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回设置概览 (Alt+左方向键)</value></data>
+  <data name="SettingsBackButtonLabel.Text" xml:space="preserve"><value>设置</value></data>
+  <data name="LocalAnalysisSettingsPageTitle.Text" xml:space="preserve"><value>本地分析</value></data>
+  <data name="LocalAnalysisSettingsPageSubtitle.Text" xml:space="preserve"><value>调整本地 OCR、视觉增强、硬件加速和模型包。</value></data>
+  <data name="CurrentExecutionSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>
+  <data name="AnalysisSourceOptions.AutomationProperties.Name" xml:space="preserve"><value>选择新任务的分析来源</value></data>
+  <data name="LocalAnalysisSourceOption.AutomationProperties.Name" xml:space="preserve"><value>使用本地分析</value></data>
+  <data name="ApiAnalysisSourceOption.AutomationProperties.Name" xml:space="preserve"><value>使用 API 分析</value></data>
+  <data name="AnalysisSettingsSectionTitle.Text" xml:space="preserve"><value>分析设置</value></data>
+  <data name="OpenLocalAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>打开本地分析设置</value></data>
+  <data name="OpenLocalAnalysisSettingsButton.Content" xml:space="preserve"><value>配置</value></data>
+  <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>本地分析</value></data>
+  <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>在本地设备上完成 OCR、视觉模型与推理，数据不上云端。</value></data>
+  <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>就绪</value></data>
+  <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>打开 API 分析设置</value></data>
+  <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>配置</value></data>
+  <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>云端 API</value></data>
+  <data name="ApiAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>通过云端服务完成分析，需配置供应商与密钥后才能使用。</value></data>
+  <data name="ApiConfigurationReadyStatus" xml:space="preserve"><value>已配置</value></data>
+  <data name="ApiConfigurationMissingStatus" xml:space="preserve"><value>未配置</value></data>
+  <data name="ApiConfigurationUnavailableStatus" xml:space="preserve"><value>状态不可用</value></data>
+  <data name="ExecutionTargetLocal" xml:space="preserve"><value>本地</value></data>
+  <data name="ExecutionTargetLocalDetail" xml:space="preserve"><value>新任务使用完整本地流水线；联网分析已关闭。若选择 API 分析但尚未配置，会先进入配置页。</value></data>
+  <data name="ExecutionTargetRemoteOcrText" xml:space="preserve"><value>API · OCR 文字</value></data>
+  <data name="ExecutionTargetRemoteVision" xml:space="preserve"><value>API · 图片</value></data>
+  <data name="ExecutionTargetRemoteDetailFormat" xml:space="preserve"><value>{0} · {1}。只影响新导入和你明确重新分析的项目。</value></data>
+  <data name="ExecutionTargetRemoteMissingProfileDetail" xml:space="preserve"><value>所选 API profile 不可用。继续导入前请切回本地。</value></data>
+  <data name="ExecutionTargetUnavailable" xml:space="preserve"><value>不可用</value></data>
+  <data name="ExecutionTargetUnavailableDetail" xml:space="preserve"><value>存储尚未就绪，无法读取当前执行目标。</value></data>
+  <data name="ApiAnalysisSettingsPageTitle.Text" xml:space="preserve"><value>云端 API</value></data>
+  <data name="ApiAnalysisSettingsPageSubtitle.Text" xml:space="preserve"><value>完成配置、连接测试与隐私确认后，应用才会连接并进行分析。</value></data>
+  <data name="ApiProviderSectionTitle.Text" xml:space="preserve"><value>选择服务</value></data>
+  <data name="ApiProviderRowTitle.Text" xml:space="preserve"><value>API 供应商</value></data>
+  <data name="ApiProviderComboBox.AutomationProperties.Name" xml:space="preserve"><value>API 供应商</value></data>
+  <data name="ApiEndpointLabel.Text" xml:space="preserve"><value>API 地址</value></data>
+  <data name="ApiModelRowTitle.Text" xml:space="preserve"><value>模型</value></data>
+  <data name="ApiModelIdTextBox.PlaceholderText" xml:space="preserve"><value>输入此供应商支持的模型</value></data>
+  <data name="ApiModelIdTextBox.AutomationProperties.Name" xml:space="preserve"><value>远程模型 ID</value></data>
+  <data name="ApiInputModeSectionTitle.Text" xml:space="preserve"><value>发送内容</value></data>
+  <data name="ApiInputModeOptions.Header" xml:space="preserve"><value>选择发送给 API 的内容</value></data>
+  <data name="ApiInputModeOptions.AutomationProperties.Name" xml:space="preserve"><value>远程输入模式</value></data>
+  <data name="ApiInputModeOptionsCompact.AutomationProperties.Name" xml:space="preserve"><value>远程输入模式</value></data>
+  <data name="ApiInputModeSectionDescription.Text" xml:space="preserve"><value>选择发送给 API 的内容范围。</value></data>
+  <data name="RemoteOcrTextOption.Content" xml:space="preserve"><value>仅发送 OCR 文字</value></data>
+  <data name="RemoteOcrTextOption.AutomationProperties.Name" xml:space="preserve"><value>向 API 发送本地 OCR 文字</value></data>
+  <data name="RemoteVisionOption.Content" xml:space="preserve"><value>发送图片</value></data>
+  <data name="RemoteVisionOption.AutomationProperties.Name" xml:space="preserve"><value>向 API 发送清洗后的分析图片</value></data>
+  <data name="ApiPayloadDisclosureInfoBar.Title" xml:space="preserve"><value>载荷边界</value></data>
+  <data name="ApiRemoteOcrTextPayloadDisclosure" xml:space="preserve"><value>先运行完整本地 OCR 和确定性实体提取，只发送有界 OCR 文字、语言标签、输出语言策略、参考日期和时区。绝不发送图片、文件名、路径、哈希、内部 ID、EXIF、边界框或资料库上下文。</value></data>
+  <data name="ApiRemoteVisionPayloadDisclosure" xml:space="preserve"><value>跳过本地 OCR 和本地视觉模型，只发送按上限重新编码、已去除 EXIF/XMP、文件名和路径的像素副本；不发送本地 OCR、哈希、内部 ID 或资料库上下文。图片内容本身仍可能识别人或地点。</value></data>
+  <data name="ApiCredentialSectionTitle.Text" xml:space="preserve"><value>API 密钥</value></data>
+  <data name="ApiCredentialSectionDescription.Text" xml:space="preserve"><value>输入并保存您的 API 密钥。</value></data>
+  <data name="ApiCredentialPasswordBox.PlaceholderText" xml:space="preserve"><value>输入 API 密钥</value></data>
+  <data name="ApiCredentialPasswordBox.AutomationProperties.Name" xml:space="preserve"><value>新 API 密钥</value></data>
+  <data name="SaveApiCredentialButton.Content" xml:space="preserve"><value>保存凭据</value></data>
+  <data name="SaveApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>保存 API 凭据</value></data>
+  <data name="DeleteApiCredentialButton.Content" xml:space="preserve"><value>删除凭据</value></data>
+  <data name="DeleteApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>删除 API 凭据并切回本地分析</value></data>
+  <data name="ApiCredentialSavedState" xml:space="preserve"><value>已保存到 Windows 凭据保险箱；正文保持隐藏。</value></data>
+  <data name="ApiCredentialMissingState" xml:space="preserve"><value>未保存。</value></data>
+  <data name="ApiPolicySectionTitle.Text" xml:space="preserve"><value>供应商政策、限制与费用</value></data>
+  <data name="ApiPolicyVerifiedFormat" xml:space="preserve"><value>政策说明最近核验：{0:d}</value></data>
+  <data name="ApiLimitsFormat" xml:space="preserve"><value>本地限制：最多 {0:N0} 个 OCR 字符或 {1:N0} MiB 清洗图片；超时 {2:N0} 秒。</value></data>
+  <data name="OpenAiRetentionStatement" xml:space="preserve"><value>OpenAI 声明 API 数据默认不用于训练，除非账户主动选择加入。滥用监控日志可能保留内容最多 30 天，仍受账户控制及法律、安全例外约束。</value></data>
+  <data name="GoogleGeminiRetentionStatement" xml:space="preserve"><value>Google 对 Gemini API 付费与免费服务采用不同数据规则。付费服务的提示和响应不用于改进产品；有限期安全日志和当前条款仍然适用。</value></data>
+  <data name="XaiRetentionStatement" xml:space="preserve"><value>xAI 的保留和训练处理取决于当前 API 条款与账户控制。PicForLater 不承诺更短保留期或不训练；同意前请查看链接政策。</value></data>
+  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>隐私</value></data>
+  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商隐私政策</value></data>
+  <data name="ApiTermsLink.Content" xml:space="preserve"><value>条款</value></data>
+  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商条款</value></data>
+  <data name="ApiPricingLink.Content" xml:space="preserve"><value>价格</value></data>
+  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商价格页</value></data>
+  <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>连接测试只使用内置测试内容：文字模式发送固定短句，图片模式发送内置授权猫图；不会读取用户图片、OCR 或资料库。供应商可能对测试和分析收费；超时或取消时也可能已经处理并计费。</value></data>
+  <data name="ApiConnectionSectionTitle.Text" xml:space="preserve"><value>连接测试</value></data>
+  <data name="TestApiConnectionButton.Content" xml:space="preserve"><value>测试连接</value></data>
+  <data name="TestApiConnectionButton.AutomationProperties.Name" xml:space="preserve"><value>使用合成内容测试 API</value></data>
+  <data name="ApiConnectionStatusInfoBar.Title" xml:space="preserve"><value>API 状态</value></data>
+  <data name="ApiValidationUnverified" xml:space="preserve"><value>尚未验证。请保存凭据、选择预期载荷模式并运行合成测试。</value></data>
+  <data name="ApiValidationInvalid" xml:space="preserve"><value>上次合成测试失败，远程发送已阻止。</value></data>
+  <data name="ApiValidationModelChanged" xml:space="preserve"><value>模型 ID 已在本页更改；启用前请运行合成测试以保存并验证。</value></data>
+  <data name="ApiValidationValidFormat" xml:space="preserve"><value>已于 {0:g} 验证兼容的合成响应。</value></data>
+  <data name="ApiActivationSectionTitle.Text" xml:space="preserve"><value>测试并启用</value></data>
+  <data name="ApiActivationSectionDescription.Text" xml:space="preserve"><value>先测试连接，再确认发送范围并启用。</value></data>
+  <data name="EnableRemoteApiButton.Content" xml:space="preserve"><value>核对同意并启用</value></data>
+  <data name="EnableRemoteApiButton.AutomationProperties.Name" xml:space="preserve"><value>核对同意并启用所选 API 模式</value></data>
+  <data name="UseLocalAnalysisButton.Content" xml:space="preserve"><value>使用本地分析</value></data>
+  <data name="UseLocalAnalysisButton.AutomationProperties.Name" xml:space="preserve"><value>让新任务切回本地分析</value></data>
+  <data name="RevokeApiConsentButton.Content" xml:space="preserve"><value>撤销同意</value></data>
+  <data name="RevokeApiConsentButton.AutomationProperties.Name" xml:space="preserve"><value>撤销当前 API 同意并切回本地分析</value></data>
+  <data name="ApiShutdownInfoBar.Title" xml:space="preserve"><value>停用能做到什么</value></data>
+  <data name="ApiShutdownInfoBar.Message" xml:space="preserve"><value>切回本地、撤销同意或删除凭据会阻止尚未发送的请求；无法召回供应商已经收到的内容、撤销可能产生的费用，也不能保证取消已在传输或处理中的请求。</value></data>
+  <data name="ApiRemoteOcrTextModeName" xml:space="preserve"><value>API · OCR 文字</value></data>
+  <data name="ApiRemoteVisionModeName" xml:space="preserve"><value>API · 图片</value></data>
+  <data name="ApiConsentDialogTitle" xml:space="preserve"><value>确认远程分析边界</value></data>
+  <data name="ApiConsentDialogPrimary" xml:space="preserve"><value>启用远程分析</value></data>
+  <data name="ApiConsentCheckBoxFormat" xml:space="preserve"><value>我为新分析任务选择 {0} 的“{1}”，并接受上述载荷。</value></data>
+  <data name="ApiConsentConsequencesText" xml:space="preserve"><value>同意按供应商和载荷模式版本化。供应商、endpoint、政策范围或模式变化后必须重新确认；供应商失败时绝不会自动改变模式或供应商。</value></data>
+  <data name="ApiSettingsUnavailableStatus" xml:space="preserve"><value>本地存储就绪前无法使用 API 设置。</value></data>
+  <data name="ApiCredentialSavedStatus" xml:space="preserve"><value>凭据已保存。此密钥通过合成测试前，执行目标保持本地。</value></data>
+  <data name="ApiCredentialDeletedStatus" xml:space="preserve"><value>凭据和同意已删除，尚未发送的请求已阻止，新任务使用本地。</value></data>
+  <data name="ApiCredentialRequiredStatus" xml:space="preserve"><value>测试此 profile 前请先保存凭据。</value></data>
+  <data name="ApiConnectionSucceededStatus" xml:space="preserve"><value>供应商已针对所选合成载荷返回兼容的结构化结果。</value></data>
+  <data name="ApiConnectionCredentialRejectedStatus" xml:space="preserve"><value>供应商拒绝了凭据，不会自动重试。</value></data>
+  <data name="ApiConnectionRateLimitedStatus" xml:space="preserve"><value>合成测试被限流；再次尝试前请核对供应商限制。</value></data>
+  <data name="ApiConnectionTimedOutStatus" xml:space="preserve"><value>合成测试超时，仍可能已处理或计费；应用没有重新发送。</value></data>
+  <data name="ApiConnectionNetworkFailedStatus" xml:space="preserve"><value>合成测试无法连接当前 API 地址。</value></data>
+  <data name="ApiConnectionModelRejectedStatus" xml:space="preserve"><value>供应商拒绝了模型、所选输入模式或严格输出 schema。</value></data>
+  <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供应商已响应，但结果不符合 PicForLater 的严格结构化 schema。</value></data>
+  <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成测试失败；没有发送用户图片或 OCR 文字。</value></data>
+  <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>启用前请先让此供应商、模型和载荷模式通过合成测试。</value></data>
+  <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已为新任务启用所选供应商和载荷模式的远程分析。</value></data>
+  <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新任务已切回本地，尚未发送的请求已阻止。</value></data>
+  <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤销，新任务已切回本地；供应商已经收到的内容无法召回。</value></data>
+  <data name="ApiOperationFailedStatus" xml:space="preserve"><value>未能更新 API 设置；隐私边界没有改变。</value></data>
+  <data name="ApiCategoryRowTitle.Text" xml:space="preserve"><value>供应商分类</value></data>
+  <data name="ApiCategoryComboBox.AutomationProperties.Name" xml:space="preserve"><value>API 供应商分类</value></data>
+  <data name="ApiCategoryInternational" xml:space="preserve"><value>国际主流模型官方 API（5）</value></data>
+  <data name="ApiCategoryChina" xml:space="preserve"><value>中国主流模型官方 API（8）</value></data>
+  <data name="ApiCategoryAggregator" xml:space="preserve"><value>多模型聚合与高速推理平台（4）</value></data>
+  <data name="ApiCategoryLocalPrivate" xml:space="preserve"><value>本地运行与私有化部署（2）</value></data>
+  <data name="ApiCategoryCustom" xml:space="preserve"><value>自定义接口</value></data>
+  <data name="GenericApiRetentionStatement" xml:space="preserve"><value>数据保留和训练处理取决于供应商、套餐、地区和当前账户控制；同意前请查看链接中的供应商政策。</value></data>
+  <data name="LoopbackApiRetentionStatement" xml:space="preserve"><value>请求只发送给本机所选 loopback 服务；存储与模型行为由该本地服务控制。</value></data>
+  <data name="CustomApiRetentionStatement" xml:space="preserve"><value>PicForLater 无法验证自定义服务的所有者、保留、训练或价格政策；测试和同意前请自行核验 endpoint 与政策。</value></data>
+  <data name="ApiCredentialNotRequiredState" xml:space="preserve"><value>此 loopback/自定义 profile 不发送鉴权凭据。</value></data>
+  <data name="ApiCustomInterfaceTitle.Text" xml:space="preserve"><value>自定义兼容契约</value></data>
+  <data name="ApiCustomEndpointTextBox.Header" xml:space="preserve"><value>完整 POST endpoint</value></data>
+  <data name="ApiCustomEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
+  <data name="ApiCustomProtocolComboBox.Header" xml:space="preserve"><value>请求协议</value></data>
+  <data name="ApiProtocolOpenAi.Content" xml:space="preserve"><value>OpenAI Chat Completions</value></data>
+  <data name="ApiProtocolAnthropic.Content" xml:space="preserve"><value>Anthropic Messages</value></data>
+  <data name="ApiCustomAuthenticationComboBox.Header" xml:space="preserve"><value>鉴权方式</value></data>
+  <data name="ApiAuthenticationBearer.Content" xml:space="preserve"><value>Authorization: Bearer</value></data>
+  <data name="ApiAuthenticationXApiKey.Content" xml:space="preserve"><value>x-api-key</value></data>
+  <data name="ApiAuthenticationNone.Content" xml:space="preserve"><value>无（建议仅用于 loopback）</value></data>
+  <data name="ApiCustomStructuredOutputComboBox.Header" xml:space="preserve"><value>结构化输出</value></data>
+  <data name="ApiStructuredOutputJsonSchema.Content" xml:space="preserve"><value>JSON Schema</value></data>
+  <data name="ApiStructuredOutputJsonObject.Content" xml:space="preserve"><value>JSON Object</value></data>
+  <data name="ApiCustomEndpointTrustComboBox.Header" xml:space="preserve"><value>网络边界</value></data>
+  <data name="ApiEndpointTrustPublicHttps.Content" xml:space="preserve"><value>仅公共 HTTPS</value></data>
+  <data name="ApiEndpointTrustLoopback.Content" xml:space="preserve"><value>仅 loopback HTTP/HTTPS</value></data>
+  <data name="ApiCustomEndpointSafetyInfoBar.Title" xml:space="preserve"><value>受限的自定义 endpoint</value></data>
+  <data name="ApiCustomEndpointSafetyInfoBar.Message" xml:space="preserve"><value>公共模式要求 HTTPS，并在 DNS 解析后阻止 loopback、私网和链路本地地址；loopback 模式只接受 localhost、127.0.0.1 或 ::1。重定向一律拒绝。</value></data>
+  <data name="SaveCustomApiProfileButton.Content" xml:space="preserve"><value>保存自定义契约</value></data>
+  <data name="SaveCustomApiProfileButton.AutomationProperties.Name" xml:space="preserve"><value>保存自定义 API 兼容契约</value></data>
+  <data name="ApiCustomProfileSavedStatus" xml:space="preserve"><value>自定义契约已保存；所选合成测试通过且确认同意前，远程发送仍保持本地。</value></data>
+  <data name="ApiStructuredOutputPromptOnly.Content" xml:space="preserve"><value>仅提示词约束（兼容性较广）</value></data>
+  <data name="ApiAdvancedSettingsExpander.Header" xml:space="preserve"><value>高级模型参数</value></data>
+  <data name="ApiReasoningRowTitle.Text" xml:space="preserve"><value>思考规模</value></data>
+  <data name="ApiReasoningModeComboBox.AutomationProperties.Name" xml:space="preserve"><value>模型思考规模</value></data>
+  <data name="ApiReasoningProviderDefault" xml:space="preserve"><value>供应商默认</value></data>
+  <data name="ApiReasoningDisabled" xml:space="preserve"><value>关闭（结构化输出推荐）</value></data>
+  <data name="ApiReasoningLow" xml:space="preserve"><value>低</value></data>
+  <data name="ApiReasoningMedium" xml:space="preserve"><value>中</value></data>
+  <data name="ApiReasoningHigh" xml:space="preserve"><value>高</value></data>
+  <data name="ApiReasoningWireFormatComboBox.Header" xml:space="preserve"><value>自定义接口思考参数格式</value></data>
+  <data name="ApiReasoningWireNone.Content" xml:space="preserve"><value>不发送思考参数</value></data>
+  <data name="ApiReasoningWireThinkingObject.Content" xml:space="preserve"><value>thinking.type</value></data>
+  <data name="ApiReasoningWireEffort.Content" xml:space="preserve"><value>reasoning_effort</value></data>
+  <data name="ApiReasoningWireEnableThinking.Content" xml:space="preserve"><value>enable_thinking</value></data>
+  <data name="ApiReasoningWireEnabledObject.Content" xml:space="preserve"><value>reasoning.enabled</value></data>
+  <data name="ApiMaxOutputTokensRowTitle.Text" xml:space="preserve"><value>最大输出 token</value></data>
+  <data name="ApiTimeoutRowTitle.Text" xml:space="preserve"><value>请求超时（秒）</value></data>
+  <data name="ApiAdvancedSettingsDescription.Text" xml:space="preserve"><value>保存任何更改都会使连接验证和旧同意失效；提高思考规模、token 或超时可能增加延迟和费用。</value></data>
+  <data name="SaveApiAdvancedSettingsButton.Content" xml:space="preserve"><value>保存高级设置</value></data>
+  <data name="SaveApiAdvancedSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>保存 API 高级模型参数</value></data>
+  <data name="ApiAdvancedSettingsSavedStatus" xml:space="preserve"><value>高级参数已保存；已切回本地，重新测试连接并确认同意后才会发送内容。</value></data>
+  <data name="ApiConnectionContentFailedStatus" xml:space="preserve"><value>供应商返回了结构化对象，但标题/简介为空或内容没有依据输入；未通过 PicForLater 的草稿质量检查。可保持关闭思考、确认模型支持指令遵循后重试。</value></data>
+  <data name="RecommendedPpOcrDisplayName" xml:space="preserve"><value>增强 OCR</value></data>
+  <data name="RecommendedQwenCpuDisplayName" xml:space="preserve"><value>CPU 视觉模型</value></data>
+  <data name="RecommendedQwenCudaDisplayName" xml:space="preserve"><value>NVIDIA GPU 视觉模型</value></data>
+  <data name="RecommendedLocalModelDisplayName" xml:space="preserve"><value>本地模型</value></data>
+  <data name="RecommendedModelDetailsExpander.Header" xml:space="preserve"><value>实现、体积与许可证</value></data>
+  <data name="InstalledOcrModelDisplayName" xml:space="preserve"><value>已安装的增强 OCR</value></data>
+  <data name="InstalledVisionModelDisplayName" xml:space="preserve"><value>已安装的视觉模型</value></data>
+  <data name="InstalledLocalModelDisplayName" xml:space="preserve"><value>已安装的本地模型</value></data>
+  <data name="InstalledModelDetailsExpander.Header" xml:space="preserve"><value>技术详情</value></data>
+  <data name="RecommendedModelInfoButton.AutomationProperties.Name" xml:space="preserve"><value>查看推荐模型详情</value></data>
+  <data name="RecommendedModelInfoButton.ToolTipService.ToolTip" xml:space="preserve"><value>实现、体积与许可证</value></data>
+  <data name="InstalledModelInfoButton.AutomationProperties.Name" xml:space="preserve"><value>查看已安装模型详情</value></data>
+  <data name="InstalledModelInfoButton.ToolTipService.ToolTip" xml:space="preserve"><value>查看技术详情</value></data>
+  <data name="ModelPackagesSectionTitle.Text" xml:space="preserve"><value>模型包</value></data>
+  <data name="AdvancedSettingsSectionTitle.Text" xml:space="preserve"><value>高级设置</value></data>
+  <data name="AdvancedSettingsSectionDescription.Text" xml:space="preserve"><value>能力槽位与模型包</value></data>
+  <data name="InstalledModelsExpander.AutomationProperties.Name" xml:space="preserve"><value>已安装模型包</value></data>
+  <data name="InstalledModelsExpander.AutomationProperties.HelpText" xml:space="preserve"><value>展开已安装模型包</value></data>
+  <data name="InstalledModelsExpandHelpText" xml:space="preserve"><value>展开已安装模型包</value></data>
+  <data name="InstalledModelsCollapseHelpText" xml:space="preserve"><value>收起已安装模型包</value></data>
+  <data name="ApiConfigurationSectionTitle.Text" xml:space="preserve"><value>API 配置</value></data>
+  <data name="ApiConfigurationSectionDescription.Text" xml:space="preserve"><value>选择供应商、模型、发送范围和凭据。修改配置不会自动启用联网分析。</value></data>
+  <data name="ApiCustomInterfaceExpander.Header" xml:space="preserve"><value>自定义接口契约</value></data>
+  <data name="ApiConsentSectionTitle.Text" xml:space="preserve"><value>确认发送范围并启用</value></data>
+  <data name="ApiPolicyExpander.Header" xml:space="preserve"><value>查看供应商政策、限制与费用</value></data>
+  <data name="ApiConsentMissingState" xml:space="preserve"><value>尚未同意当前供应商和载荷模式；即使连接测试通过，也不会发送用户内容。</value></data>
+  <data name="ApiConsentGrantedFormat" xml:space="preserve"><value>已同意“{0}”的当前披露版本。</value></data>
+  <data name="ApiConsentDifferentModeState" xml:space="preserve"><value>同意适用于另一个载荷模式；切换后需要重新核对并确认。</value></data>
+  <data name="InstalledModelsEmptyText.Text" xml:space="preserve"><value>安装后的模型包会显示在这里。</value></data>
+  <data name="ApiProviderSectionDescription.Text" xml:space="preserve"><value>选择供应商和模型。切换选择不会自动启用联网分析。</value></data>
+  <data name="ApiCredentialCardTitle.Text" xml:space="preserve"><value>Windows 凭据保险箱</value></data>
+  <data name="ApiAdvancedSectionTitle.Text" xml:space="preserve"><value>高级设置</value></data>
+  <data name="ApiAdvancedSectionDescription.Text" xml:space="preserve"><value>调整 API 地址、模型推理参数和超时；更改后需要重新测试。</value></data>
+  <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>完整 API 地址</value></data>
+  <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
+  <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>完整 API 地址</value></data>
+  <data name="ApiEndpointEditDescription.Text" xml:space="preserve"><value>支持公共 HTTPS 或本机 loopback 地址。更改地址会使当前测试与同意失效，并在保存前要求确认风险。</value></data>
+  <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>自定义接口契约</value></data>
+  <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>仅自定义接口需要声明请求协议、鉴权、结构化输出和网络边界。</value></data>
+  <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>更改 API 地址？</value></data>
+  <data name="ApiEndpointChangeDialogMessageFormat" xml:space="preserve"><value>API 请求和密钥将从“{0}”改为发送到“{1}”。请确认服务所有者、费用与隐私政策；应用仍会拒绝重定向和不安全的网络目标。</value></data>
+  <data name="ApiEndpointChangeDialogPrimary" xml:space="preserve"><value>仍要更改</value></data>
+  <data name="ApiAdvancedSettingsSaveRequiredStatus" xml:space="preserve"><value>请先保存高级设置，再测试连接。</value></data>
+  <data name="LocalInferenceComponentSectionTitle.Text" xml:space="preserve"><value>可选本地分析组件</value></data>
+  <data name="LocalInferenceComponentSectionDescription.Text" xml:space="preserve"><value>核心应用不携带 ONNX 和 GenAI 运行库。仅在需要本地分析时，从官方 GitHub Release 下载这一可执行组件；云端 API 分析不需要它。</value></data>
+  <data name="LocalInferenceComponentStatusTitle.Text" xml:space="preserve"><value>本地执行组件</value></data>
+  <data name="InstallLocalInferenceComponentButton.AutomationProperties.Name" xml:space="preserve"><value>安装或修复本地分析组件</value></data>
+  <data name="RemoveLocalInferenceComponentButton.Content" xml:space="preserve"><value>移除</value></data>
+  <data name="RemoveLocalInferenceComponentButton.AutomationProperties.Name" xml:space="preserve"><value>移除本地分析组件</value></data>
+  <data name="LocalInferenceComponentInstallAction" xml:space="preserve"><value>下载并安装</value></data>
+  <data name="LocalInferenceComponentRepairAction" xml:space="preserve"><value>检查更新或修复</value></data>
+  <data name="LocalInferenceComponentInstalledStatusFormat" xml:space="preserve"><value>已安装并验证版本 {0}。</value></data>
+  <data name="LocalInferenceComponentNotInstalledStatus" xml:space="preserve"><value>尚未安装；云端 API 分析仍可使用。</value></data>
+  <data name="LocalInferenceComponentTrustUnavailableStatus" xml:space="preserve"><value>尚未安装。发布签名公钥配置完成前，安全下载暂不可用；云端 API 分析仍可使用。</value></data>
+  <data name="LocalInferenceComponentInstallDialogTitle" xml:space="preserve"><value>下载本地分析组件？</value></data>
+  <data name="LocalInferenceComponentInstallConfirmation" xml:space="preserve"><value>这会从 PicForLater 官方 GitHub Release 下载体积较大的架构专用可执行组件。应用会先验证签名发布清单、压缩包体积与 SHA-256，并逐文件复验后再原子激活。不会上传图片、OCR 文本、模型输入、API 密钥或其他用户内容。</value></data>
+  <data name="LocalInferenceComponentRemoveDialogTitle" xml:space="preserve"><value>移除本地分析组件？</value></data>
+  <data name="LocalInferenceComponentRemoveConfirmationFormat" xml:space="preserve"><value>移除本地执行组件版本 {0}？本地模型包、图片、分析结果、设置和云端 API 配置都会保留。重新安装组件前，本地分析将不可用。</value></data>
+  <data name="LocalInferenceComponentRemoveAction" xml:space="preserve"><value>移除组件</value></data>
+  <data name="LocalInferenceComponentInstalledSuccessFormat" xml:space="preserve"><value>本地分析组件版本 {0} 已验证并激活。</value></data>
+  <data name="LocalInferenceComponentAlreadyCurrentFormat" xml:space="preserve"><value>本地分析组件版本 {0} 已是当前版本且验证通过。</value></data>
+  <data name="LocalInferenceComponentCanceledStatus" xml:space="preserve"><value>组件操作已取消，当前组件保持不变。</value></data>
+  <data name="LocalInferenceComponentRemovingStatus" xml:space="preserve"><value>正在停止本地分析并移除执行组件…</value></data>
+  <data name="LocalInferenceComponentRemovedStatus" xml:space="preserve"><value>本地分析组件已移除；模型和用户数据已保留。</value></data>
+  <data name="LocalInferenceComponentRemoveFailedStatus" xml:space="preserve"><value>无法移除本地分析组件；已尽可能恢复之前的状态。</value></data>
+  <data name="LocalInferenceComponentPreparingStatus" xml:space="preserve"><value>正在下载并认证已签名的组件清单…</value></data>
+  <data name="LocalInferenceComponentDownloadingStatus" xml:space="preserve"><value>正在下载本地分析组件…</value></data>
+  <data name="LocalInferenceComponentVerifyingStatus" xml:space="preserve"><value>正在检查压缩包和安装文件完整性…</value></data>
+  <data name="LocalInferenceComponentActivatingStatus" xml:space="preserve"><value>正在停止旧 worker 并原子激活已验证组件…</value></data>
+  <data name="LocalInferenceComponentCompletingStatus" xml:space="preserve"><value>正在完成本地分析组件操作…</value></data>
+  <data name="LocalInferenceComponentInsufficientSpaceStatus" xml:space="preserve"><value>磁盘空间不足，无法同时容纳下载文件和解压后的组件；当前组件保持不变。</value></data>
+  <data name="LocalInferenceComponentDownloadTimedOutStatus" xml:space="preserve"><value>组件下载因长时间未收到数据而超时；不完整的 staging 数据已清理。</value></data>
+  <data name="LocalInferenceComponentNetworkFailedStatus" xml:space="preserve"><value>无法从 GitHub 下载组件；请在网络稳定后重试。</value></data>
+  <data name="LocalInferenceComponentSignatureFailedStatus" xml:space="preserve"><value>组件发布清单没有有效的受信任签名，未安装任何内容。</value></data>
+  <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>签名清单、来源、体积、SHA-256、压缩包布局或安装文件未通过验证；当前组件保持不变。</value></data>
+  <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>无法安装或激活本地分析组件；当前组件和用户数据保持不变。</value></data>
+  <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} 错误代码：{1}</value></data>
+</root>

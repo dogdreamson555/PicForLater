@@ -1,0 +1,190 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>PicForLater.App</RootNamespace>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Configurations>Debug;Release;UiTest</Configurations>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <Platform Condition="'$(Platform)' == '' Or '$(Platform)' == 'AnyCPU'">x64</Platform>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+    <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <EnableVisualFixture Condition="'$(EnableVisualFixture)' == ''">false</EnableVisualFixture>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'UiTest'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);PICFORLATER_UI_TESTING</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'UiTest' And '$(EnableVisualFixture)' == 'true'">
+    <DefineConstants>$(DefineConstants);PICFORLATER_UI_VISUAL_FIXTURE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <DefineConstants>$(DefineConstants);PICFORLATER_CUDA_RUNTIME</DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="ValidateUiTestConfiguration" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(EnableVisualFixture)' != 'true' And '$(EnableVisualFixture)' != 'false'" Text="EnableVisualFixture must be true or false." />
+    <Error Condition="'$(EnableVisualFixture)' == 'true' And '$(Configuration)' != 'UiTest'" Text="EnableVisualFixture may only be enabled by the isolated UiTest configuration." />
+  </Target>
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\AppIcon.ico"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="..\..\LICENSE.txt" Link="LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\dotnet-runtime\**\*.*"
+             Link="licenses\dotnet-runtime\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\windows-app-sdk\**\*.*"
+             Link="licenses\windows-app-sdk\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\webview2\**\*.*"
+             Link="licenses\webview2\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\communitytoolkit-mvvm\**\*.*"
+             Link="licenses\communitytoolkit-mvvm\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\communitytoolkit-winui-notifications\**\*.*"
+             Link="licenses\communitytoolkit-winui-notifications\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\fluent-ui-system-icons\**\*.*"
+             Link="licenses\fluent-ui-system-icons\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\managed-dependencies\**\*.*"
+             Link="licenses\managed-dependencies\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\sqlite\**\*.*"
+             Link="licenses\sqlite\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\sqlitepclraw\**\*.*"
+             Link="licenses\sqlitepclraw\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Keep the stable umbrella package: the standalone WinUI component currently
+      carries Engineering Preview terms that do not permit live distribution.
+    -->
+    <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.8249" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.4.0" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.11" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PicForLater.Core\PicForLater.Core.csproj" />
+    <ProjectReference Include="..\PicForLater.Infrastructure\PicForLater.Infrastructure.csproj" />
+    <ProjectReference Include="..\PicForLater.Analysis\PicForLater.Analysis.csproj" />
+    <ProjectReference Include="..\PicForLater.LocalInference.Protocol\PicForLater.LocalInference.Protocol.csproj" />
+  </ItemGroup>
+
+  <!--
+    Windows App SDK's stable umbrella package transitively exposes Windows ML.
+    The App does not compile or execute that projection; remove its runtime files
+    from the core layout while retaining the umbrella package's release license.
+  -->
+  <Target Name="RemoveUnusedWindowsMlBuildAssets"
+          AfterTargets="ResolveLockFileCopyLocalFiles"
+          BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)"
+                            Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning'" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)"
+                               Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning'
+                                          Or '%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'System.Numerics.Tensors'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RemoveUnusedWindowsMlPublishAssets" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="'%(ResolvedFileToPublish.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning'
+                                        Or '%(ResolvedFileToPublish.NuGetPackageId)' == 'System.Numerics.Tensors'" />
+      <ForbiddenCorePublishAsset Include="@(ResolvedFileToPublish)"
+                                 Condition="'%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'onnxruntime.dll'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'onnxruntime-genai.dll'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'DirectML.dll'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Microsoft.ML.OnnxRuntime.dll'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Microsoft.Windows.AI.MachineLearning.dll'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'PicForLater.LocalInference.exe'
+                                            Or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'PicForLater.LocalInference.dll'" />
+    </ItemGroup>
+    <Error Condition="'@(ForbiddenCorePublishAsset)' != ''"
+           Text="The core App publish contains a local-inference runtime asset: @(ForbiddenCorePublishAsset)." />
+  </Target>
+
+  <!--
+    The WinUI compiler places unpackaged MRT Core and XAML resources in the
+    build output, but the .NET Publish target does not add them automatically.
+    A published EXE without these files starts and then fails inside WinUI.
+  -->
+  <Target Name="IncludeUnpackagedWinUiPublishAssets" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <_UnpackagedWinUiPri Include="$(TargetDir)$(TargetName).pri"
+                           Condition="Exists('$(TargetDir)$(TargetName).pri')" />
+      <_UnpackagedWinUiXbf Include="$(TargetDir)**\*.xbf" />
+      <ResolvedFileToPublish Include="@(_UnpackagedWinUiPri)">
+        <RelativePath>$(TargetName).pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="@(_UnpackagedWinUiXbf)">
+        <RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <Error Condition="'@(_UnpackagedWinUiPri)' == ''"
+           Text="The unpackaged WinUI publish is missing $(TargetName).pri." />
+    <Error Condition="'@(_UnpackagedWinUiXbf)' == ''"
+           Text="The unpackaged WinUI publish is missing compiled XAML resources." />
+  </Target>
+
+  <!-- Publish Properties -->
+  <PropertyGroup>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="PicForLater.App.Pages.LibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:PicForLater.App.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:PicForLater.App.Models"
+    d:DesignHeight="768"
+    d:DesignWidth="1200"
+    AllowDrop="True"
+    Background="{ThemeResource AppPageBackgroundBrush}"
+    DragLeave="LibraryPage_DragLeave"
+    DragOver="LibraryPage_DragOver"
+    Drop="LibraryPage_Drop"
+    SizeChanged="LibraryPage_SizeChanged"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style
+            x:Key="LibraryCardMetadataTextBlockStyle"
+            BasedOn="{StaticResource AppMetadataTextBlockStyle}"
+            TargetType="TextBlock">
+            <Setter Property="MaxLines" Value="1" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+        <DataTemplate x:Key="LibraryGridItemTemplate" x:DataType="models:LibraryItem">
+            <Border
+                Height="228"
+                Background="{ThemeResource AppCardBackgroundBrush}"
+                BorderBrush="{ThemeResource AppCardStrokeBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource AppCardCornerRadius}">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            x:Uid="ContextOpenImageMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextOpenAutomationId(Id), Mode=OneTime}"
+                            Click="ContextOpenImageMenuItem_Click"
+                            Icon="OpenFile"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextViewDetailsMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextDetailsAutomationId(Id), Mode=OneTime}"
+                            Click="ContextViewDetailsMenuItem_Click"
+                            Icon="View"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextAddReminderMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextAddReminderAutomationId(Id), Mode=OneTime}"
+                            Click="ContextAddReminderMenuItem_Click"
+                            Icon="Calendar"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextReanalyzeMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextReanalyzeAutomationId(Id), Mode=OneTime}"
+                            Click="ContextReanalyzeMenuItem_Click"
+                            Tag="{x:Bind Mode=OneTime}">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE72C;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem
+                            x:Uid="ContextSelectMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextSelectAutomationId(Id), Mode=OneTime}"
+                            Click="ContextSelectMenuItem_Click"
+                            Tag="{x:Bind Mode=OneTime}">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
+                            x:Uid="ContextDeleteMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextDeleteAutomationId(Id), Mode=OneTime}"
+                            Click="ContextDeleteMenuItem_Click"
+                            Icon="Delete"
+                            Tag="{x:Bind Mode=OneTime}" />
+                    </MenuFlyout>
+                </Border.ContextFlyout>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="148" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Image
+                        AutomationProperties.AccessibilityView="Raw"
+                        Source="{x:Bind ThumbnailUri, Mode=OneTime}"
+                        Stretch="UniformToFill" />
+                    <StackPanel Grid.Row="1" Padding="12,8" Spacing="{StaticResource AppSpacingXs}">
+                        <TextBlock
+                            MaxLines="1"
+                            Style="{StaticResource AppCardTitleTextBlockStyle}"
+                            Text="{x:Bind Title, Mode=OneTime}"
+                            TextWrapping="NoWrap"
+                            ToolTipService.ToolTip="{x:Bind Title, Mode=OneTime}" />
+                        <TextBlock
+                            Style="{StaticResource LibraryCardMetadataTextBlockStyle}"
+                            Text="{x:Bind CategorySummary, Mode=OneTime}"
+                            ToolTipService.ToolTip="{x:Bind CategorySummary, Mode=OneTime}" />
+                        <TextBlock
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetAnalysisStateAutomationId(Id), Mode=OneTime}"
+                            Style="{StaticResource LibraryCardMetadataTextBlockStyle}"
+                            Text="{x:Bind local:LibraryPage.GetAnalysisStatus(AnalysisState), Mode=OneTime}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LibraryListItemTemplate" x:DataType="models:LibraryItem">
+            <Grid
+                MinHeight="112"
+                Padding="8"
+                Background="{ThemeResource SubtleFillColorTransparentBrush}"
+                ColumnSpacing="{StaticResource AppSpacingMd}">
+                <Grid.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            x:Uid="ContextOpenImageMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextOpenAutomationId(Id), Mode=OneTime}"
+                            Click="ContextOpenImageMenuItem_Click"
+                            Icon="OpenFile"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextViewDetailsMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextDetailsAutomationId(Id), Mode=OneTime}"
+                            Click="ContextViewDetailsMenuItem_Click"
+                            Icon="View"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextAddReminderMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextAddReminderAutomationId(Id), Mode=OneTime}"
+                            Click="ContextAddReminderMenuItem_Click"
+                            Icon="Calendar"
+                            Tag="{x:Bind Mode=OneTime}" />
+                        <MenuFlyoutItem
+                            x:Uid="ContextReanalyzeMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextReanalyzeAutomationId(Id), Mode=OneTime}"
+                            Click="ContextReanalyzeMenuItem_Click"
+                            Tag="{x:Bind Mode=OneTime}">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE72C;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem
+                            x:Uid="ContextSelectMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextSelectAutomationId(Id), Mode=OneTime}"
+                            Click="ContextSelectMenuItem_Click"
+                            Tag="{x:Bind Mode=OneTime}">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
+                            x:Uid="ContextDeleteMenuItem"
+                            AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetContextDeleteAutomationId(Id), Mode=OneTime}"
+                            Click="ContextDeleteMenuItem_Click"
+                            Icon="Delete"
+                            Tag="{x:Bind Mode=OneTime}" />
+                    </MenuFlyout>
+                </Grid.ContextFlyout>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="128" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="128"
+                    Height="96"
+                    Background="{ThemeResource AppCardBackgroundBrush}"
+                    CornerRadius="{StaticResource AppCardCornerRadius}">
+                    <Image
+                        AutomationProperties.AccessibilityView="Raw"
+                        Source="{x:Bind ThumbnailUri, Mode=OneTime}"
+                        Stretch="UniformToFill" />
+                </Border>
+                <Grid Grid.Column="1" Padding="0,4" RowSpacing="{StaticResource AppSpacingXs}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        FontWeight="SemiBold"
+                        Text="{x:Bind Title, Mode=OneTime}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                        MaxLines="2"
+                        Text="{x:Bind ListSummary, Mode=OneTime}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                    <Grid Grid.Row="2" ColumnSpacing="{StaticResource AppSpacingMd}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind CategorySummary, Mode=OneTime}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind SizeDisplay, Mode=OneTime}" />
+                        <TextBlock
+                            Grid.Column="2"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind CreatedDisplay, Mode=OneTime}" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid x:Name="LayoutRoot" AutomationProperties.AutomationId="LibraryPage">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="PageWidthStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.Setters>
+                        <Setter Target="CollectionPane.Padding" Value="{StaticResource AppPrimaryPagePaddingNarrow}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource AppBreakpointMedium}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="CollectionPane.Padding" Value="{StaticResource AppPrimaryPagePaddingMedium}" />
+                        <Setter Target="FilterActions.(Grid.Row)" Value="0" />
+                        <Setter Target="FilterActions.(Grid.Column)" Value="1" />
+                        <Setter Target="FilterLayout.RowSpacing" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource AppBreakpointExpanded}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="CollectionPane.Padding" Value="{StaticResource AppPrimaryPagePaddingWide}" />
+                        <Setter Target="FilterActions.(Grid.Row)" Value="0" />
+                        <Setter Target="FilterActions.(Grid.Column)" Value="1" />
+                        <Setter Target="FilterLayout.RowSpacing" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="CollectionColumn" Width="*" />
+            <ColumnDefinition x:Name="DetailColumn" Width="0" />
+        </Grid.ColumnDefinitions>
+
+        <Grid
+            x:Name="CollectionPane"
+            Grid.Column="0"
+            Padding="{StaticResource AppPrimaryPagePaddingNarrow}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid
+                x:Name="HeaderLayout"
+                ColumnSpacing="{StaticResource AppSpacingLg}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    MaxWidth="560"
+                    HorizontalAlignment="Left"
+                    Spacing="{StaticResource AppSpacingXs}">
+                    <TextBlock x:Uid="LibraryPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" TextWrapping="NoWrap" />
+                    <TextBlock x:Uid="LibraryPageSubtitle" Style="{StaticResource AppPageSubtitleTextBlockStyle}" />
+                </StackPanel>
+                <CommandBar
+                    x:Name="HeaderCommandBar"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Background="Transparent"
+                    DefaultLabelPosition="Right"
+                    IsDynamicOverflowEnabled="True">
+                    <CommandBar.Resources>
+                        <x:Double x:Key="CommandBarOverflowMinWidth">148</x:Double>
+                    </CommandBar.Resources>
+                    <AppBarButton
+                        x:Name="ImportButton"
+                        x:Uid="ImportButton"
+                        AutomationProperties.AutomationId="ImportButton"
+                        Click="ImportButton_Click"
+                        IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsWorking), Mode=OneWay}">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE8B7;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton
+                        x:Name="PasteButton"
+                        x:Uid="PasteButton"
+                        AutomationProperties.AutomationId="PasteButton"
+                        Click="PasteButton_Click"
+                        IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsWorking), Mode=OneWay}">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE77F;" />
+                        </AppBarButton.Icon>
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="V" Modifiers="Control" />
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <CommandBar.SecondaryCommands>
+                        <AppBarButton
+                            x:Name="SelectionModeButton"
+                            x:Uid="SelectionModeButton"
+                            AutomationProperties.AutomationId="SelectionModeButton"
+                            Click="SelectionModeButton_Click">
+                            <AppBarButton.Icon>
+                                <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                            </AppBarButton.Icon>
+                        </AppBarButton>
+                        <AppBarButton
+                        x:Name="SortButton"
+                        x:Uid="SortButton"
+                        AutomationProperties.AutomationId="SortButton"
+                        IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE8CB;" />
+                        </AppBarButton.Icon>
+                        <AppBarButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutSubItem x:Uid="SortByTimeSubItem" AutomationProperties.AutomationId="SortByTimeSubItem">
+                                    <ToggleMenuFlyoutItem x:Name="SortNewestMenuItem" x:Uid="SortNewestMenuItem" AutomationProperties.AutomationId="SortNewestMenuItem" Click="SortMenuItem_Click" Tag="CreatedDescending" />
+                                    <ToggleMenuFlyoutItem x:Name="SortOldestMenuItem" x:Uid="SortOldestMenuItem" AutomationProperties.AutomationId="SortOldestMenuItem" Click="SortMenuItem_Click" Tag="CreatedAscending" />
+                                </MenuFlyoutSubItem>
+                                <MenuFlyoutSubItem x:Uid="SortByNameSubItem" AutomationProperties.AutomationId="SortByNameSubItem">
+                                    <ToggleMenuFlyoutItem x:Name="SortNameAscendingMenuItem" x:Uid="SortNameAscendingMenuItem" AutomationProperties.AutomationId="SortNameAscendingMenuItem" Click="SortMenuItem_Click" Tag="TitleAscending" />
+                                    <ToggleMenuFlyoutItem x:Name="SortNameDescendingMenuItem" x:Uid="SortNameDescendingMenuItem" AutomationProperties.AutomationId="SortNameDescendingMenuItem" Click="SortMenuItem_Click" Tag="TitleDescending" />
+                                </MenuFlyoutSubItem>
+                                <MenuFlyoutSubItem x:Uid="SortBySizeSubItem" AutomationProperties.AutomationId="SortBySizeSubItem">
+                                    <ToggleMenuFlyoutItem x:Name="SortSizeDescendingMenuItem" x:Uid="SortSizeDescendingMenuItem" AutomationProperties.AutomationId="SortSizeDescendingMenuItem" Click="SortMenuItem_Click" Tag="SizeDescending" />
+                                    <ToggleMenuFlyoutItem x:Name="SortSizeAscendingMenuItem" x:Uid="SortSizeAscendingMenuItem" AutomationProperties.AutomationId="SortSizeAscendingMenuItem" Click="SortMenuItem_Click" Tag="SizeAscending" />
+                                </MenuFlyoutSubItem>
+                                <MenuFlyoutSubItem x:Uid="SortByCategorySubItem" AutomationProperties.AutomationId="SortByCategorySubItem">
+                                    <ToggleMenuFlyoutItem x:Name="SortCategoryAscendingMenuItem" x:Uid="SortCategoryAscendingMenuItem" AutomationProperties.AutomationId="SortCategoryAscendingMenuItem" Click="SortMenuItem_Click" Tag="CategoryAscending" />
+                                    <ToggleMenuFlyoutItem x:Name="SortCategoryDescendingMenuItem" x:Uid="SortCategoryDescendingMenuItem" AutomationProperties.AutomationId="SortCategoryDescendingMenuItem" Click="SortMenuItem_Click" Tag="CategoryDescending" />
+                                </MenuFlyoutSubItem>
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                        </AppBarButton>
+                        <AppBarToggleButton
+                        x:Name="GridViewModeButton"
+                        x:Uid="GridViewModeButton"
+                        AutomationProperties.AutomationId="GridViewModeButton"
+                        BorderThickness="0"
+                        Click="GridViewModeButton_Click"
+                        IsChecked="True">
+                        <AppBarToggleButton.Icon>
+                            <FontIcon Glyph="&#xE80A;" />
+                        </AppBarToggleButton.Icon>
+                        </AppBarToggleButton>
+                        <AppBarToggleButton
+                        x:Name="ListViewModeButton"
+                        x:Uid="ListViewModeButton"
+                        AutomationProperties.AutomationId="ListViewModeButton"
+                        BorderThickness="0"
+                        Click="ListViewModeButton_Click">
+                        <AppBarToggleButton.Icon>
+                            <FontIcon Glyph="&#xE8FD;" />
+                        </AppBarToggleButton.Icon>
+                        </AppBarToggleButton>
+                    </CommandBar.SecondaryCommands>
+                </CommandBar>
+            </Grid>
+
+            <Grid
+                x:Name="FilterLayout"
+                Grid.Row="1"
+                Margin="0,12,0,0"
+                ColumnSpacing="{StaticResource AppSpacingMd}"
+                RowSpacing="{StaticResource AppSpacingSm}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <AutoSuggestBox
+                    x:Name="LibrarySearchBox"
+                    x:Uid="LibrarySearchBox"
+                    AutomationProperties.AutomationId="LibrarySearchBox"
+                    MinHeight="40"
+                    QueryIcon="Find"
+                    VerticalContentAlignment="Center"
+                    IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsSelectionModeActive), Mode=OneWay}"
+                    Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel
+                    x:Name="FilterActions"
+                    Grid.Row="1"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource AppSpacingSm}">
+                    <ComboBox
+                        x:Name="CategoryFilterComboBox"
+                        x:Uid="CategoryFilterComboBox"
+                        MinWidth="180"
+                        MinHeight="40"
+                        AutomationProperties.AutomationId="CategoryFilterComboBox"
+                        DisplayMemberPath="Name"
+                        IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsSelectionModeActive), Mode=OneWay}"
+                        ItemsSource="{x:Bind ViewModel.CategoryFilters, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.SelectedCategoryFilter, Mode=TwoWay}"
+                        SelectionChanged="CategoryFilterComboBox_SelectionChanged" />
+                    <Button
+                        x:Uid="ClearFiltersButton"
+                        Width="40"
+                        Height="40"
+                        Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        AutomationProperties.AutomationId="ClearFiltersButton"
+                        Click="ClearFiltersButton_Click"
+                        IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                        <FontIcon FontSize="16" Glyph="&#xE894;" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <CommandBar
+                x:Name="SelectionCommandBar"
+                Grid.Row="2"
+                Margin="0,12,0,0"
+                AutomationProperties.AutomationId="SelectionCommandBar"
+                Background="Transparent"
+                DefaultLabelPosition="Right"
+                Visibility="{x:Bind local:LibraryPage.BoolToVisibility(ViewModel.IsSelectionModeActive), Mode=OneWay}">
+                <CommandBar.Content>
+                    <TextBlock
+                        x:Name="SelectionCountTextBlock"
+                        AutomationProperties.AutomationId="SelectionCountTextBlock"
+                        Text="{x:Bind local:LibraryPage.GetSelectionSummary(ViewModel.SelectedCount), Mode=OneWay}"
+                        VerticalAlignment="Center" />
+                </CommandBar.Content>
+                <AppBarButton
+                    x:Uid="SelectAllLoadedButton"
+                    AutomationProperties.AutomationId="SelectAllLoadedButton"
+                    Click="SelectAllLoadedButton_Click">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="{StaticResource AppSelectAllIconGlyph}" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton
+                    x:Uid="DeleteSelectedButton"
+                    AutomationProperties.AutomationId="DeleteSelectedButton"
+                    Click="DeleteSelectedButton_Click"
+                    IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="{StaticResource AppDeleteIconGlyph}" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton
+                    x:Uid="ReanalyzeSelectedButton"
+                    AutomationProperties.AutomationId="ReanalyzeSelectedButton"
+                    Click="ReanalyzeSelectedButton_Click"
+                    IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE72C;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton
+                    x:Uid="CancelSelectionButton"
+                    AutomationProperties.AutomationId="CancelSelectionButton"
+                    Click="CancelSelectionButton_Click">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE711;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </CommandBar>
+
+            <InfoBar
+                x:Name="LibraryStatusInfoBar"
+                x:Uid="LibraryStatusInfoBar"
+                Grid.Row="3"
+                Margin="0,12,0,0"
+                AutomationProperties.AutomationId="LibraryStatusInfoBar"
+                IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
+                IsClosable="True"
+                Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                Severity="Informational"
+                Visibility="{x:Bind local:LibraryPage.BoolToVisibility(LibraryStatusInfoBar.IsOpen), Mode=OneWay}" />
+
+            <Grid Grid.Row="4" Margin="0,12,0,0">
+                <Grid
+                    x:Name="StateContent"
+                    MaxWidth="480"
+                    AutomationProperties.LiveSetting="Polite"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <StackPanel
+                        x:Name="LoadingState"
+                        x:Load="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+                        AutomationProperties.AutomationId="LibraryLoadingState"
+                        HorizontalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}">
+                        <ProgressRing Width="32" Height="32" AutomationProperties.AccessibilityView="Raw" IsActive="True" />
+                        <TextBlock x:Uid="LibraryLoadingTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="LibraryLoadingMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel
+                        x:Name="EmptyState"
+                        x:Load="{x:Bind ViewModel.IsEmpty, Mode=OneWay}"
+                        AutomationProperties.AutomationId="LibraryEmptyState"
+                        HorizontalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}">
+                        <FontIcon
+                            FontSize="{StaticResource AppEmptyStateIconSize}"
+                            AutomationProperties.AccessibilityView="Raw"
+                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                            Glyph="{StaticResource AppLibraryIconGlyph}" />
+                        <TextBlock x:Uid="LibraryEmptyTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="LibraryEmptyMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="{StaticResource AppSpacingSm}">
+                            <Button
+                                x:Uid="EmptyImportButton"
+                                AutomationProperties.AutomationId="EmptyImportButton"
+                                Click="ImportButton_Click" />
+                            <Button
+                                x:Uid="EmptyPasteButton"
+                                AutomationProperties.AutomationId="EmptyPasteButton"
+                                Click="PasteButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel
+                        x:Name="ErrorState"
+                        x:Load="{x:Bind ViewModel.HasError, Mode=OneWay}"
+                        AutomationProperties.AutomationId="LibraryErrorState"
+                        HorizontalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}">
+                        <FontIcon FontSize="{StaticResource AppEmptyStateIconSize}" AutomationProperties.AccessibilityView="Raw" Glyph="&#xEA39;" />
+                        <TextBlock x:Uid="LibraryErrorTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="LibraryErrorMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                        <Button
+                            x:Uid="LibraryRetryButton"
+                            AutomationProperties.AutomationId="LibraryErrorRetryButton"
+                            Command="{x:Bind ViewModel.RetryCommand, Mode=OneTime}" />
+                    </StackPanel>
+
+                    <StackPanel
+                        x:Name="PermissionDeniedState"
+                        x:Load="{x:Bind ViewModel.IsPermissionDenied, Mode=OneWay}"
+                        AutomationProperties.AutomationId="LibraryPermissionDeniedState"
+                        HorizontalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}">
+                        <FontIcon FontSize="{StaticResource AppEmptyStateIconSize}" AutomationProperties.AccessibilityView="Raw" Glyph="&#xE72E;" />
+                        <TextBlock x:Uid="LibraryPermissionDeniedTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="LibraryPermissionDeniedMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel
+                        x:Name="UnsupportedState"
+                        x:Load="{x:Bind ViewModel.IsUnsupported, Mode=OneWay}"
+                        AutomationProperties.AutomationId="LibraryUnsupportedState"
+                        HorizontalAlignment="Center"
+                        Spacing="{StaticResource AppSpacingSm}">
+                        <FontIcon FontSize="{StaticResource AppEmptyStateIconSize}" AutomationProperties.AccessibilityView="Raw" Glyph="&#xE783;" />
+                        <TextBlock x:Uid="LibraryUnsupportedTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="LibraryUnsupportedMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid
+                    x:Name="ItemsContent"
+                    Visibility="{x:Bind local:LibraryPage.BoolToVisibility(ViewModel.HasItems), Mode=OneWay}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <GridView
+                        x:Name="LibraryGridView"
+                        x:Uid="LibraryGridView"
+                        AutomationProperties.AutomationId="LibraryGridView"
+                        ContainerContentChanging="LibraryGridView_ContainerContentChanging"
+                        IsItemClickEnabled="True"
+                        ItemClick="LibraryCollection_ItemClick"
+                        ItemTemplate="{StaticResource LibraryGridItemTemplate}"
+                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                        Margin="0,0,0,0"
+                        SelectionChanged="LibraryCollection_SelectionChanged"
+                        SelectionMode="Single"
+                        SizeChanged="LibraryGridView_SizeChanged">
+                        <GridView.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource DefaultGridViewItemStyle}" TargetType="GridViewItem">
+                                <Setter Property="Margin" Value="0,0,12,12" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </GridView.ItemContainerStyle>
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid Loaded="LibraryGridItemsWrapGrid_Loaded" Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                    </GridView>
+                    <ListView
+                        x:Name="LibraryListView"
+                        x:Uid="LibraryListView"
+                        AutomationProperties.AutomationId="LibraryListView"
+                        ContainerContentChanging="LibraryGridView_ContainerContentChanging"
+                        IsItemClickEnabled="True"
+                        ItemClick="LibraryCollection_ItemClick"
+                        ItemTemplate="{StaticResource LibraryListItemTemplate}"
+                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                        SelectionChanged="LibraryCollection_SelectionChanged"
+                        SelectionMode="Single"
+                        Visibility="Collapsed">
+                        <ListView.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+                    <Button
+                        x:Uid="LoadMoreButton"
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AutomationId="LoadMoreButton"
+                        Command="{x:Bind ViewModel.LoadMoreCommand, Mode=OneTime}"
+                        Visibility="{x:Bind local:LibraryPage.BoolToVisibility(ViewModel.HasMore), Mode=OneWay}" />
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <Border
+            x:Name="DetailSurface"
+            Grid.Column="1"
+            BorderBrush="{ThemeResource AppCardStrokeBrush}"
+            BorderThickness="1,0,0,0"
+            Background="{ThemeResource AppLayerBackgroundBrush}"
+            SizeChanged="DetailSurface_SizeChanged">
+            <Grid>
+                <Grid
+                    x:Name="DetailPane"
+                    AutomationProperties.AutomationId="LibraryDetailPane"
+                    Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Padding="16,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            x:Name="DetailBackButton"
+                            x:Uid="DetailBackButton"
+                            Margin="0,0,12,0"
+                            Style="{StaticResource AppBackButtonStyle}"
+                            VerticalAlignment="Center"
+                            AutomationProperties.AutomationId="DetailBackButton"
+                            Click="DetailBackButton_Click">
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="Left" Modifiers="Menu" />
+                            </Button.KeyboardAccelerators>
+                            <FontIcon
+                                AutomationProperties.AccessibilityView="Raw"
+                                FontSize="20"
+                                Glyph="{StaticResource AppBackIconGlyph}" />
+                        </Button>
+                        <TextBlock
+                            x:Uid="DetailPaneTitle"
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <Button
+                            x:Uid="DeleteImageButton"
+                            Grid.Column="2"
+                            AutomationProperties.AutomationId="DeleteImageButton"
+                            Click="DeleteImageButton_Click">
+                            <FontIcon Glyph="{StaticResource AppDeleteIconGlyph}" />
+                        </Button>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel
+                            x:Name="DetailContentPanel"
+                            MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
+                            Padding="16,4,16,20"
+                            HorizontalAlignment="Center"
+                            Spacing="{StaticResource AppSpacingLg}">
+                            <Button
+                                x:Uid="DetailImageButton"
+                                Padding="0"
+                                AutomationProperties.AutomationId="DetailImageButton"
+                                Background="{ThemeResource SubtleFillColorTransparentBrush}"
+                                BorderThickness="0"
+                                Click="DetailImageButton_Click"
+                                HorizontalContentAlignment="Stretch">
+                                <Image
+                                    Height="240"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Source="{x:Bind local:LibraryPage.ToImageSource(ViewModel.DetailImageUri), Mode=OneWay}"
+                                    Stretch="Uniform" />
+                            </Button>
+                            <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                <TextBlock
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{x:Bind ViewModel.DetailFileName, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{x:Bind ViewModel.DetailMetadata, Mode=OneWay}" />
+                            </StackPanel>
+                            <InfoBar
+                                x:Uid="DetailContentSourceInfoBar"
+                                AutomationProperties.AccessibilityView="Content"
+                                AutomationProperties.AutomationId="DetailContentSourceInfoBar"
+                                AutomationProperties.Name="{x:Bind ViewModel.DetailContentSourceMessage, Mode=OneWay}"
+                                IsClosable="False"
+                                IsOpen="True"
+                                Message="{x:Bind ViewModel.DetailContentSourceMessage, Mode=OneWay}"
+                                Severity="Informational" />
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="DetailTitleLabel" />
+                                <TextBox
+                                    x:Name="DetailTitleTextBox"
+                                    x:Uid="DetailTitleTextBox"
+                                    Height="32"
+                                    Padding="10,4,6,5"
+                                    AutomationProperties.AutomationId="DetailTitleTextBox"
+                                    Loaded="DetailTitleTextBox_Loaded"
+                                    MaxLength="300"
+                                    TextChanging="DetailTitleTextBox_TextChanging"
+                                    Text="{x:Bind ViewModel.DetailTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <TextBox
+                                x:Name="DetailSummaryTextBox"
+                                x:Uid="DetailSummaryTextBox"
+                                MinHeight="96"
+                                AcceptsReturn="True"
+                                AutomationProperties.AutomationId="DetailSummaryTextBox"
+                                MaxLength="4000"
+                                Text="{x:Bind ViewModel.DetailSummary, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap" />
+                            <Grid ColumnSpacing="{StaticResource AppSpacingSm}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Uid="CategoriesSectionTitle" VerticalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <Button
+                                    x:Uid="AddCategoryButton"
+                                    Grid.Column="1"
+                                    AutomationProperties.AutomationId="AddCategoryButton"
+                                    Click="AddCategoryButton_Click">
+                                    <FontIcon Glyph="&#xE710;" />
+                                </Button>
+                            </Grid>
+                            <ItemsRepeater
+                                x:Name="DetailCategoriesRepeater"
+                                x:Uid="DetailCategoriesRepeater"
+                                AutomationProperties.AutomationId="DetailCategoriesRepeater"
+                                ItemsSource="{x:Bind ViewModel.CategoryOptions, Mode=OneWay}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="models:CategoryOption">
+                                        <Grid Padding="0,4" ColumnSpacing="{StaticResource AppSpacingSm}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox
+                                                AutomationProperties.AutomationId="{x:Bind AutomationId, Mode=OneTime}"
+                                                AutomationProperties.Name="{x:Bind Name, Mode=OneTime}"
+                                                Click="CategoryAssignmentCheckBox_Click"
+                                                Content="{x:Bind Name, Mode=OneTime}"
+                                                IsChecked="{x:Bind IsAssigned, Mode=TwoWay}"
+                                                Tag="{x:Bind Mode=OneTime}" />
+                                            <Button
+                                                x:Uid="RenameCategoryButton"
+                                                Grid.Column="1"
+                                                AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetCategoryRenameAutomationId(Id), Mode=OneTime}"
+                                                Click="RenameCategoryButton_Click"
+                                                Tag="{x:Bind Mode=OneTime}">
+                                                <FontIcon Glyph="&#xE70F;" />
+                                            </Button>
+                                            <Button
+                                                x:Uid="DeleteCategoryButton"
+                                                Grid.Column="2"
+                                                AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetCategoryDeleteAutomationId(Id), Mode=OneTime}"
+                                                Click="DeleteCategoryButton_Click"
+                                                Tag="{x:Bind Mode=OneTime}">
+                                                <FontIcon Glyph="{StaticResource AppDeleteIconGlyph}" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Grid
+                        x:Name="DetailCommandGrid"
+                        Grid.Row="2"
+                        Margin="0,12,0,16"
+                        MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
+                        Padding="16,0"
+                        HorizontalAlignment="Center"
+                        ColumnSpacing="{StaticResource AppSpacingSm}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            x:Uid="DetailAddReminderButton"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="DetailAddReminderButton"
+                            Click="DetailAddReminderButton_Click"
+                            IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsWorking), Mode=OneWay}" />
+                        <Button
+                            x:Uid="SaveDetailsButton"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="SaveDetailsButton"
+                            Command="{x:Bind ViewModel.SaveDetailCommand, Mode=OneTime}"
+                            Style="{StaticResource AccentButtonStyle}" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border
+            x:Name="DropOverlay"
+            Grid.ColumnSpan="2"
+            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+            BorderThickness="2"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="{StaticResource AppSpacingMd}">
+                <FontIcon FontSize="{StaticResource AppEmptyStateIconSize}" AutomationProperties.AccessibilityView="Raw" Glyph="&#xE8B7;" />
+                <TextBlock x:Uid="DropOverlayTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock x:Uid="DropOverlayMessage" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
