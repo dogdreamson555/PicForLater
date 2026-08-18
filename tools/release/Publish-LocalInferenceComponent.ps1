@@ -17,7 +17,9 @@ param(
 
     [string]$SigningPrivateKeyPath,
 
-    [switch]$SkipArchive
+    [switch]$SkipArchive,
+
+    [switch]$NoRestore
 )
 
 Set-StrictMode -Version Latest
@@ -67,16 +69,26 @@ if (Test-Path -LiteralPath $componentRoot) {
 }
 
 $projectPath = Join-Path $repositoryRoot 'src\PicForLater.LocalInference\PicForLater.LocalInference.csproj'
-& dotnet publish $projectPath `
-    -c Release `
-    "-p:Platform=$Platform" `
-    "-p:RuntimeIdentifier=$runtimeIdentifier" `
-    '-p:SelfContained=true' `
-    '-p:PublishTrimmed=false' `
-    '-p:DebugSymbols=false' `
-    '-p:DebugType=None' `
-    '-p:CopyOutputSymbolsToPublishDirectory=false' `
-    -o $componentRoot
+$publishArguments = @(
+    'publish',
+    $projectPath,
+    '-c',
+    'Release',
+    "-p:Platform=$Platform",
+    "-p:RuntimeIdentifier=$runtimeIdentifier",
+    '-p:SelfContained=true',
+    '-p:PublishTrimmed=false',
+    '-p:DebugSymbols=false',
+    '-p:DebugType=None',
+    '-p:CopyOutputSymbolsToPublishDirectory=false',
+    '-o',
+    $componentRoot
+)
+if ($NoRestore) {
+    $publishArguments += '--no-restore'
+}
+
+& dotnet @publishArguments
 if ($LASTEXITCODE -ne 0) {
     throw "Local inference publish failed with exit code $LASTEXITCODE."
 }

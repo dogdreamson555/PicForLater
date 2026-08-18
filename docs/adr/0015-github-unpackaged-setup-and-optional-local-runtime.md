@@ -18,9 +18,10 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
 1. 正式发行改为真正的 unpackaged WinUI 3。应用以
    `WindowsPackageType=None` 构建并从普通 `.exe` 启动，不生成或安装应用 MSIX，
    运行时不假定 package identity。
-2. GitHub Release 只提供传统 `Setup.exe`，不额外上传 checksum sidecar。首版允许用户
-   从 GitHub 手动获取更新，不在本次迁移中新增后台自动更新器。未签名状态和 SmartScreen
-   预期必须在 README 与 Release 说明中如实披露。
+2. GitHub Release 提供传统 `Setup.exe`，并为按需本地分析提供架构专用的签名组件清单、
+   detached signature 和组件 ZIP；不额外上传 checksum sidecar。首版允许用户从 GitHub
+   手动获取应用更新，不在本次迁移中新增后台自动更新器。未签名状态和 SmartScreen 预期
+   必须在 README 与 Release 说明中如实披露。
 3. 生产数据根固定为 `%LocalAppData%\PicForLater`。数据库、原图、缓存、staging、
    模型、设置和可选组件都位于该用户目录下，不放入安装目录；核心程序覆盖升级和普通
    卸载不得默认删除这些用户数据。Core 与 Infrastructure 继续只接收注入的绝对根路径。

@@ -11,17 +11,21 @@ $workflowRoot = Join-Path $repositoryRoot '.github\workflows'
 $ciPath = Join-Path $workflowRoot 'ci.yml'
 $releasePath = Join-Path $workflowRoot 'release.yml'
 $setupBuildPath = Join-Path $PSScriptRoot 'Build-Setup.ps1'
+$componentBuildPath = Join-Path $PSScriptRoot 'Publish-LocalInferenceComponent.ps1'
 $setupDefinitionPath = Join-Path $PSScriptRoot 'setup\PicForLater.iss'
 $runtimeManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
 $appProjectPath = Join-Path $repositoryRoot 'src\PicForLater.App\PicForLater.App.csproj'
+$arm64ComponentLockPath = Join-Path $repositoryRoot 'src\PicForLater.LocalInference\packages.arm64.lock.json'
 
 foreach ($requiredPath in @(
     $ciPath,
     $releasePath,
     $setupBuildPath,
+    $componentBuildPath,
     $setupDefinitionPath,
     $runtimeManifestPath,
     $appProjectPath,
+    $arm64ComponentLockPath,
     (Join-Path $repositoryRoot 'global.json'))) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Required release file is missing: $requiredPath"
@@ -62,9 +66,18 @@ foreach ($workflow in @($ci, $release)) {
             throw "A workflow is missing the required token: $requiredToken"
         }
     }
-    if ($workflow -match '\$\{\{\s*secrets\.') {
-        throw 'Core build/release workflows must not consume secrets.'
-    }
+}
+if ($ci -match '\$\{\{\s*secrets\.') {
+    throw 'The CI workflow must not consume secrets.'
+}
+$releaseSecretReferences = @(
+    [regex]::Matches($release, '\$\{\{\s*secrets\.([A-Z0-9_]+)\s*\}\}') |
+        ForEach-Object { $_.Groups[1].Value } |
+        Sort-Object -Unique
+)
+if ($releaseSecretReferences.Count -ne 1 -or
+    $releaseSecretReferences[0] -ne 'LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM') {
+    throw 'The release workflow may consume only the approved local-inference signing secret.'
 }
 
 if (-not $release.Contains('workflow_dispatch:', [StringComparison]::Ordinal) -or
@@ -74,11 +87,18 @@ if (-not $release.Contains('workflow_dispatch:', [StringComparison]::Ordinal) -o
 foreach ($requiredReleaseToken in @(
     'needs: validate',
     'Build-Setup.ps1',
+    'Publish-LocalInferenceComponent.ps1',
     "-Platform '`${{ matrix.platform }}'",
     'PicForLater-Setup-$env:APP_VERSION-$arch.exe',
+    'PicForLater.LocalInference-$arch-$env:APP_VERSION.zip',
+    'local-inference-$arch.release.json',
     'artifacts/github/${{ matrix.artifact_arch }}/*',
     'if-no-files-found: error',
-    'Expected exactly one Setup.exe')) {
+    'Expected exactly four release assets',
+    'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c',
+    'Expected exactly eight GitHub Release assets',
+    'contents: write',
+    'gh release create')) {
     if (-not $release.Contains($requiredReleaseToken, [StringComparison]::Ordinal)) {
         throw "The release workflow is missing an artifact-path invariant: $requiredReleaseToken"
     }
@@ -91,6 +111,10 @@ $windowsAppSdkReference = $appProject.SelectSingleNode(
 if ($null -eq $windowsAppSdkReference -or
     $windowsAppSdkReference.GetAttribute('Version') -ne $runtimeManifest.version) {
     throw 'The Windows App SDK package and pinned offline Runtime versions differ.'
+}
+$applicationIcon = $appProject.SelectSingleNode('/Project/PropertyGroup/ApplicationIcon')
+if ($null -eq $applicationIcon -or $applicationIcon.InnerText -ne 'Assets\AppIcon.ico') {
+    throw 'The App executable must embed Assets\AppIcon.ico for installed shortcuts.'
 }
 foreach ($architecture in @('x64', 'arm64')) {
     $definition = $runtimeManifest.architectures.$architecture
@@ -113,7 +137,8 @@ if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne '
     ActionsPinnedToFullSha = $usesLines.Count
     ReleaseTrigger = 'workflow_dispatch only'
     ArtifactArchitectures = 'x64, arm64'
-    ArtifactFilesPerArchitecture = 'Setup.exe'
+    ArtifactFilesPerArchitecture = 'Setup.exe, signed local-inference manifest/signature/archive'
+    GitHubRelease = 'v<Version>, 8 assets'
     WindowsAppRuntime = $runtimeManifest.version
     DotNetSdk = $globalJson.sdk.version
 }

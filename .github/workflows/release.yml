@@ -1,4 +1,4 @@
-name: Build release candidates
+name: Publish release
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-candidate
+  group: release-publish
   cancel-in-progress: false
 
 jobs:
@@ -15,6 +15,8 @@ jobs:
     name: Release build and tests
     runs-on: windows-2025
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -30,7 +32,21 @@ jobs:
         with:
           dotnet-version: 10.0.302
           cache: true
-          cache-dependency-path: "**/packages.lock.json"
+          cache-dependency-path: "**/packages*.lock.json"
+
+      - name: Resolve release version
+        id: version
+        shell: pwsh
+        run: |
+          $versionOutput = & dotnet msbuild .\src\PicForLater.App\PicForLater.App.csproj '-getProperty:Version' '-p:Configuration=Release'
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not read the application version.'
+          }
+          $version = ($versionOutput | Select-Object -Last 1).Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
+            throw "Invalid release version: $version"
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Restore locked dependencies
         shell: pwsh
@@ -45,10 +61,10 @@ jobs:
         run: dotnet test .\PicForLater.slnx -c Release --no-build --no-restore --logger "trx;LogFilePrefix=release"
 
   package:
-    name: Setup ${{ matrix.artifact_arch }}
+    name: Release assets ${{ matrix.artifact_arch }}
     needs: validate
     runs-on: windows-2025
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -60,6 +76,7 @@ jobs:
             artifact_arch: arm64
             rid: win-arm64
     env:
+      APP_VERSION: ${{ needs.validate.outputs.version }}
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
     steps:
@@ -74,20 +91,11 @@ jobs:
         with:
           dotnet-version: 10.0.302
           cache: true
-          cache-dependency-path: "**/packages.lock.json"
+          cache-dependency-path: "**/packages*.lock.json"
 
-      - name: Resolve version and Inno Setup compiler
+      - name: Resolve Inno Setup compiler
         shell: pwsh
         run: |
-          $versionOutput = & dotnet msbuild .\src\PicForLater.App\PicForLater.App.csproj '-getProperty:Version' '-p:Configuration=Release'
-          if ($LASTEXITCODE -ne 0) {
-            throw 'Could not read the application version.'
-          }
-          $version = ($versionOutput | Select-Object -Last 1).Trim()
-          if ($version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
-            throw "Invalid Setup version: $version"
-          }
-
           $candidates = @(
             (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1),
             (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
@@ -99,13 +107,15 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($compiler)) {
             throw 'The GitHub runner does not provide Inno Setup 6.'
           }
-
-          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "INNO_COMPILER=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Restore locked App dependencies
+      - name: Restore locked release dependencies
         shell: pwsh
-        run: dotnet restore .\src\PicForLater.App\PicForLater.App.csproj --locked-mode -p:Platform=${{ matrix.platform }} -p:RuntimeIdentifier=${{ matrix.rid }}
+        run: |
+          dotnet restore .\src\PicForLater.App\PicForLater.App.csproj --locked-mode -p:Platform=${{ matrix.platform }} -p:RuntimeIdentifier=${{ matrix.rid }}
+          if ($LASTEXITCODE -ne 0) { throw 'App restore failed.' }
+          dotnet restore .\src\PicForLater.LocalInference\PicForLater.LocalInference.csproj --locked-mode -p:Platform=${{ matrix.platform }} -p:RuntimeIdentifier=${{ matrix.rid }}
+          if ($LASTEXITCODE -ne 0) { throw 'Local inference restore failed.' }
 
       - name: Build unpackaged publish and Setup
         shell: pwsh
@@ -120,29 +130,142 @@ jobs:
             -InnoCompilerPath $env:INNO_COMPILER `
             -NoRestore
 
+      - name: Build signed local inference component
+        shell: pwsh
+        env:
+          LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM: ${{ secrets.LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM)) {
+            throw 'The LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM repository secret is required.'
+          }
+
+          $keyPath = Join-Path $env:RUNNER_TEMP 'local-inference-signing-private.pem'
+          [IO.File]::WriteAllText(
+            $keyPath,
+            $env:LOCAL_INFERENCE_SIGNING_PRIVATE_KEY_PEM,
+            [Text.UTF8Encoding]::new($false))
+          try {
+            .\tools\release\Publish-LocalInferenceComponent.ps1 `
+              -Platform '${{ matrix.platform }}' `
+              -Version $env:APP_VERSION `
+              -OutputRoot (Join-Path $env:RUNNER_TEMP 'PicForLater-components') `
+              -SigningPrivateKeyPath $keyPath `
+              -NoRestore
+          }
+          finally {
+            Remove-Item -LiteralPath $keyPath -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Verify and collect release files
         shell: pwsh
         run: |
           $arch = '${{ matrix.artifact_arch }}'
-          $fileName = "PicForLater-Setup-$env:APP_VERSION-$arch.exe"
-           $sourceRoot = Join-Path $env:RUNNER_TEMP "PicForLater-release\$env:APP_VERSION\$arch\installer"
-           $setupPath = Join-Path $sourceRoot $fileName
-           if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
-             throw "Expected Setup outputs were not produced under $sourceRoot."
-           }
+          $setupName = "PicForLater-Setup-$env:APP_VERSION-$arch.exe"
+          $componentArchiveName = "PicForLater.LocalInference-$arch-$env:APP_VERSION.zip"
+          $manifestName = "local-inference-$arch.release.json"
+          $expectedNames = @(
+            $setupName,
+            $componentArchiveName,
+            $manifestName,
+            "$manifestName.sig"
+          )
 
-           $destination = Join-Path $PWD "artifacts\github\$arch"
-           New-Item -ItemType Directory -Path $destination -Force | Out-Null
-           Copy-Item -LiteralPath $setupPath -Destination $destination
-           $collected = @(Get-ChildItem -LiteralPath $destination -File)
-           if ($collected.Count -ne 1 -or $collected[0].Name -ne $fileName) {
-             throw "Expected exactly one Setup.exe, found $($collected.Name -join ', ')."
-           }
+          $setupPath = Join-Path $env:RUNNER_TEMP "PicForLater-release\$env:APP_VERSION\$arch\installer\$setupName"
+          $componentRoot = Join-Path $env:RUNNER_TEMP "PicForLater-components\$arch"
+          $sourcePaths = @(
+            $setupPath,
+            (Join-Path $componentRoot $componentArchiveName),
+            (Join-Path $componentRoot $manifestName),
+            (Join-Path $componentRoot "$manifestName.sig")
+          )
+          foreach ($sourcePath in $sourcePaths) {
+            if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+              throw "Expected release asset was not produced: $sourcePath"
+            }
+          }
 
-      - name: Upload Setup candidate
+          $destination = Join-Path $PWD "artifacts\github\$arch"
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          Copy-Item -LiteralPath $sourcePaths -Destination $destination
+          $collectedNames = @(
+            Get-ChildItem -LiteralPath $destination -File |
+              Sort-Object Name |
+              Select-Object -ExpandProperty Name
+          )
+          $sortedExpectedNames = @($expectedNames | Sort-Object)
+          if ($collectedNames.Count -ne 4 -or
+              (Compare-Object $sortedExpectedNames $collectedNames).Count -ne 0) {
+            throw "Expected exactly four release assets for $arch; found $($collectedNames -join ', ')."
+          }
+
+      - name: Upload release candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: PicForLater-Setup-${{ matrix.artifact_arch }}
+          name: PicForLater-release-${{ matrix.artifact_arch }}
           path: artifacts/github/${{ matrix.artifact_arch }}/*
           if-no-files-found: error
           retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    needs: [validate, package]
+    runs-on: windows-2025
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      APP_VERSION: ${{ needs.validate.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download verified release candidates
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: PicForLater-release-*
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: Verify complete release asset set
+        shell: pwsh
+        run: |
+          $expectedNames = @(
+            "PicForLater-Setup-$env:APP_VERSION-x64.exe",
+            "PicForLater-Setup-$env:APP_VERSION-arm64.exe",
+            "PicForLater.LocalInference-x64-$env:APP_VERSION.zip",
+            "PicForLater.LocalInference-arm64-$env:APP_VERSION.zip",
+            'local-inference-x64.release.json',
+            'local-inference-x64.release.json.sig',
+            'local-inference-arm64.release.json',
+            'local-inference-arm64.release.json.sig'
+          ) | Sort-Object
+          $assets = @(Get-ChildItem -LiteralPath .\artifacts\release -File | Sort-Object Name)
+          $assetNames = @($assets | Select-Object -ExpandProperty Name)
+          if ($assets.Count -ne 8 -or (Compare-Object $expectedNames $assetNames).Count -ne 0) {
+            throw "Expected exactly eight GitHub Release assets; found $($assetNames -join ', ')."
+          }
+          if (@($assets | Where-Object Length -le 0).Count -ne 0) {
+            throw 'A GitHub Release asset is empty.'
+          }
+
+      - name: Create GitHub Release
+        shell: pwsh
+        run: |
+          $tag = "v$env:APP_VERSION"
+          & gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "GitHub Release $tag already exists; refusing to overwrite it."
+          }
+
+          $assetPaths = @(
+            Get-ChildItem -LiteralPath .\artifacts\release -File |
+              Sort-Object Name |
+              Select-Object -ExpandProperty FullName
+          )
+          & gh release create $tag @assetPaths `
+            --repo $env:GITHUB_REPOSITORY `
+            --target $env:GITHUB_SHA `
+            --title "PicForLater $env:APP_VERSION" `
+            --generate-notes `
+            --latest
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub Release creation failed with exit code $LASTEXITCODE."
+          }
