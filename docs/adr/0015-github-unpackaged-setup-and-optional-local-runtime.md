@@ -44,8 +44,9 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
    原子切换 `active.json`。在信任根和稳定 Release URL 确认前，不启用可执行组件下载。
 8. 核心采用 `.NET self-contained + Windows App SDK framework-dependent`。正式安装器
    使用 Inno Setup 生成架构专用的离线 `Setup.exe`：x64 Setup 只携带微软签名的 x64
-   Windows App Runtime 2.3.1 安装器，ARM64 Setup 只携带 ARM64 安装器。构建脚本固定其
-   长度、SHA-256 和 Microsoft Authenticode 签名，并以 `--quiet --msix` 为当前用户注册
+   Windows App Runtime 2.3.1 安装器及 Microsoft Visual C++ 运行库，ARM64 Setup 只携带
+   ARM64 安装器。构建脚本固定其长度、SHA-256 和 Microsoft Authenticode 签名，并以
+   `--quiet --msix` 为当前用户注册
    framework、Main、Singleton 和 DDLM 包；PicForLater 本身始终不注册为 MSIX。
 9. Setup 是 per-user、`PrivilegesRequired=lowest` 且不允许提升覆盖，默认安装到
    `%LocalAppData%\Programs\PicForLater`。开始复制程序前先安装 Runtime；创建开始菜单

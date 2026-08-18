@@ -34,6 +34,12 @@ The direct dependency is the stable umbrella package, not individually pinned Wi
 
 The umbrella package declares these top-level transitive components: `Microsoft.WindowsAppSDK.Base 2.0.4`, `Foundation 2.3.5`, `InteractiveExperiences 2.1.3`, `WinUI 2.3.0`, `DWrite 2.1.0`, `Widgets 2.0.5`, `AI 2.3.4`, `ML 2.1.74`, and exact `Runtime 2.3.1`. They are implementation dependencies selected by the umbrella package, not separate PicForLater capability commitments. In particular, phase 1 does not invoke the transitive AI/ML APIs or add model downloads or network behavior.
 
+## Microsoft Visual C++ Redistributable 14.51.36247.0
+
+- Purpose: native runtime required by the optional local ONNX Runtime component.
+- Distribution: each architecture-specific Setup includes the matching Microsoft-signed redistributable and installs it with Microsoft's supported installer before copying PicForLater.
+- License and deployment terms: https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
+
 ## Microsoft.Web.WebView2 1.0.3719.77 (transitive)
 
 - Purpose: transitive SDK/runtime integration through the umbrella package's WinUI component; PicForLater does not directly host a WebView.

@@ -468,6 +468,7 @@
   <data name="RecommendedQwenTokenLimitFailedStatus" xml:space="preserve"><value>Qwen 本地生成未能在受控 token 预算内完成结构化结果；模型未启用，已校验文件已保留。</value></data>
   <data name="RecommendedQwenStructuredOutputFailedStatus" xml:space="preserve"><value>Qwen 已完成本地生成，但结果未通过严格 JSON Schema 与证据校验；模型未启用，已校验文件已保留。</value></data>
   <data name="RecommendedQwenGenerationFailedStatus" xml:space="preserve"><value>Qwen 自检已进入本地生成阶段，但生成或严格结构化输出校验失败；模型未启用，已校验文件已保留。</value></data>
+  <data name="LocalWorkerNativeRuntimeMissingStatus" xml:space="preserve"><value>缺少或无法加载 Microsoft Visual C++ 运行库。请运行最新的 PicForLater Setup 完成前置组件安装，然后重试；已校验的模型文件已保留。</value></data>
   <data name="ReminderNotificationsUnavailableInfo.Title" xml:space="preserve"><value>系统通知当前不可用</value></data>
   <data name="ReminderNotificationsUnavailableInfo.Message" xml:space="preserve"><value>提醒仍保存在本机，但 Windows 通知被关闭或当前环境不支持通知。启用通知后重新打开本页即可重试调度。</value></data>
   <data name="ReminderStatusInfo.Title" xml:space="preserve"><value>提醒已更新</value></data>

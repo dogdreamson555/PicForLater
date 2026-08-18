@@ -468,6 +468,7 @@
   <data name="RecommendedQwenTokenLimitFailedStatus" xml:space="preserve"><value>Local Qwen generation did not finish within the bounded token budget. The model was not enabled; verified files were kept.</value></data>
   <data name="RecommendedQwenStructuredOutputFailedStatus" xml:space="preserve"><value>Local Qwen generation completed, but the result failed strict JSON Schema or evidence validation. The model was not enabled; verified files were kept.</value></data>
   <data name="RecommendedQwenGenerationFailedStatus" xml:space="preserve"><value>The Qwen self-test reached local generation, but generation or strict structured-output validation failed. The model was not enabled; verified files were kept.</value></data>
+  <data name="LocalWorkerNativeRuntimeMissingStatus" xml:space="preserve"><value>The Microsoft Visual C++ runtime is missing or could not be loaded. Run the latest PicForLater Setup to install the prerequisite, then try again. Verified model files were kept.</value></data>
   <data name="ReminderNotificationsUnavailableInfo.Title" xml:space="preserve"><value>System notifications are unavailable</value></data>
   <data name="ReminderNotificationsUnavailableInfo.Message" xml:space="preserve"><value>The reminder remains on this device, but Windows notifications are disabled or unsupported. Reopen this page after enabling notifications to retry scheduling.</value></data>
   <data name="ReminderStatusInfo.Title" xml:space="preserve"><value>Reminder updated</value></data>

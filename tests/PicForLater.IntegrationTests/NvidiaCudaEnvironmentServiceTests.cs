@@ -105,6 +105,51 @@ public sealed class NvidiaCudaEnvironmentServiceTests
     }
 
     [Fact]
+    public async Task DownloadAndInstallRuntime_ThrottlesRapidDownloadProgressUpdates()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var requiredFiles = NvidiaCudaRuntimeLocator.CudaFiles
+            .Concat(NvidiaCudaRuntimeLocator.CudnnFiles)
+            .ToArray();
+        var payload = CreateArchive(requiredFiles, firstFileBytes: 8 * 1024 * 1024);
+        var definition = new NvidiaCudaRuntimeArchiveDefinition(
+            "runtime.zip",
+            new Uri("https://developer.download.nvidia.com/compute/cuda/redist/test/runtime.zip"),
+            payload.LongLength,
+            Hash(payload),
+            requiredFiles);
+        using var httpClient = new HttpClient(new StaticArchiveHandler(payload));
+        var package = new NvidiaCudaRuntimePackageInfo(
+            "12.8-test",
+            "9-test",
+            payload.LongLength,
+            payload.LongLength,
+            "https://example.invalid/cuda-license",
+            "https://example.invalid/cudnn-license",
+            "https://developer.download.nvidia.com/compute/cuda/redist/");
+        NvidiaCudaRuntimeLocation? LocateManaged(string path) =>
+            requiredFiles.All(fileName => File.Exists(Path.Combine(path, fileName)))
+                ? new NvidiaCudaRuntimeLocation(path, path, NvidiaCudaRuntimeSource.AppManaged)
+                : null;
+        var service = new NvidiaCudaEnvironmentService(
+            root.Paths,
+            httpClient,
+            new FakeHardwareProbe(),
+            archives: [definition],
+            runtimePackage: package,
+            runtimeLocator: LocateManaged,
+            timeProvider: new FrozenTimeProvider());
+        var reports = new List<ModelDownloadProgress>();
+
+        await service.DownloadAndInstallRuntimeAsync(new CallbackProgress(reports.Add));
+
+        var downloadReports = reports.Where(report => report.Stage == ModelDownloadStage.Downloading).ToArray();
+        Assert.Equal(2, downloadReports.Length);
+        Assert.Equal(payload.LongLength, downloadReports[^1].DownloadedBytes);
+    }
+
+    [Fact]
     public async Task DownloadAndInstallRuntime_HashMismatchDoesNotReplaceExistingRuntimeDirectory()
     {
         using var root = new TemporaryAppDataRoot();
@@ -143,16 +188,24 @@ public sealed class NvidiaCudaEnvironmentServiceTests
         Assert.Equal("keep", await File.ReadAllTextAsync(markerPath));
     }
 
-    private static byte[] CreateArchive(IReadOnlyList<string> fileNames)
+    private static byte[] CreateArchive(IReadOnlyList<string> fileNames, int firstFileBytes = 0)
     {
         using var stream = new MemoryStream();
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            foreach (var fileName in fileNames)
+            for (var index = 0; index < fileNames.Count; index++)
             {
+                var fileName = fileNames[index];
                 var entry = archive.CreateEntry($"runtime/bin/{fileName}", CompressionLevel.NoCompression);
                 using var destination = entry.Open();
-                destination.Write("test-runtime"u8);
+                if (index == 0 && firstFileBytes > 0)
+                {
+                    destination.Write(new byte[firstFileBytes]);
+                }
+                else
+                {
+                    destination.Write("test-runtime"u8);
+                }
             }
 
             var ignored = archive.CreateEntry("runtime/bin/not-allowlisted.dll");
@@ -190,5 +243,16 @@ public sealed class NvidiaCudaEnvironmentServiceTests
                 Content = new ByteArrayContent(payload),
             });
         }
+    }
+
+    private sealed class CallbackProgress(Action<ModelDownloadProgress> callback)
+        : IProgress<ModelDownloadProgress>
+    {
+        public void Report(ModelDownloadProgress value) => callback(value);
+    }
+
+    private sealed class FrozenTimeProvider : TimeProvider
+    {
+        public override long GetTimestamp() => 0;
     }
 }

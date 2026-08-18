@@ -10,6 +10,9 @@
 #ifndef RuntimeInstallerPath
   #error RuntimeInstallerPath must be defined by Build-Setup.ps1.
 #endif
+#ifndef VisualCppRuntimeInstallerPath
+  #error VisualCppRuntimeInstallerPath must be defined by Build-Setup.ps1.
+#endif
 #ifndef SetupOutputDir
   #error SetupOutputDir must be defined by Build-Setup.ps1.
 #endif
@@ -20,6 +23,7 @@
 #define AppIdValue "D8947F12-A34E-4A61-A6E2-B406940EE5EC"
 #define AppExeName "PicForLater.App.exe"
 #define RuntimeInstallerName "WindowsAppRuntimeInstall.exe"
+#define VisualCppRuntimeInstallerName "VC_redist.exe"
 
 #if AppArchitecture == "x64"
   #define AllowedArchitecture "x64os"
@@ -67,6 +71,7 @@ ChangesEnvironment=no
 [Files]
 Source: "{#AppPublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#RuntimeInstallerPath}"; DestName: "{#RuntimeInstallerName}"; Flags: dontcopy
+Source: "{#VisualCppRuntimeInstallerPath}"; DestName: "{#VisualCppRuntimeInstallerName}"; Flags: dontcopy
 
 [Icons]
 Name: "{autoprograms}\PicForLater"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
@@ -87,6 +92,29 @@ var
   ResultCode: Integer;
 begin
   Result := '';
+  ExtractTemporaryFile('{#VisualCppRuntimeInstallerName}');
+  if not ShellExec(
+    'runas',
+    ExpandConstant('{tmp}\{#VisualCppRuntimeInstallerName}'),
+    '/install /quiet /norestart',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode) then
+  begin
+    Result := 'Microsoft Visual C++ Runtime could not be started.';
+    exit;
+  end;
+
+  if (ResultCode = 3010) or (ResultCode = 1641) then
+    NeedsRestart := True
+  else if (ResultCode <> 0) and (ResultCode <> 1638) then
+  begin
+    Result := 'Microsoft Visual C++ Runtime installation failed with exit code ' +
+      IntToStr(ResultCode) + '.';
+    exit;
+  end;
+
   ExtractTemporaryFile('{#RuntimeInstallerName}');
   if not Exec(
     ExpandConstant('{tmp}\{#RuntimeInstallerName}'),

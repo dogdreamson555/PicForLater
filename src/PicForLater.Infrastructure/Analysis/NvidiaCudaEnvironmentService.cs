@@ -178,6 +178,7 @@ internal sealed record NvidiaCudaRuntimeArchiveDefinition(
 public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
 {
     private const string RuntimeId = "nvidia-cuda-runtime";
+    private static readonly TimeSpan DownloadProgressInterval = TimeSpan.FromMilliseconds(250);
     private const int MinimumDriverCudaVersion = 12_000;
     // NVIDIA's nominal 8 GB cards can report about 7.9 GiB through the driver
     // after reserved regions are excluded. Keep the qualified 8 GB class while
@@ -237,6 +238,7 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
     private readonly Func<string, NvidiaCudaRuntimeLocation?> _runtimeLocator;
     private readonly SemaphoreSlim _operationGate = new(1, 1);
     private readonly TimeSpan _downloadInactivityTimeout;
+    private readonly TimeProvider _timeProvider;
 
     public NvidiaCudaEnvironmentService(
         AppDataPaths paths,
@@ -253,7 +255,8 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
         TimeSpan? downloadInactivityTimeout = null,
         IReadOnlyList<NvidiaCudaRuntimeArchiveDefinition>? archives = null,
         NvidiaCudaRuntimePackageInfo? runtimePackage = null,
-        Func<string, NvidiaCudaRuntimeLocation?>? runtimeLocator = null)
+        Func<string, NvidiaCudaRuntimeLocation?>? runtimeLocator = null,
+        TimeProvider? timeProvider = null)
     {
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -261,6 +264,7 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
         _archives = archives ?? ProductionArchives;
         RuntimePackage = runtimePackage ?? ProductionRuntimePackage;
         _runtimeLocator = runtimeLocator ?? NvidiaCudaRuntimeLocator.Locate;
+        _timeProvider = timeProvider ?? TimeProvider.System;
         if (_archives.Count == 0
             || _archives.Sum(archive => archive.ByteLength) != RuntimePackage.DownloadBytes)
         {
@@ -595,6 +599,7 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
             using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
             var fileBytes = 0L;
+            var lastProgressTimestamp = _timeProvider.GetTimestamp();
             try
             {
                 while (true)
@@ -618,10 +623,18 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
                     await destination.WriteAsync(
                         buffer.AsMemory(0, read),
                         transferCancellation.Token).ConfigureAwait(false);
-                    progress?.Report(Progress(
-                        ModelDownloadStage.Downloading,
-                        alreadyDownloadedBytes + fileBytes,
-                        archive.FileName));
+                    var progressTimestamp = _timeProvider.GetTimestamp();
+                    if (progress is not null
+                        && (fileBytes == read
+                            || _timeProvider.GetElapsedTime(lastProgressTimestamp, progressTimestamp)
+                                >= DownloadProgressInterval))
+                    {
+                        progress.Report(Progress(
+                            ModelDownloadStage.Downloading,
+                            alreadyDownloadedBytes + fileBytes,
+                            archive.FileName));
+                        lastProgressTimestamp = progressTimestamp;
+                    }
                 }
 
                 await destination.FlushAsync(transferCancellation.Token).ConfigureAwait(false);

@@ -27,6 +27,7 @@ $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $projectPath = Join-Path $repositoryRoot 'src\PicForLater.App\PicForLater.App.csproj'
 $setupScriptPath = Join-Path $PSScriptRoot 'setup\PicForLater.iss'
 $runtimeManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
+$visualCppManifestPath = Join-Path $PSScriptRoot 'setup\visual-cpp-runtime.json'
 $isDryRun = $DryRun -or $SkipCompile
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
@@ -87,6 +88,7 @@ foreach ($requiredSetupDirective in @(
     'MinVersion=10.0.19041',
     'Source: "{#AppPublishDir}\*"',
     'Source: "{#RuntimeInstallerPath}"',
+    'Source: "{#VisualCppRuntimeInstallerPath}"',
     'Parameters: "--uninstall-notifications"')) {
     if (-not $setupDefinition.Contains($requiredSetupDirective, [StringComparison]::Ordinal)) {
         throw "The Inno Setup definition is missing a required release directive: $requiredSetupDirective"
@@ -98,6 +100,7 @@ if ($setupDefinition -match '(?im)^\s*(DelTree|DeleteFile|DeleteDir)\b' -or
 }
 
 $runtimeManifest = Get-Content -Raw -LiteralPath $runtimeManifestPath | ConvertFrom-Json
+$visualCppManifest = Get-Content -Raw -LiteralPath $visualCppManifestPath | ConvertFrom-Json
 $appProject = [xml](Get-Content -Raw -LiteralPath $projectPath)
 $windowsAppSdkReference = $appProject.SelectSingleNode(
     "/Project/ItemGroup/PackageReference[@Include='Microsoft.WindowsAppSDK']")
@@ -110,25 +113,40 @@ $runtimeDefinition = $runtimeManifest.architectures.$architecture
 if ($null -eq $runtimeDefinition) {
     throw "No Windows App SDK Runtime is pinned for $architecture."
 }
+$visualCppDefinition = $visualCppManifest.architectures.$architecture
+if ($null -eq $visualCppDefinition) {
+    throw "No Microsoft Visual C++ Runtime is pinned for $architecture."
+}
 
 New-Item -ItemType Directory -Path $runtimeCacheRootPath -Force | Out-Null
 $runtimeInstallerPath = Join-Path $runtimeCacheRootPath (
     "WindowsAppRuntimeInstall-$architecture-$($runtimeManifest.version).exe")
+$visualCppInstallerPath = Join-Path $runtimeCacheRootPath (
+    "VC_redist-$architecture-$($visualCppManifest.version).exe")
 
-function Test-RuntimeInstaller {
-    param([Parameter(Mandatory = $true)][string]$Path)
+function Test-MicrosoftInstaller {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][object]$Definition,
+        [string]$ExpectedFileVersion
+    )
 
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         return $false
     }
 
     $file = Get-Item -LiteralPath $Path
-    if ($file.Length -ne [long]$runtimeDefinition.length) {
+    if ($file.Length -ne [long]$Definition.length) {
         return $false
     }
 
     $hash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
-    if (-not $hash.Equals([string]$runtimeDefinition.sha256, [StringComparison]::OrdinalIgnoreCase)) {
+    if (-not $hash.Equals([string]$Definition.sha256, [StringComparison]::OrdinalIgnoreCase)) {
+        return $false
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedFileVersion) -and
+        $file.VersionInfo.FileVersion -ne $ExpectedFileVersion) {
         return $false
     }
 
@@ -138,11 +156,11 @@ function Test-RuntimeInstaller {
         $signature.SignerCertificate.Subject -like 'CN=Microsoft Corporation,*'
 }
 
-if (-not (Test-RuntimeInstaller -Path $runtimeInstallerPath)) {
+if (-not (Test-MicrosoftInstaller -Path $runtimeInstallerPath -Definition $runtimeDefinition)) {
     $temporaryRuntimePath = "$runtimeInstallerPath.$([Guid]::NewGuid().ToString('N')).partial"
     try {
         Invoke-WebRequest -Uri $runtimeDefinition.uri -OutFile $temporaryRuntimePath -UseBasicParsing
-        if (-not (Test-RuntimeInstaller -Path $temporaryRuntimePath)) {
+        if (-not (Test-MicrosoftInstaller -Path $temporaryRuntimePath -Definition $runtimeDefinition)) {
             throw 'The downloaded Windows App SDK Runtime failed length, SHA-256, or Microsoft signature validation.'
         }
 
@@ -150,6 +168,27 @@ if (-not (Test-RuntimeInstaller -Path $runtimeInstallerPath)) {
     }
     finally {
         Remove-Item -LiteralPath $temporaryRuntimePath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+if (-not (Test-MicrosoftInstaller `
+    -Path $visualCppInstallerPath `
+    -Definition $visualCppDefinition `
+    -ExpectedFileVersion $visualCppManifest.version)) {
+    $temporaryVisualCppPath = "$visualCppInstallerPath.$([Guid]::NewGuid().ToString('N')).partial"
+    try {
+        Invoke-WebRequest -Uri $visualCppDefinition.uri -OutFile $temporaryVisualCppPath -UseBasicParsing
+        if (-not (Test-MicrosoftInstaller `
+            -Path $temporaryVisualCppPath `
+            -Definition $visualCppDefinition `
+            -ExpectedFileVersion $visualCppManifest.version)) {
+            throw 'The downloaded Microsoft Visual C++ Runtime failed version, length, SHA-256, or Microsoft signature validation.'
+        }
+
+        Move-Item -LiteralPath $temporaryVisualCppPath -Destination $visualCppInstallerPath -Force
+    }
+    finally {
+        Remove-Item -LiteralPath $temporaryVisualCppPath -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -250,6 +289,7 @@ if ($isDryRun) {
         PublishFileCount = $publishedFiles.Count
         PublishBytes = ($publishedFiles | Measure-Object Length -Sum).Sum
         RuntimeInstaller = $runtimeInstallerPath
+        VisualCppRuntimeInstaller = $visualCppInstallerPath
         ExpectedSetup = $setupPath
         Setup = $null
     }
@@ -279,6 +319,7 @@ if ([string]::IsNullOrWhiteSpace($InnoCompilerPath) -or
     "/DAppArchitecture=$architecture" `
     "/DAppPublishDir=$publishRoot" `
     "/DRuntimeInstallerPath=$runtimeInstallerPath" `
+    "/DVisualCppRuntimeInstallerPath=$visualCppInstallerPath" `
     "/DSetupOutputDir=$installerRoot" `
     "/DRepositoryRoot=$repositoryRoot" `
     $setupScriptPath
@@ -298,6 +339,7 @@ if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
     PublishFileCount = $publishedFiles.Count
     PublishBytes = ($publishedFiles | Measure-Object Length -Sum).Sum
     RuntimeInstaller = $runtimeInstallerPath
+    VisualCppRuntimeInstaller = $visualCppInstallerPath
     Setup = $setupPath
     SetupBytes = (Get-Item -LiteralPath $setupPath).Length
 }

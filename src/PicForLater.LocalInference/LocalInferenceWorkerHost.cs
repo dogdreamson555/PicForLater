@@ -471,19 +471,43 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
         await LocalInferenceProtocol.WriteAsync(_pipe, response, cancellationToken).ConfigureAwait(false);
     }
 
-    private static LocalInferenceError Classify(Exception exception) => exception switch
+    private static LocalInferenceError Classify(Exception exception)
     {
-        OcrProviderUnavailableException value => new(value.ErrorCode, false, "unavailable"),
-        OcrProviderException value => new(value.ErrorCode, value.IsRetryable, "provider"),
-        ModelPackageValidationException value => new(value.ErrorCode, false, "model-package"),
-        QwenStructuredOutputException value => new(value.ErrorCode, false, "model-output"),
-        LocalInferenceProtocolException value => new(value.ErrorCode, false, "protocol"),
-        OperationCanceledException => new("local-worker.operation-canceled", true, "canceled"),
-        FileNotFoundException => new("local-worker.file-not-found", false, "input"),
-        InvalidDataException => new("local-worker.invalid-input", false, "input"),
-        IOException => new("local-worker.io-failed", true, "io"),
-        _ => new("local-worker.unexpected-failure", true, "unexpected"),
-    };
+        if (ContainsNativeRuntimeFailure(exception))
+        {
+            return new LocalInferenceError(
+                "local-worker.native-runtime-missing",
+                false,
+                "dependency");
+        }
+
+        return exception switch
+        {
+            OcrProviderUnavailableException value => new(value.ErrorCode, false, "unavailable"),
+            OcrProviderException value => new(value.ErrorCode, value.IsRetryable, "provider"),
+            ModelPackageValidationException value => new(value.ErrorCode, false, "model-package"),
+            QwenStructuredOutputException value => new(value.ErrorCode, false, "model-output"),
+            LocalInferenceProtocolException value => new(value.ErrorCode, false, "protocol"),
+            OperationCanceledException => new("local-worker.operation-canceled", true, "canceled"),
+            FileNotFoundException => new("local-worker.file-not-found", false, "input"),
+            InvalidDataException => new("local-worker.invalid-input", false, "input"),
+            IOException => new("local-worker.io-failed", true, "io"),
+            _ => new("local-worker.unexpected-failure", true, "unexpected"),
+        };
+    }
+
+    private static bool ContainsNativeRuntimeFailure(Exception exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool IsProcessAlive(int processId)
     {

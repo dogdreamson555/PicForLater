@@ -14,6 +14,7 @@ $setupBuildPath = Join-Path $PSScriptRoot 'Build-Setup.ps1'
 $componentBuildPath = Join-Path $PSScriptRoot 'Publish-LocalInferenceComponent.ps1'
 $setupDefinitionPath = Join-Path $PSScriptRoot 'setup\PicForLater.iss'
 $runtimeManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
+$visualCppManifestPath = Join-Path $PSScriptRoot 'setup\visual-cpp-runtime.json'
 $appProjectPath = Join-Path $repositoryRoot 'src\PicForLater.App\PicForLater.App.csproj'
 $arm64ComponentLockPath = Join-Path $repositoryRoot 'src\PicForLater.LocalInference\packages.arm64.lock.json'
 
@@ -24,6 +25,7 @@ foreach ($requiredPath in @(
     $componentBuildPath,
     $setupDefinitionPath,
     $runtimeManifestPath,
+    $visualCppManifestPath,
     $appProjectPath,
     $arm64ComponentLockPath,
     (Join-Path $repositoryRoot 'global.json'))) {
@@ -110,6 +112,7 @@ foreach ($requiredReleaseToken in @(
 }
 
 $runtimeManifest = Get-Content -Raw -LiteralPath $runtimeManifestPath | ConvertFrom-Json
+$visualCppManifest = Get-Content -Raw -LiteralPath $visualCppManifestPath | ConvertFrom-Json
 $appProject = [xml](Get-Content -Raw -LiteralPath $appProjectPath)
 $windowsAppSdkReference = $appProject.SelectSingleNode(
     "/Project/ItemGroup/PackageReference[@Include='Microsoft.WindowsAppSDK']")
@@ -129,6 +132,30 @@ foreach ($architecture in @('x64', 'arm64')) {
         [string]$definition.uri -notmatch '^https://') {
         throw "The offline Runtime definition is incomplete for $architecture."
     }
+
+    $visualCppDefinition = $visualCppManifest.architectures.$architecture
+    if ($null -eq $visualCppDefinition -or
+        [long]$visualCppDefinition.length -le 0 -or
+        [string]$visualCppDefinition.sha256 -notmatch '^[0-9a-f]{64}$' -or
+        [string]$visualCppDefinition.uri -notmatch '^https://') {
+        throw "The Microsoft Visual C++ Runtime definition is incomplete for $architecture."
+    }
+}
+if ([string]$visualCppManifest.version -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+    throw 'The Microsoft Visual C++ Runtime manifest version is invalid.'
+}
+
+$setupBuild = Get-Content -Raw -LiteralPath $setupBuildPath
+$setupDefinition = Get-Content -Raw -LiteralPath $setupDefinitionPath
+foreach ($requiredVisualCppToken in @(
+    'VisualCppRuntimeInstallerPath',
+    '/install /quiet /norestart',
+    'ShellExec(',
+    "'runas'")) {
+    if (-not $setupBuild.Contains($requiredVisualCppToken, [StringComparison]::Ordinal) -and
+        -not $setupDefinition.Contains($requiredVisualCppToken, [StringComparison]::Ordinal)) {
+        throw "The Setup pipeline is missing a Visual C++ Runtime invariant: $requiredVisualCppToken"
+    }
 }
 
 $globalJson = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'global.json') | ConvertFrom-Json
@@ -145,5 +172,6 @@ if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne '
     ArtifactFilesPerArchitecture = 'Setup.exe, signed local-inference manifest/signature/archive'
     GitHubRelease = 'v<Version>, 8 assets'
     WindowsAppRuntime = $runtimeManifest.version
+    VisualCppRuntime = $visualCppManifest.version
     DotNetSdk = $globalJson.sdk.version
 }

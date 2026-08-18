@@ -725,6 +725,7 @@ public partial class SettingsPageViewModel : ObservableObject
                 "qwen.ungrounded-numeric-output" or
                 "qwen.schema-validation-failed" => "RecommendedQwenStructuredOutputFailedStatus",
             "qwen.generation-failed" => "RecommendedQwenGenerationFailedStatus",
+            "local-worker.native-runtime-missing" => "LocalWorkerNativeRuntimeMissingStatus",
             "nvidia.driver-missing" => "NvidiaDriverMissingStatus",
             "nvidia.cuda-device-missing" => "NvidiaCudaDeviceMissingStatus",
             "nvidia.driver-too-old" => "NvidiaDriverTooOldStatus",
