@@ -48,7 +48,12 @@ if ($LASTEXITCODE -ne 0) {
 
 $ci = Get-Content -Raw -LiteralPath $ciPath
 $release = Get-Content -Raw -LiteralPath $releasePath
+$componentBuild = Get-Content -Raw -LiteralPath $componentBuildPath
 $allWorkflows = "$ci`n$release"
+
+if ($componentBuild -notmatch 'componentLength\s*=\s*\[long\]') {
+    throw 'The component release manifest length must be serialized as an integer.'
+}
 
 $usesLines = @($allWorkflows -split "`r?`n" | Where-Object { $_ -match '^\s*uses:\s*' })
 if ($usesLines.Count -eq 0) {

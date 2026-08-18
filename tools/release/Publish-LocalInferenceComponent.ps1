@@ -159,8 +159,8 @@ if (-not $SkipArchive) {
         protocolMaximumVersion = $ProtocolMaximumVersion
         archiveFileName = $archiveName
         archiveLength = $archiveInfo.Length
-        componentLength = (Get-ChildItem -LiteralPath $componentRoot -File -Recurse |
-            Measure-Object Length -Sum).Sum
+        componentLength = [long]((Get-ChildItem -LiteralPath $componentRoot -File -Recurse |
+            Measure-Object Length -Sum).Sum)
         archiveSha256 = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
         componentManifestSha256 = (Get-FileHash -LiteralPath $componentManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
     } |
