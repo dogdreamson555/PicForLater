@@ -455,7 +455,7 @@
   <data name="RecommendedQwenSelfTestFailedStatus" xml:space="preserve"><value>Qwen 文件已完整下载并通过哈希，但本地多模态推理自检失败；模型未启用，已校验文件已保留。</value></data>
   <data name="RecommendedQwenSelfTestOutputMismatchStatus" xml:space="preserve"><value>Qwen 已完成本地推理，但没有按固定自检内容返回结构化结果；模型未启用，已校验文件已保留。</value></data>
   <data name="RecommendedQwenModelLoadFailedStatus" xml:space="preserve"><value>Qwen 文件已完整下载并通过哈希，但 ONNX Runtime GenAI 无法加载模型图；模型未启用，已校验文件已保留。</value></data>
-  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>CUDA Qwen 文件已通过哈希，但 CUDA Provider 无法加载。请确认已安装 CUDA 12.x 与 cuDNN 9.x，并将两者的 bin 目录加入 PATH 后重启应用；模型未启用，原能力槽位保持不变。</value></data>
+  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>CUDA Qwen 文件已通过哈希，但 CUDA Provider 自检未通过。若 NVIDIA 环境显示已就绪，则当前 GPU 驱动或虚拟化环境可能不支持此运行时；无需手动修改 PATH。模型未启用，原能力槽位保持不变。</value></data>
   <data name="RecommendedQwenDirectMlUnavailableStatus" xml:space="preserve"><value>DirectML Qwen 包与当前应用内置运行时不匹配；模型未启用，当前能力槽位保持不变。</value></data>
   <data name="RecommendedQwenModelInspectionFailedStatus" xml:space="preserve"><value>Qwen 模型已加载，但运行时报告的模型类型不兼容；模型未启用，已校验文件已保留。</value></data>
   <data name="RecommendedQwenProcessorFailedStatus" xml:space="preserve"><value>Qwen 模型图已加载，但多模态处理器或 tokenizer 初始化失败；模型未启用，已校验文件已保留。</value></data>
