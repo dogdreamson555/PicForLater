@@ -193,7 +193,7 @@ PicForLater 默认本地运行，但不能笼统称为“完全离线”。以�
 - Windows；
 - Visual Studio 2022 的 Windows App SDK / C++ 桌面构建组件；
 - PowerShell 7；
-- `global.json` 固定的 .NET SDK 10.0.302。
+- .NET SDK 10.0.302 或同一 10.0.3xx feature band 的更高补丁版本（由 `global.json` 约束）。
 
 生成完整 Setup 还需要 Inno Setup 6；普通 build / test 和 Setup dry run 不要求本机安装 Inno。发布 workflow 的本地静态检查使用 actionlint 1.7.12，可通过 `-ActionlintPath` 指向经官方 SHA-256 校验的可执行文件，无需把该工具提交到仓库。
 

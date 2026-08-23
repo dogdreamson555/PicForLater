@@ -159,8 +159,8 @@ foreach ($requiredVisualCppToken in @(
 }
 
 $globalJson = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'global.json') | ConvertFrom-Json
-if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne 'disable') {
-    throw 'global.json must pin exactly .NET SDK 10.0.302 with rollForward disabled.'
+if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne 'patch') {
+    throw 'global.json must require .NET SDK 10.0.302 and allow a later patch in the 10.0.3xx feature band.'
 }
 
 [pscustomobject]@{
