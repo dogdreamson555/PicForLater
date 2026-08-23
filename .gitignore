@@ -3,8 +3,8 @@
 
 AGENTS.md
 /problems&improve/*
-!/problems&improve/问题与改进.md
-!/problems&improve/img??.png
+
+
 /ui-tests/
 .env
 # Visual Studio and .NET build output

@@ -35,6 +35,11 @@ public static class RemoteEndpointPolicy
 
     public static bool IsPublicAddress(IPAddress address)
     {
+        if (address.IsIPv4MappedToIPv6)
+        {
+            return IsPublicAddress(address.MapToIPv4());
+        }
+
         if (IPAddress.IsLoopback(address)
             || address.Equals(IPAddress.Any)
             || address.Equals(IPAddress.IPv6Any)

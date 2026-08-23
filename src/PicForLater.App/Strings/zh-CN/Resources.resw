@@ -180,6 +180,11 @@
   <data name="RecycleBinLoadingTitle.Text" xml:space="preserve"><value>正在读取回收站</value></data>
   <data name="RecycleBinErrorTitle.Text" xml:space="preserve"><value>无法读取回收站</value></data>
   <data name="RecycleBinErrorMessage.Text" xml:space="preserve"><value>本地数据暂时不可用。现有图片不会被自动删除。</value></data>
+  <data name="RecycleBinRetryButton.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="RecycleBinRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重试加载回收站</value></data>
+  <data name="RecycleBinLoadMoreButton.Content" xml:space="preserve"><value>加载更多</value></data>
+  <data name="RecycleBinLoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>加载更多回收站图片</value></data>
+  <data name="RecycleBinLoadMoreFailedStatus" xml:space="preserve"><value>无法加载更多回收站图片，请重试。</value></data>
   <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>回收站图片</value></data>
   <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
   <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个回收站图片</value></data>
