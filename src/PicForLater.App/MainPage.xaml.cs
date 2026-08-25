@@ -1,6 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using PicForLater.App.Pages;
+using PicForLater.App.ViewModels;
+using PicForLater.Core.Runtime;
 
 namespace PicForLater.App;
 
@@ -11,8 +13,12 @@ public sealed partial class MainPage : Page
 {
     private bool _notificationImageRequestedSubscribed;
     private bool _reminderCreationRequestedSubscribed;
+    private bool _backgroundWorkerStatusChangedSubscribed;
     private bool _suppressSelectionNavigation;
     private bool _initialized;
+
+    public BackgroundWorkersStatusViewModel ViewModel { get; } = new(
+        App.RetryFaultedBackgroundWorkersAsync);
 
     public MainPage()
     {
@@ -20,11 +26,16 @@ public sealed partial class MainPage : Page
         Loaded += MainPage_Loaded;
         Unloaded += MainPage_Unloaded;
         SubscribeToNavigationRequests();
+        SubscribeToBackgroundWorkerStatus();
     }
+
+    public static bool Not(bool value) => !value;
 
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         SubscribeToNavigationRequests();
+        SubscribeToBackgroundWorkerStatus();
+        ViewModel.Update(App.GetBackgroundWorkerStatuses());
         if (_initialized)
         {
             return;
@@ -60,6 +71,12 @@ public sealed partial class MainPage : Page
             App.ReminderCreationRequested -= App_ReminderCreationRequested;
             _reminderCreationRequestedSubscribed = false;
         }
+
+        if (_backgroundWorkerStatusChangedSubscribed)
+        {
+            App.BackgroundWorkerStatusChanged -= App_BackgroundWorkerStatusChanged;
+            _backgroundWorkerStatusChangedSubscribed = false;
+        }
     }
 
     private void App_NotificationImageRequested(Guid imageItemId) =>
@@ -67,6 +84,18 @@ public sealed partial class MainPage : Page
 
     private void App_ReminderCreationRequested(Guid imageItemId) =>
         NavigateToReminderEditor(imageItemId);
+
+    private void App_BackgroundWorkerStatusChanged(BackgroundWorkerStatus status)
+    {
+        if (DispatcherQueue.HasThreadAccess)
+        {
+            ViewModel.Update(App.GetBackgroundWorkerStatuses());
+            return;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(
+            () => ViewModel.Update(App.GetBackgroundWorkerStatuses()));
+    }
 
     private void NavigateToLibraryItem(Guid imageItemId)
     {
@@ -119,6 +148,17 @@ public sealed partial class MainPage : Page
             App.ReminderCreationRequested += App_ReminderCreationRequested;
             _reminderCreationRequestedSubscribed = true;
         }
+    }
+
+    private void SubscribeToBackgroundWorkerStatus()
+    {
+        if (_backgroundWorkerStatusChangedSubscribed)
+        {
+            return;
+        }
+
+        App.BackgroundWorkerStatusChanged += App_BackgroundWorkerStatusChanged;
+        _backgroundWorkerStatusChangedSubscribed = true;
     }
 
     private void ShellNavigation_SelectionChanged(

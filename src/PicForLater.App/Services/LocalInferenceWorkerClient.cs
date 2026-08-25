@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
+using PicForLater.Core.Runtime;
 using PicForLater.Infrastructure.Analysis;
 using PicForLater.Infrastructure.Storage;
 using PicForLater.LocalInference.Protocol;
@@ -37,19 +38,26 @@ public sealed class LocalInferenceWorkerClient :
         AppDataPaths paths,
         IInferenceAccelerationPreferenceService acceleration,
         LocalInferenceComponentLocator componentLocator,
-        TimeSpan? idleTimeout = null)
+        TimeSpan? idleTimeout = null,
+        BackgroundFailureCircuit? failureCircuit = null)
     {
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _acceleration = acceleration ?? throw new ArgumentNullException(nameof(acceleration));
         _componentLocator = componentLocator
             ?? throw new ArgumentNullException(nameof(componentLocator));
         _idleTimeout = idleTimeout ?? DefaultIdleTimeout;
+        FailureCircuit = failureCircuit ?? new BackgroundFailureCircuit(
+            BackgroundWorkerKind.LocalInference,
+            failureThreshold: 3,
+            "background.local-worker.crash-loop");
         if (_idleTimeout <= TimeSpan.Zero
             || _idleTimeout > TimeSpan.FromSeconds(LocalInferenceProtocol.MaximumIdleTimeoutSeconds))
         {
             throw new ArgumentOutOfRangeException(nameof(idleTimeout));
         }
     }
+
+    public BackgroundFailureCircuit FailureCircuit { get; }
 
     public OcrProviderDescriptor Descriptor { get; } = new(
         "local.worker-ocr",
@@ -294,6 +302,27 @@ public sealed class LocalInferenceWorkerClient :
         }
     }
 
+    public async Task<bool> ResetFailureCircuitAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!FailureCircuit.IsOpen)
+            {
+                return false;
+            }
+
+            await StopWorkerAsync(graceful: false).ConfigureAwait(false);
+            return FailureCircuit.Reset();
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
+    }
+
     private async Task<TResponse> ExecuteAsync<TRequest, TResponse>(
         string operation,
         TRequest payload,
@@ -304,6 +333,7 @@ public sealed class LocalInferenceWorkerClient :
         await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            ThrowIfFailureCircuitOpen();
             await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
             var pipe = _pipe ?? throw CreateWorkerFailure("local-worker.pipe-unavailable", true);
             var requestId = Guid.NewGuid();
@@ -338,7 +368,15 @@ public sealed class LocalInferenceWorkerClient :
 
                 if (response is null)
                 {
-                    throw CreateWorkerFailure("local-worker.process-exited", true);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var exitCode = TryGetExitCode(_process);
+                    await StopWorkerAsync(graceful: false).ConfigureAwait(false);
+                    var circuitOpened = FailureCircuit.ReportFailure(exitCode);
+                    throw CreateWorkerFailure(
+                        circuitOpened
+                            ? "local-worker.crash-loop"
+                            : "local-worker.process-exited",
+                        isRetryable: !circuitOpened);
                 }
                 ValidateResponse(response, requestId, operation, _protocolVersion);
                 ApplyExecutionStatus(response.ExecutionStatus);
@@ -347,7 +385,15 @@ public sealed class LocalInferenceWorkerClient :
                     throw MapError(response.Error, mapUnavailable);
                 }
 
-                return LocalInferenceProtocol.ReadPayload<TResponse>(response);
+                var result = LocalInferenceProtocol.ReadPayload<TResponse>(response);
+                // Availability is probed before each inference request. Resetting here would
+                // hide a crash loop where every probe succeeds but every inference crashes.
+                if (!IsAvailabilityOperation(operation))
+                {
+                    FailureCircuit.ReportSuccess();
+                }
+
+                return result;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -364,14 +410,19 @@ public sealed class LocalInferenceWorkerClient :
             catch (Exception exception) when (exception is IOException
                                               or EndOfStreamException
                                               or LocalInferenceProtocolException
-                                              or ObjectDisposedException)
+                                              or ObjectDisposedException && !_disposed)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                var exitCode = TryGetExitCode(_process);
                 await StopWorkerAsync(graceful: false).ConfigureAwait(false);
+                var circuitOpened = FailureCircuit.ReportFailure(exitCode);
                 throw CreateWorkerFailure(
-                    exception is LocalInferenceProtocolException protocol
+                    circuitOpened
+                        ? "local-worker.crash-loop"
+                        : exception is LocalInferenceProtocolException protocol
                         ? protocol.ErrorCode
                         : "local-worker.pipe-broken",
-                    isRetryable: true,
+                    isRetryable: !circuitOpened,
                     exception);
             }
         }
@@ -383,24 +434,58 @@ public sealed class LocalInferenceWorkerClient :
 
     private async Task EnsureConnectedAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        ThrowIfFailureCircuitOpen();
         if (_pipe is { IsConnected: true } && _process is { HasExited: false })
         {
             return;
         }
 
+        var staleExitCode = TryGetExitCode(_process);
+        var stalePipeBroken = _pipe is not null
+            && _process is { HasExited: false }
+            && !_pipe.IsConnected;
+        cancellationToken.ThrowIfCancellationRequested();
         await StopWorkerAsync(graceful: false).ConfigureAwait(false);
+        if ((staleExitCode is not null and not 0 || stalePipeBroken)
+            && FailureCircuit.ReportFailure(staleExitCode))
+        {
+            ThrowIfFailureCircuitOpen();
+        }
+
         var component = await _componentLocator.LocateAsync(cancellationToken)
             .ConfigureAwait(false)
             ?? throw new OcrProviderUnavailableException("local-worker.component-unavailable");
-        _jobObject ??= new WorkerJobObject();
+        try
+        {
+            _jobObject ??= new WorkerJobObject();
+        }
+        catch (Exception exception) when (exception is Win32Exception
+                                          or UnauthorizedAccessException)
+        {
+            FailureCircuit.LatchFailure();
+            throw CreateWorkerFailure("local-worker.crash-loop", false);
+        }
 
         var pipeName = $"PicForLater.LocalInference.{Environment.ProcessId}.{Guid.NewGuid():N}";
-        var pipe = new NamedPipeServerStream(
-            pipeName,
-            PipeDirection.InOut,
-            maxNumberOfServerInstances: 1,
-            PipeTransmissionMode.Byte,
-            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        NamedPipeServerStream pipe;
+        try
+        {
+            pipe = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.InOut,
+                maxNumberOfServerInstances: 1,
+                PipeTransmissionMode.Byte,
+                PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        }
+        catch (Exception exception) when (exception is IOException
+                                          or UnauthorizedAccessException
+                                          or PlatformNotSupportedException)
+        {
+            FailureCircuit.LatchFailure();
+            throw CreateWorkerFailure("local-worker.crash-loop", false);
+        }
+
         Process? process = null;
         try
         {
@@ -463,20 +548,29 @@ public sealed class LocalInferenceWorkerClient :
             _pipe = pipe;
             _process = process;
         }
-        catch
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             pipe.Dispose();
-            if (process is { HasExited: false })
+            await StopProcessAsync(process).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            var exitCode = TryGetExitCode(process);
+            pipe.Dispose();
+            await StopProcessAsync(process).ConfigureAwait(false);
+            if (IsPermanentStartupFailure(exception))
             {
-                try
-                {
-                    process.Kill(entireProcessTree: true);
-                }
-                catch
-                {
-                }
+                FailureCircuit.LatchFailure(exitCode);
             }
-            process?.Dispose();
+
+            var circuitOpened = FailureCircuit.IsOpen
+                || FailureCircuit.ReportFailure(exitCode);
+            if (circuitOpened)
+            {
+                throw CreateWorkerFailure("local-worker.crash-loop", false);
+            }
+
             throw;
         }
     }
@@ -563,6 +657,66 @@ public sealed class LocalInferenceWorkerClient :
 
         pipe?.Dispose();
         process?.Dispose();
+    }
+
+    private static async Task StopProcessAsync(Process? process)
+    {
+        if (process is null)
+        {
+            return;
+        }
+
+        if (!process.HasExited)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+                await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+        }
+
+        process.Dispose();
+    }
+
+    private void ThrowIfFailureCircuitOpen()
+    {
+        if (FailureCircuit.IsOpen)
+        {
+            throw CreateWorkerFailure("local-worker.crash-loop", false);
+        }
+    }
+
+    private static bool IsAvailabilityOperation(string operation) =>
+        operation is LocalInferenceOperations.OcrAvailability
+            or LocalInferenceOperations.VisionAvailability;
+
+    private static bool IsPermanentStartupFailure(Exception exception) => exception switch
+    {
+        Win32Exception => true,
+        UnauthorizedAccessException => true,
+        FileNotFoundException => true,
+        OcrProviderException provider => !provider.IsRetryable,
+        _ => false,
+    };
+
+    private static int? TryGetExitCode(Process? process)
+    {
+        if (process is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return process.HasExited ? process.ExitCode : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void ApplyExecutionStatus(InferenceExecutionStatus? status)

@@ -113,7 +113,13 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(profile);
-        var normalized = NormalizeAndValidate(profile);
+        var candidate = profile with
+        {
+            ProfileId = NormalizeRequired(
+                profile.ProfileId,
+                nameof(profile.ProfileId),
+                MaximumIdentifierLength),
+        };
         await _mutationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -122,18 +128,33 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
             var existing = await ReadProfileAsync(
                 connection,
                 transaction,
-                normalized.ProfileId,
+                candidate.ProfileId,
                 cancellationToken).ConfigureAwait(false);
-            if (existing is not null && ConsentScopeChanged(existing, normalized))
+            if (existing is not null)
             {
-                normalized = normalized with
+                var validationScopeChanged = ValidationScopeChanged(existing, candidate);
+                var consentScopeChanged = ConsentScopeChanged(existing, candidate);
+                if (validationScopeChanged)
                 {
-                    ConsentedInputMode = null,
-                    ConsentedDisclosureVersion = null,
-                    ConsentGrantedAtUtc = null,
-                };
+                    candidate = candidate with
+                    {
+                        ValidationState = RemoteApiProfileValidationState.Unverified,
+                        LastVerifiedAtUtc = null,
+                    };
+                }
+
+                if (validationScopeChanged || consentScopeChanged)
+                {
+                    candidate = candidate with
+                    {
+                        ConsentedInputMode = null,
+                        ConsentedDisclosureVersion = null,
+                        ConsentGrantedAtUtc = null,
+                    };
+                }
             }
 
+            var normalized = NormalizeAndValidate(candidate);
             var now = _timeProvider.GetUtcNow();
             normalized = normalized with
             {
@@ -164,16 +185,6 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
 
             var isSelected = backend == AnalysisExecutionBackend.RemoteApi
                 && selectedProfileId == normalized.ProfileId;
-            if (isSelected)
-            {
-                var selectionError = GetSelectionError(normalized, inputMode);
-                if (selectionError is not null)
-                {
-                    throw new RemoteApiProfileException(
-                        "remote.active-profile-change-requires-local");
-                }
-            }
-
             await UpsertProfileAsync(
                 connection,
                 transaction,
@@ -181,11 +192,30 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
                 cancellationToken).ConfigureAwait(false);
             if (isSelected)
             {
-                await IncrementRevisionAsync(
-                    connection,
-                    transaction,
-                    now,
-                    cancellationToken).ConfigureAwait(false);
+                if (GetSelectionError(normalized, inputMode) is not null)
+                {
+                    await ExecuteAsync(
+                        connection,
+                        transaction,
+                        """
+                        UPDATE AnalysisSettings
+                        SET ExecutionBackend = @local,
+                            ProfileRevision = ProfileRevision + 1,
+                            UpdatedAtUtc = @updated
+                        WHERE Id = 1;
+                        """,
+                        cancellationToken,
+                        ("@local", (int)AnalysisExecutionBackend.Local),
+                        ("@updated", ToDb(now))).ConfigureAwait(false);
+                }
+                else
+                {
+                    await IncrementRevisionAsync(
+                        connection,
+                        transaction,
+                        now,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
 
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -568,11 +598,15 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
         };
     }
 
-    private static bool ConsentScopeChanged(RemoteApiProfile existing, RemoteApiProfile current) =>
+    private static bool ValidationScopeChanged(
+        RemoteApiProfile existing,
+        RemoteApiProfile current) =>
         !string.Equals(existing.ProviderId, current.ProviderId, StringComparison.Ordinal)
         || !string.Equals(existing.EndpointId, current.EndpointId, StringComparison.Ordinal)
         || !existing.BaseUri.Equals(current.BaseUri)
-        || !existing.SupportedInputModes.Order().SequenceEqual(current.SupportedInputModes.Order())
+        || !string.Equals(existing.ModelId, current.ModelId, StringComparison.Ordinal)
+        || !existing.SupportedInputModes.Order().SequenceEqual(
+            (current.SupportedInputModes ?? []).Order())
         || !string.Equals(existing.PromptVersion, current.PromptVersion, StringComparison.Ordinal)
         || !string.Equals(existing.OutputSchemaVersion, current.OutputSchemaVersion, StringComparison.Ordinal)
         || existing.Protocol != current.Protocol
@@ -584,6 +618,17 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
         || existing.DisableExternalSearch != current.DisableExternalSearch
         || existing.ReasoningMode != current.ReasoningMode
         || existing.ReasoningWireFormat != current.ReasoningWireFormat
+        || existing.MaxOutputTokens != current.MaxOutputTokens
+        || existing.TimeoutSeconds != current.TimeoutSeconds
+        || !string.Equals(
+            existing.CredentialReference,
+            current.CredentialReference,
+            StringComparison.Ordinal);
+
+    private static bool ConsentScopeChanged(
+        RemoteApiProfile existing,
+        RemoteApiProfile current) =>
+        ValidationScopeChanged(existing, current)
         || existing.MaxTextChars != current.MaxTextChars
         || existing.MaxImageBytes != current.MaxImageBytes
         || !existing.PrivacyUrl.Equals(current.PrivacyUrl)
@@ -592,6 +637,7 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
             existing.RetentionTrainingStatement,
             current.RetentionTrainingStatement,
             StringComparison.Ordinal)
+        || existing.RetentionTrainingVerifiedAtUtc != current.RetentionTrainingVerifiedAtUtc
         || !string.Equals(existing.DisclosureVersion, current.DisclosureVersion, StringComparison.Ordinal);
 
     private static Uri ValidateHttpsUri(Uri? uri, bool disallowQuery, string errorCode)

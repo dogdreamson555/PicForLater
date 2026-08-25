@@ -185,19 +185,30 @@
                 <FontIcon FontSize="{StaticResource AppEmptyStateIconSize}" AutomationProperties.AccessibilityView="Raw" Glyph="&#xEA39;" />
                 <TextBlock x:Uid="RecycleBinErrorTitle" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" />
                 <TextBlock x:Uid="RecycleBinErrorMessage" TextAlignment="Center" TextWrapping="Wrap" />
+                <Button
+                    x:Uid="RecycleBinRetryButton"
+                    AutomationProperties.AutomationId="RecycleBinErrorRetryButton"
+                    Command="{x:Bind ViewModel.RetryCommand, Mode=OneTime}" />
             </StackPanel>
 
-            <GridView
-                x:Name="RecycleBinGridView"
-                x:Uid="RecycleBinGridView"
-                x:Load="{x:Bind ViewModel.HasItems, Mode=OneWay}"
-                AutomationProperties.AutomationId="RecycleBinGridView"
-                ContainerContentChanging="RecycleBinGridView_ContainerContentChanging"
-                ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
-                SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
-                SelectionChanged="RecycleBinGridView_SelectionChanged"
-                SelectionMode="Single"
-                SizeChanged="RecycleBinGridView_SizeChanged">
+            <Grid
+                x:Name="RecycleBinItemsContent"
+                x:Load="{x:Bind ViewModel.HasItems, Mode=OneWay}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <GridView
+                    x:Name="RecycleBinGridView"
+                    x:Uid="RecycleBinGridView"
+                    Grid.Row="0"
+                    AutomationProperties.AutomationId="RecycleBinGridView"
+                    ContainerContentChanging="RecycleBinGridView_ContainerContentChanging"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
+                    SelectionChanged="RecycleBinGridView_SelectionChanged"
+                    SelectionMode="Single"
+                    SizeChanged="RecycleBinGridView_SizeChanged">
                 <GridView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource DefaultGridViewItemStyle}" TargetType="GridViewItem">
                         <Setter Property="Margin" Value="0,0,12,12" />
@@ -277,7 +288,16 @@
                         <ItemsWrapGrid Loaded="RecycleBinItemsWrapGrid_Loaded" Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
-            </GridView>
+                </GridView>
+                <Button
+                    x:Uid="RecycleBinLoadMoreButton"
+                    Grid.Row="1"
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.AutomationId="RecycleBinLoadMoreButton"
+                    Command="{x:Bind ViewModel.LoadMoreCommand, Mode=OneTime}"
+                    Visibility="{x:Bind local:RecycleBinPage.BoolToVisibility(ViewModel.HasMore), Mode=OneWay}" />
+            </Grid>
         </Grid>
     </Grid>
 </Page>

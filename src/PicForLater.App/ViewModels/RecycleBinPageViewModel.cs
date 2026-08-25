@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Models;
 using PicForLater.App.Services;
@@ -12,6 +13,7 @@ namespace PicForLater.App.ViewModels;
 
 public partial class RecycleBinPageViewModel : ObservableObject
 {
+    private const int PageSize = 100;
     private static readonly ResourceLoader _resources = new();
     private readonly IStorageReadinessService _readiness;
     private readonly Func<ILibraryService?> _libraryAccessor;
@@ -52,6 +54,12 @@ public partial class RecycleBinPageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
     public partial string StatusMessage { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    public partial bool HasMore { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsWorking { get; set; }
+
     public bool IsLoading => State == LibraryViewState.Loading;
 
     public bool IsEmpty => State == LibraryViewState.Empty;
@@ -71,8 +79,20 @@ public partial class RecycleBinPageViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
+        await UpdateStorageStateAsync(forceRetry: false).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private Task RetryAsync() => UpdateStorageStateAsync(forceRetry: true);
+
+    [RelayCommand]
+    private Task LoadMoreAsync() =>
+        IsWorking || !HasMore ? Task.CompletedTask : LoadPageAsync(reset: false);
+
+    private async Task UpdateStorageStateAsync(bool forceRetry)
+    {
         State = LibraryViewState.Loading;
-        var readiness = await _readiness.EnsureReadyAsync().ConfigureAwait(true);
+        var readiness = await _readiness.EnsureReadyAsync(forceRetry).ConfigureAwait(true);
         if (readiness.Status != StorageReadinessStatus.Ready || _libraryAccessor() is null)
         {
             State = readiness.Status switch
@@ -84,7 +104,7 @@ public partial class RecycleBinPageViewModel : ObservableObject
             return;
         }
 
-        await ReloadAsync().ConfigureAwait(true);
+        await LoadPageAsync(reset: true).ConfigureAwait(true);
     }
 
     public async Task RestoreSelectedAsync()
@@ -104,9 +124,12 @@ public partial class RecycleBinPageViewModel : ObservableObject
             return null;
         }
 
+        var loadedCount = Items.Count;
         var result = await GetLibrary().PermanentlyDeleteAsync(SelectedItem.Id).ConfigureAwait(true);
-        SetPermanentDeleteStatus(result.Status == PermanentDeleteStatus.Completed ? 1 : 0, 1);
-        await ReloadAsync().ConfigureAwait(true);
+        var completedCount = result.Status == PermanentDeleteStatus.Completed ? 1 : 0;
+        SetPermanentDeleteStatus(completedCount, 1);
+        SetSelectionMode(isActive: false);
+        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
         return result;
     }
 
@@ -130,6 +153,7 @@ public partial class RecycleBinPageViewModel : ObservableObject
             return 0;
         }
 
+        var loadedCount = Items.Count;
         var restoredCount = 0;
         foreach (var id in ids)
         {
@@ -144,7 +168,8 @@ public partial class RecycleBinPageViewModel : ObservableObject
                 _resources.GetString("RestoreBatchCompletedStatusFormat"),
                 restoredCount,
                 ids.Length);
-        await ReloadAsync().ConfigureAwait(true);
+        SetSelectionMode(isActive: false);
+        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - restoredCount)).ConfigureAwait(true);
         return restoredCount;
     }
 
@@ -156,6 +181,7 @@ public partial class RecycleBinPageViewModel : ObservableObject
             return 0;
         }
 
+        var loadedCount = Items.Count;
         var completedCount = 0;
         foreach (var id in ids)
         {
@@ -167,29 +193,73 @@ public partial class RecycleBinPageViewModel : ObservableObject
         }
 
         SetPermanentDeleteStatus(completedCount, ids.Length);
-        await ReloadAsync().ConfigureAwait(true);
+        SetSelectionMode(isActive: false);
+        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
         return completedCount;
     }
 
-    private async Task ReloadAsync()
+    private async Task ReloadToDepthAsync(int targetCount)
     {
+        await LoadPageAsync(reset: true).ConfigureAwait(true);
+        while (State == LibraryViewState.Ready
+               && HasMore
+               && Items.Count < targetCount)
+        {
+            var previousCount = Items.Count;
+            await LoadPageAsync(reset: false).ConfigureAwait(true);
+            if (Items.Count == previousCount)
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task LoadPageAsync(bool reset)
+    {
+        var previousHasMore = HasMore;
+        IsWorking = true;
         try
         {
             var library = GetLibrary();
-            var query = new LibraryQuery(IsDeleted: true, Limit: 200);
+            var offset = reset ? 0 : Items.Count;
+            var query = new LibraryQuery(IsDeleted: true, Offset: offset, Limit: PageSize);
             var result = await Task.Run(() => library.QueryAsync(query)).ConfigureAwait(true);
-            Items.Clear();
-            foreach (var entry in result.Items)
+
+            if (reset)
             {
-                Items.Add(MapEntry(entry));
+                Items.Clear();
+                SelectedItem = null;
+                SelectedCount = 0;
             }
 
-            SelectedItem = null;
+            var existingIds = Items.Select(item => item.Id).ToHashSet();
+            foreach (var entry in result.Items)
+            {
+                if (existingIds.Add(entry.Item.Id))
+                {
+                    Items.Add(MapEntry(entry));
+                }
+            }
+
+            HasMore = result.HasMore;
             State = Items.Count == 0 ? LibraryViewState.Empty : LibraryViewState.Ready;
         }
         catch
         {
-            State = LibraryViewState.Error;
+            if (reset || Items.Count == 0)
+            {
+                HasMore = false;
+                State = LibraryViewState.Error;
+            }
+            else
+            {
+                HasMore = previousHasMore;
+                StatusMessage = _resources.GetString("RecycleBinLoadMoreFailedStatus");
+            }
+        }
+        finally
+        {
+            IsWorking = false;
         }
     }
 

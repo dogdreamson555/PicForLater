@@ -162,8 +162,6 @@ public static class RemoteApiProviderCatalog
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profileService);
-        var executionState = await profileService.GetExecutionStateAsync(cancellationToken)
-            .ConfigureAwait(false);
         var options = new List<RemoteApiProviderOption>(Presets.Count);
         foreach (var preset in Presets)
         {
@@ -172,14 +170,6 @@ public static class RemoteApiProviderCatalog
             var desired = CreateProfile(preset, existing);
             if (existing is null || !ProfileEquals(existing, desired))
             {
-                if (executionState.Settings.Backend == AnalysisExecutionBackend.RemoteApi
-                    && executionState.Settings.RemoteApiProfileId == preset.ProfileId)
-                {
-                    await profileService.SelectLocalAsync(cancellationToken).ConfigureAwait(false);
-                    executionState = await profileService.GetExecutionStateAsync(cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
                 desired = await profileService.SaveProfileAsync(desired, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -210,13 +200,8 @@ public static class RemoteApiProviderCatalog
         }
 
         var hasUserEndpointOverride = existing is not null
-            && string.Equals(
-                existing.EndpointId,
-                preset.EndpointId + UserEndpointSuffix,
-                StringComparison.Ordinal)
+            && existing.EndpointId.EndsWith(UserEndpointSuffix, StringComparison.Ordinal)
             && existing.BaseUri != preset.BaseUri;
-        var fixedFieldsChanged = existing is not null
-            && FixedFieldsChanged(existing, preset, hasUserEndpointOverride);
         return new RemoteApiProfile
         {
             ProfileId = preset.ProfileId,
@@ -257,44 +242,14 @@ public static class RemoteApiProviderCatalog
                     : preset.ReasoningMode,
             ReasoningWireFormat = preset.ReasoningWireFormat,
             IsEnabled = existing?.IsEnabled ?? true,
-            ValidationState = fixedFieldsChanged
-                ? RemoteApiProfileValidationState.Unverified
-                : existing?.ValidationState ?? RemoteApiProfileValidationState.Unverified,
-            LastVerifiedAtUtc = fixedFieldsChanged ? null : existing?.LastVerifiedAtUtc,
-            ConsentedInputMode = fixedFieldsChanged ? null : existing?.ConsentedInputMode,
-            ConsentedDisclosureVersion = fixedFieldsChanged ? null : existing?.ConsentedDisclosureVersion,
-            ConsentGrantedAtUtc = fixedFieldsChanged ? null : existing?.ConsentGrantedAtUtc,
+            ValidationState = existing?.ValidationState ?? RemoteApiProfileValidationState.Unverified,
+            LastVerifiedAtUtc = existing?.LastVerifiedAtUtc,
+            ConsentedInputMode = existing?.ConsentedInputMode,
+            ConsentedDisclosureVersion = existing?.ConsentedDisclosureVersion,
+            ConsentGrantedAtUtc = existing?.ConsentGrantedAtUtc,
             UpdatedAtUtc = existing?.UpdatedAtUtc ?? default,
         };
     }
-
-    private static bool FixedFieldsChanged(
-        RemoteApiProfile existing,
-        RemoteApiProviderPreset preset,
-        bool hasUserEndpointOverride) =>
-        existing.ProviderId != preset.ProviderId
-        || existing.DisplayName != preset.DisplayName
-        || (!hasUserEndpointOverride && existing.EndpointId != preset.EndpointId)
-        || (!hasUserEndpointOverride && existing.BaseUri != preset.BaseUri)
-        || existing.PrivacyUrl != preset.PrivacyUrl
-        || existing.TermsUrl != preset.TermsUrl
-        || existing.RetentionTrainingStatement != preset.RetentionTrainingStatement
-        || existing.RetentionTrainingVerifiedAtUtc != preset.PolicyVerifiedAtUtc
-        || existing.CredentialReference != preset.CredentialReference
-        || existing.DisclosureVersion != preset.DisclosureVersion
-        || !existing.SupportedInputModes.Order().SequenceEqual(preset.SupportedInputModes.Order())
-        || existing.PromptVersion != PromptVersion
-        || existing.OutputSchemaVersion != QwenStructuredOutputParser.SchemaVersion
-        || existing.Protocol != preset.Protocol
-        || existing.AuthenticationKind != preset.AuthenticationKind
-        || existing.StructuredOutputMode != preset.StructuredOutputMode
-        || (!hasUserEndpointOverride && existing.EndpointTrustMode != preset.EndpointTrustMode)
-        || existing.ApiVersion != preset.ApiVersion
-        || existing.DisableProviderFallbacks != preset.DisableProviderFallbacks
-        || existing.DisableExternalSearch != preset.DisableExternalSearch
-        || preset.RetiredDefaultModelIds.Contains(existing.ModelId, StringComparer.Ordinal)
-        || !preset.SupportedReasoningModes.Contains(existing.ReasoningMode)
-        || existing.ReasoningWireFormat != preset.ReasoningWireFormat;
 
     public static string GetEndpointId(RemoteApiProviderPreset preset, Uri endpoint) =>
         endpoint == preset.BaseUri

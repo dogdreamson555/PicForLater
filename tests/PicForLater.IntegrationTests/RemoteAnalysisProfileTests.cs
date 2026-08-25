@@ -193,7 +193,7 @@ public sealed class RemoteAnalysisProfileTests
     }
 
     [Fact]
-    public async Task ScopeChange_InvalidatesConsentAndPreventsRemoteSelection()
+    public async Task ScopeChange_InvalidatesValidationAndConsent()
     {
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
@@ -208,12 +208,114 @@ public sealed class RemoteAnalysisProfileTests
             BaseUri = new Uri("https://changed.example.test/v1/"),
         });
 
+        Assert.Equal(RemoteApiProfileValidationState.Unverified, changed.ValidationState);
+        Assert.Null(changed.LastVerifiedAtUtc);
         Assert.Null(changed.ConsentedInputMode);
         Assert.Null(changed.ConsentedDisclosureVersion);
         Assert.Null(changed.ConsentGrantedAtUtc);
         var exception = await Assert.ThrowsAsync<RemoteApiProfileException>(() =>
             profiles.SelectRemoteAsync(changed.ProfileId, RemoteInputMode.LocalOcrText));
-        Assert.Equal("remote.consent-required", exception.ErrorCode);
+        Assert.Equal("remote.profile-not-verified", exception.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData("endpoint", true)]
+    [InlineData("protocol", true)]
+    [InlineData("input-modes", true)]
+    [InlineData("disclosure", false)]
+    [InlineData("retention-verification", false)]
+    public async Task SelectedProfile_TrustScopeChange_ReturnsLocalAndClearsStaleTrust(
+        string change,
+        bool invalidatesValidation)
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        var saved = await profiles.SaveProfileAsync(CreateValidProfile());
+        await profiles.SelectRemoteAsync(saved.ProfileId, RemoteInputMode.LocalOcrText);
+
+        var changedProfile = change switch
+        {
+            "endpoint" => saved with
+            {
+                EndpointId = "fixed.changed.v2",
+                BaseUri = new Uri("https://changed.example.test/v2/"),
+            },
+            "protocol" => saved with
+            {
+                Protocol = RemoteApiProtocol.OpenAiChatCompletions,
+                AuthenticationKind = RemoteApiAuthenticationKind.Bearer,
+                ApiVersion = null,
+            },
+            "input-modes" => saved with
+            {
+                SupportedInputModes = [RemoteInputMode.DirectImage],
+            },
+            "disclosure" => saved with
+            {
+                DisclosureVersion = "remote-disclosure.v2",
+            },
+            "retention-verification" => saved with
+            {
+                RetentionTrainingVerifiedAtUtc =
+                    saved.RetentionTrainingVerifiedAtUtc.AddDays(1),
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+
+        var changed = await profiles.SaveProfileAsync(changedProfile);
+        var execution = await profiles.GetExecutionStateAsync();
+
+        Assert.Equal(AnalysisExecutionBackend.Local, execution.Settings.Backend);
+        Assert.Equal(saved.ProfileId, execution.Settings.RemoteApiProfileId);
+        Assert.Null(changed.ConsentedInputMode);
+        Assert.Null(changed.ConsentedDisclosureVersion);
+        Assert.Null(changed.ConsentGrantedAtUtc);
+        if (invalidatesValidation)
+        {
+            Assert.Equal(RemoteApiProfileValidationState.Unverified, changed.ValidationState);
+            Assert.Null(changed.LastVerifiedAtUtc);
+        }
+        else
+        {
+            Assert.Equal(saved.ValidationState, changed.ValidationState);
+            Assert.Equal(saved.LastVerifiedAtUtc, changed.LastVerifiedAtUtc);
+        }
+    }
+
+    [Fact]
+    public async Task SelectedProfile_NonTrustChange_PreservesRemoteSelectionAndTrust()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        var saved = await profiles.SaveProfileAsync(CreateValidProfile());
+        await profiles.SelectRemoteAsync(saved.ProfileId, RemoteInputMode.LocalOcrText);
+
+        var changed = await profiles.SaveProfileAsync(saved with
+        {
+            DisplayName = "Renamed profile",
+        });
+        var execution = await profiles.GetExecutionStateAsync();
+
+        Assert.Equal(AnalysisExecutionBackend.RemoteApi, execution.Settings.Backend);
+        Assert.Equal(RemoteApiProfileValidationState.Valid, changed.ValidationState);
+        Assert.NotNull(changed.LastVerifiedAtUtc);
+        Assert.NotNull(changed.ConsentGrantedAtUtc);
+    }
+
+    [Fact]
+    public async Task ExistingProfile_NullInputModes_ReturnsStableValidationError()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        var saved = await profiles.SaveProfileAsync(CreateValidProfile());
+
+        var exception = await Assert.ThrowsAsync<RemoteApiProfileException>(() =>
+            profiles.SaveProfileAsync(saved with { SupportedInputModes = null! }));
+
+        Assert.Equal("remote.supported-input-modes-invalid", exception.ErrorCode);
     }
 
     [Fact]
@@ -240,7 +342,7 @@ public sealed class RemoteAnalysisProfileTests
     }
 
     [Fact]
-    public async Task SelectedProfile_CannotBeDisabledOrDeletedWithoutReturningLocal()
+    public async Task SelectedProfile_DisableReturnsLocalAndDeleteStillRequiresLocal()
     {
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
@@ -248,16 +350,19 @@ public sealed class RemoteAnalysisProfileTests
         var saved = await profiles.SaveProfileAsync(CreateValidProfile());
         await profiles.SelectRemoteAsync(saved.ProfileId, RemoteInputMode.LocalOcrText);
 
-        var disableException = await Assert.ThrowsAsync<RemoteApiProfileException>(() =>
-            profiles.SaveProfileAsync(saved with { IsEnabled = false }));
-        Assert.Equal("remote.active-profile-change-requires-local", disableException.ErrorCode);
+        var disabled = await profiles.SaveProfileAsync(saved with { IsEnabled = false });
+        Assert.False(disabled.IsEnabled);
+        Assert.Equal(
+            AnalysisExecutionBackend.Local,
+            (await profiles.GetExecutionStateAsync()).Settings.Backend);
+
+        var reenabled = await profiles.SaveProfileAsync(disabled with { IsEnabled = true });
+        await profiles.SelectRemoteAsync(reenabled.ProfileId, RemoteInputMode.LocalOcrText);
         var deleteException = await Assert.ThrowsAsync<RemoteApiProfileException>(() =>
             profiles.DeleteProfileAsync(saved.ProfileId));
         Assert.Equal("remote.selected-profile-cannot-be-deleted", deleteException.ErrorCode);
 
         await profiles.SelectLocalAsync();
-        var disabled = await profiles.SaveProfileAsync(saved with { IsEnabled = false });
-        Assert.False(disabled.IsEnabled);
         await profiles.DeleteProfileAsync(saved.ProfileId);
         Assert.Null(await profiles.GetProfileAsync(saved.ProfileId));
     }
