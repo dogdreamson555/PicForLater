@@ -8,6 +8,7 @@ using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
 using PicForLater.Core.Library;
 using PicForLater.Core.Reminders;
+using PicForLater.Core.Runtime;
 using PicForLater.Infrastructure.Analysis;
 using PicForLater.Infrastructure.Library;
 using PicForLater.Infrastructure.Reminders;
@@ -35,9 +36,10 @@ public partial class App : Application
     private static UiTestLocalInferenceRuntime? _uiTestInferenceRuntime;
 #else
     private static LocalInferenceWorkerClient? _localInferenceWorker;
+    private static BackgroundFailureCircuit? _localInferenceFailureCircuit;
 #endif
-    private static Task? _analysisWorkerTask;
-    private static Task? _reminderWorkerTask;
+    private static BackgroundWorkerSupervisor? _analysisWorkerSupervisor;
+    private static BackgroundWorkerSupervisor? _reminderWorkerSupervisor;
     private static bool _isMainWindowReady;
     private static bool _isForegroundActivationPending;
 #if !PICFORLATER_UI_TESTING
@@ -112,6 +114,8 @@ public partial class App : Application
     public static event Action<Guid>? ReminderCreationRequested;
 
     public static Guid? PendingReminderCreationImageItemId { get; private set; }
+
+    public static event Action<BackgroundWorkerStatus>? BackgroundWorkerStatusChanged;
 
     public static WindowsImageContentProcessor ImageProcessor { get; } = new();
 
@@ -221,6 +225,22 @@ public partial class App : Application
                 var paths = AppRuntimePaths.Paths;
                 var storage = new ManagedImageStorage(paths);
                 var result = await new SqliteDatabaseInitializer(paths).InitializeAsync().ConfigureAwait(false);
+                var remoteApiProfiles = new SqliteRemoteApiProfileService(paths);
+                try
+                {
+                    // Startup safety gate: do not publish remote services or construct
+                    // background workers until every built-in preset is synchronized.
+                    await RemoteApiProviderCatalog.EnsureProfilesAsync(
+                            remoteApiProfiles,
+                            AnalysisCancellation.Token)
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+                    remoteApiProfiles.Dispose();
+                    throw;
+                }
+
                 DataPaths = paths;
                 ManagedImageStorage = storage;
                 IReminderNotificationScheduler reminderScheduler;
@@ -285,6 +305,8 @@ public partial class App : Application
                     InferenceAcceleration,
                     localInferenceComponents,
                     LocalInferenceWorkerClient.DefaultIdleTimeout);
+                _localInferenceFailureCircuit = _localInferenceWorker.FailureCircuit;
+                _localInferenceFailureCircuit.StatusChanged += OnBackgroundWorkerStatusChanged;
                 var localInferenceArchitecture = LocalInferenceWorkerClient.GetProcessArchitecture();
                 LocalInferenceComponentStore = new LocalInferenceComponentStore(
                     paths,
@@ -313,7 +335,6 @@ public partial class App : Application
                         qwenRuntime,
                         paths.AnalysisCacheDirectoryPath));
                 ModelPackages = modelPackages;
-                var remoteApiProfiles = new SqliteRemoteApiProfileService(paths);
                 RemoteApiProfiles = remoteApiProfiles;
                 IRemoteApiCredentialService remoteApiCredentials;
 #if PICFORLATER_UI_TESTING
@@ -394,8 +415,18 @@ public partial class App : Application
                     _analysisWakeSignal,
                     analysisProfiles);
                 ImageImporter = imageImporter;
-                _analysisWorkerTask = worker.RunAsync(AnalysisCancellation.Token);
-                _reminderWorkerTask = reminderService.RunAsync(AnalysisCancellation.Token);
+                _analysisWorkerSupervisor = CreateBackgroundWorkerSupervisor(
+                    BackgroundWorkerKind.Analysis,
+                    worker.RunAsync,
+                    "background.analysis.unexpected");
+                _reminderWorkerSupervisor = CreateBackgroundWorkerSupervisor(
+                    BackgroundWorkerKind.Reminders,
+                    reminderService.RunAsync,
+                    "background.reminders.unexpected");
+                _analysisWorkerSupervisor.StatusChanged += OnBackgroundWorkerStatusChanged;
+                _reminderWorkerSupervisor.StatusChanged += OnBackgroundWorkerStatusChanged;
+                _ = _analysisWorkerSupervisor.Start(AnalysisCancellation.Token);
+                _ = _reminderWorkerSupervisor.Start(AnalysisCancellation.Token);
 #if PICFORLATER_UI_VISUAL_FIXTURE
                 await UiTestVisualFixtureSeeder.SeedAsync(
                         paths,
@@ -425,35 +456,14 @@ public partial class App : Application
 
         Program.UnregisterInstanceKey();
         AnalysisCancellation.Cancel();
-        if (_analysisWorkerTask is not null)
+        var supervisedTasks = new[]
         {
-            try
-            {
-                await _analysisWorkerTask.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch
-            {
-                // Observe a worker fault during shutdown without surfacing raw
-                // storage or model details through an async event exception.
-            }
-        }
-
-        if (_reminderWorkerTask is not null)
+            _analysisWorkerSupervisor?.Completion,
+            _reminderWorkerSupervisor?.Completion,
+        }.OfType<Task>().ToArray();
+        if (supervisedTasks.Length > 0)
         {
-            try
-            {
-                await _reminderWorkerTask.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch
-            {
-                // Durable outbox rows remain recoverable on the next launch.
-            }
+            await Task.WhenAll(supervisedTasks).ConfigureAwait(false);
         }
 
 #if !PICFORLATER_UI_TESTING
@@ -485,9 +495,81 @@ public partial class App : Application
         {
             await _localInferenceWorker.DisposeAsync().ConfigureAwait(false);
         }
+        _localInferenceFailureCircuit?.Stop();
 #endif
         _analysisWakeSignal?.Dispose();
         AnalysisCancellation.Dispose();
+    }
+
+    public static IReadOnlyList<BackgroundWorkerStatus> GetBackgroundWorkerStatuses()
+    {
+        var statuses = new List<BackgroundWorkerStatus>(3);
+        if (_analysisWorkerSupervisor is { } analysis)
+        {
+            statuses.Add(analysis.CurrentStatus);
+        }
+
+        if (_reminderWorkerSupervisor is { } reminders)
+        {
+            statuses.Add(reminders.CurrentStatus);
+        }
+
+#if !PICFORLATER_UI_TESTING
+        if (_localInferenceFailureCircuit is { } localInference)
+        {
+            statuses.Add(localInference.CurrentStatus);
+        }
+#endif
+        return statuses;
+    }
+
+    public static async Task RetryFaultedBackgroundWorkersAsync()
+    {
+#if !PICFORLATER_UI_TESTING
+        if (_localInferenceWorker is not null)
+        {
+            _ = await _localInferenceWorker.ResetFailureCircuitAsync().ConfigureAwait(false);
+        }
+#endif
+        _ = _analysisWorkerSupervisor?.Retry();
+        _ = _reminderWorkerSupervisor?.Retry();
+    }
+
+    private static BackgroundWorkerSupervisor CreateBackgroundWorkerSupervisor(
+        BackgroundWorkerKind kind,
+        Func<CancellationToken, Task> runWorker,
+        string unexpectedFailureCode) =>
+        new(
+            kind,
+            runWorker,
+            exception => BackgroundWorkerTransientErrorPolicy.IsTransient(exception)
+                ? new BackgroundWorkerFailure(
+                    kind == BackgroundWorkerKind.Analysis
+                        ? "background.analysis.storage-busy"
+                        : "background.reminders.storage-busy",
+                    IsTransient: true)
+                : new BackgroundWorkerFailure(unexpectedFailureCode, IsTransient: false),
+            unexpectedFailureCode);
+
+    private static void OnBackgroundWorkerStatusChanged(BackgroundWorkerStatus status)
+    {
+        var handlers = BackgroundWorkerStatusChanged;
+        if (handlers is null)
+        {
+            return;
+        }
+
+        foreach (Action<BackgroundWorkerStatus> handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                handler(status);
+            }
+            catch
+            {
+                // A UI or diagnostic subscriber must not affect worker supervision.
+            }
+        }
     }
 
     [DllImport("user32.dll")]

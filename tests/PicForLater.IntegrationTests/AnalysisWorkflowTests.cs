@@ -83,6 +83,45 @@ public sealed class AnalysisWorkflowTests
     }
 
     [Fact]
+    public async Task UnexpectedProviderFailure_IsNotRetriedOrPersistedVerbatim()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "unexpected.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        using var signal = new AnalysisQueueWakeSignal();
+        var provider = new ThrowingOcrProvider();
+        var worker = new AnalysisWorker(
+            "unexpected-failure-worker",
+            new SqliteAnalysisJobStore(root.Paths),
+            storage,
+            provider,
+            new ExtractiveTextComposer(),
+            signal);
+
+        Assert.True(await worker.ProcessNextAsync());
+        Assert.False(await worker.ProcessNextAsync());
+
+        Assert.Equal(1, provider.CallCount);
+        await using var connection = await OpenAsync(root.Paths.DatabasePath);
+        Assert.Equal(1L, await ScalarAsync(
+            connection,
+            "SELECT COUNT(*) FROM AnalysisJobs WHERE State = 5 AND AttemptCount = 1;"));
+        Assert.Equal("analysis.unexpected-failure", await ScalarStringAsync(
+            connection,
+            "SELECT LastErrorCode FROM AnalysisJobs;"));
+        Assert.DoesNotContain(
+            "saved OCR checkpoint",
+            await ScalarStringAsync(connection, "SELECT LastErrorCode FROM AnalysisJobs;"),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task VisionFailure_PreservesOcrDraftAndCompletesJobWithWarning()
     {
         using var root = new TemporaryAppDataRoot();

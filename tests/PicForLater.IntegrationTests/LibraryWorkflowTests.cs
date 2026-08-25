@@ -141,6 +141,61 @@ public sealed class LibraryWorkflowTests
     }
 
     [Fact]
+    public async Task RecycleBin_MoreThanTwoPages_CanRestoreAndPermanentlyDeleteFromLaterPage()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
+
+        for (var index = 0; index < 201; index++)
+        {
+            var uniquePng = TinyPng.Concat(BitConverter.GetBytes(index)).ToArray();
+            var imported = await importer.ImportAsync(
+                new MemoryStream(uniquePng, writable: false),
+                $"recycled-{index:D3}.png",
+                ImageSourceKind.File,
+                ManagedImageFormat.Png);
+            await library.SoftDeleteAsync(imported.ImageItemId);
+        }
+
+        var firstPage = await library.QueryAsync(new LibraryQuery(
+            IsDeleted: true,
+            Offset: 0,
+            Limit: 100));
+        var secondPage = await library.QueryAsync(new LibraryQuery(
+            IsDeleted: true,
+            Offset: firstPage.Items.Count,
+            Limit: 100));
+        var thirdPage = await library.QueryAsync(new LibraryQuery(
+            IsDeleted: true,
+            Offset: firstPage.Items.Count + secondPage.Items.Count,
+            Limit: 100));
+
+        Assert.Equal(100, firstPage.Items.Count);
+        Assert.True(firstPage.HasMore);
+        Assert.Equal(100, secondPage.Items.Count);
+        Assert.True(secondPage.HasMore);
+        Assert.Single(thirdPage.Items);
+        Assert.False(thirdPage.HasMore);
+
+        var restoredId = secondPage.Items[0].Item.Id;
+        var permanentlyDeletedId = secondPage.Items[1].Item.Id;
+        await library.RestoreAsync(restoredId);
+        var deletion = await library.PermanentlyDeleteAsync(permanentlyDeletedId);
+
+        Assert.Equal(PermanentDeleteStatus.Completed, deletion.Status);
+        Assert.NotNull(await library.GetAsync(restoredId));
+        Assert.Null(await library.GetAsync(permanentlyDeletedId));
+        Assert.DoesNotContain(
+            restoredId,
+            (await library.QueryAsync(new LibraryQuery(IsDeleted: true, Limit: 200)))
+                .Items
+                .Select(entry => entry.Item.Id));
+    }
+
+    [Fact]
     public async Task Category_RenameAndDeleteKeepTheImageAndRemoveOnlyAssignments()
     {
         using var root = new TemporaryAppDataRoot();

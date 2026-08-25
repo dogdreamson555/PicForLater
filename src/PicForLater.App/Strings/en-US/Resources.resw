@@ -57,6 +57,13 @@
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>Background processing stopped</value></data>
+  <data name="BackgroundWorkersRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="BackgroundWorkersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry stopped background tasks</value></data>
+  <data name="BackgroundAnalysisStoppedMessage" xml:space="preserve"><value>Background analysis stopped. Queued work was preserved and can be retried.</value></data>
+  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>Background reminder processing stopped. Reminder data was preserved and can be retried.</value></data>
+  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>The local inference process exited repeatedly, so automatic restarts stopped. You can retry.</value></data>
+  <data name="BackgroundWorkersStoppedMessage" xml:space="preserve"><value>One or more background tasks stopped. Data was preserved and the tasks can be retried.</value></data>
   <data name="LibraryNavItem.Content" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>Open library</value></data>
@@ -180,6 +187,11 @@
   <data name="RecycleBinLoadingTitle.Text" xml:space="preserve"><value>Loading recycle bin</value></data>
   <data name="RecycleBinErrorTitle.Text" xml:space="preserve"><value>Could not load the recycle bin</value></data>
   <data name="RecycleBinErrorMessage.Text" xml:space="preserve"><value>Local data is temporarily unavailable. Existing images will not be deleted automatically.</value></data>
+  <data name="RecycleBinRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="RecycleBinRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry loading the recycle bin</value></data>
+  <data name="RecycleBinLoadMoreButton.Content" xml:space="preserve"><value>Load more</value></data>
+  <data name="RecycleBinLoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>Load more recycle bin images</value></data>
+  <data name="RecycleBinLoadMoreFailedStatus" xml:space="preserve"><value>Could not load more recycle bin images. Try again.</value></data>
   <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>Recycle bin images</value></data>
   <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
   <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple recycle bin images</value></data>

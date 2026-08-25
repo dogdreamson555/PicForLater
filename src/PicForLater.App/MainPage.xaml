@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:PicForLater.App"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
@@ -47,9 +48,35 @@
             </NavigationViewItem>
         </NavigationView.MenuItems>
 
-        <Frame
-            x:Name="ShellFrame"
-            AutomationProperties.AutomationId="ShellContentFrame"
-            Background="{ThemeResource AppPageBackgroundBrush}" />
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <InfoBar
+                x:Name="BackgroundWorkersFaultInfoBar"
+                x:Uid="BackgroundWorkersFaultInfoBar"
+                Margin="12,12,12,0"
+                AutomationProperties.AutomationId="BackgroundWorkersFaultInfoBar"
+                AutomationProperties.HelpText="{x:Bind ViewModel.FaultMessage, Mode=OneWay}"
+                AutomationProperties.LiveSetting="Assertive"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.HasFault, Mode=OneWay}"
+                Message="{x:Bind ViewModel.FaultMessage, Mode=OneWay}"
+                Severity="Error">
+                <InfoBar.ActionButton>
+                    <Button
+                        x:Uid="BackgroundWorkersRetryButton"
+                        AutomationProperties.AutomationId="BackgroundWorkersRetryButton"
+                        Command="{x:Bind ViewModel.RetryCommand, Mode=OneTime}"
+                        IsEnabled="{x:Bind local:MainPage.Not(ViewModel.IsRetrying), Mode=OneWay}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <Frame
+                x:Name="ShellFrame"
+                Grid.Row="1"
+                AutomationProperties.AutomationId="ShellContentFrame"
+                Background="{ThemeResource AppPageBackgroundBrush}" />
+        </Grid>
     </NavigationView>
 </Page>
