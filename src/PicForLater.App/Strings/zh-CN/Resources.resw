@@ -57,6 +57,13 @@
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主导航</value></data>
+  <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>后台处理已停止</value></data>
+  <data name="BackgroundWorkersRetryButton.Content" xml:space="preserve"><value>重试</value></data>
+  <data name="BackgroundWorkersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重试已停止的后台任务</value></data>
+  <data name="BackgroundAnalysisStoppedMessage" xml:space="preserve"><value>后台分析已停止。已保留排队任务，可以重试。</value></data>
+  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>后台提醒处理已停止。提醒数据已保留，可以重试。</value></data>
+  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>本地推理进程连续异常退出，已停止重新启动。可以重试。</value></data>
+  <data name="BackgroundWorkersStoppedMessage" xml:space="preserve"><value>一个或多个后台任务已停止。数据已保留，可以重试。</value></data>
   <data name="LibraryNavItem.Content" xml:space="preserve"><value>资料库</value></data>
   <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>资料库</value></data>
   <data name="LibraryNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>打开资料库</value></data>

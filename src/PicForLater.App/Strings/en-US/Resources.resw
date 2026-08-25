@@ -57,6 +57,13 @@
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>Background processing stopped</value></data>
+  <data name="BackgroundWorkersRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="BackgroundWorkersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry stopped background tasks</value></data>
+  <data name="BackgroundAnalysisStoppedMessage" xml:space="preserve"><value>Background analysis stopped. Queued work was preserved and can be retried.</value></data>
+  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>Background reminder processing stopped. Reminder data was preserved and can be retried.</value></data>
+  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>The local inference process exited repeatedly, so automatic restarts stopped. You can retry.</value></data>
+  <data name="BackgroundWorkersStoppedMessage" xml:space="preserve"><value>One or more background tasks stopped. Data was preserved and the tasks can be retried.</value></data>
   <data name="LibraryNavItem.Content" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>Open library</value></data>

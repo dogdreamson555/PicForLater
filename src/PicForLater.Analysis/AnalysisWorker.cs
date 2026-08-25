@@ -541,7 +541,7 @@ public sealed class AnalysisWorker
         JsonException => ("analysis.invalid-checkpoint", false),
         OperationCanceledException => ("analysis.timeout", true),
         IOException => ("analysis.io-failed", true),
-        _ => ("analysis.unexpected-failure", true),
+        _ => ("analysis.unexpected-failure", false),
     };
 
     private static bool CanUseStructuredDraft(

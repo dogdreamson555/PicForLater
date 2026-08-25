@@ -24,4 +24,11 @@
     <ProjectReference Include="..\..\src\PicForLater.Analysis\PicForLater.Analysis.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\src\PicForLater.App\Models\RemoteApiSettingsItems.cs"
+             Link="AppSource\RemoteApiSettingsItems.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\RemoteApiProviderCatalog.cs"
+             Link="AppSource\RemoteApiProviderCatalog.cs" />
+  </ItemGroup>
+
 </Project>
