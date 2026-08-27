@@ -1,21 +1,31 @@
-using System.Text;
-using Microsoft.ML.OnnxRuntimeGenAI;
 using PicForLater.Analysis;
 using PicForLater.Core.Analysis;
 
 namespace PicForLater.LocalInference;
 
-public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime
+public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime, IAsyncDisposable
 {
-    private const string CpuProvider = "CPU";
-    private const string DirectMlProvider = "DirectML";
-    private const string CudaProvider = "CUDA";
+    internal const string CpuProvider = "CPU";
+    internal const string DirectMlProvider = "DirectML";
+    internal const string CudaProvider = "CUDA";
     private readonly SemaphoreSlim _inferenceGate = new(1, 1);
     private readonly IInferenceExecutionContext _acceleration;
+    private readonly IQwenGenerationContextFactory _contextFactory;
+    private IQwenGenerationContext? _cachedContext;
+    private QwenGenerationContextKey? _cachedContextKey;
+    private bool _disposed;
 
     public OnnxRuntimeGenAiQwenRuntime(IInferenceExecutionContext acceleration)
+        : this(acceleration, new OnnxRuntimeGenAiQwenContextFactory())
+    {
+    }
+
+    internal OnnxRuntimeGenAiQwenRuntime(
+        IInferenceExecutionContext acceleration,
+        IQwenGenerationContextFactory contextFactory)
     {
         _acceleration = acceleration ?? throw new ArgumentNullException(nameof(acceleration));
+        _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
     }
 
 #if PICFORLATER_CUDA_RUNTIME
@@ -47,6 +57,7 @@ public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime
         await _inferenceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
             return await Task.Run(
                 () => GenerateWithPolicy(
                     modelDirectoryPath,
@@ -88,13 +99,13 @@ public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime
         };
         try
         {
-            var output = GenerateCore(
-                modelDirectoryPath,
+            cancellationToken.ThrowIfCancellationRequested();
+            var context = GetOrCreateContext(modelDirectoryPath, provider);
+            var output = context.Generate(
                 imageFilePath,
                 prompt,
                 jsonSchema,
                 maximumOutputTokens,
-                provider,
                 cancellationToken);
             _acceleration.ReportExecution("Qwen3Vl", executionDevice);
             return output;
@@ -109,113 +120,24 @@ public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime
         }
     }
 
-    private static string GenerateCore(
-        string modelDirectoryPath,
-        string imageFilePath,
-        string prompt,
-        string jsonSchema,
-        int maximumOutputTokens,
-        string provider,
-        CancellationToken cancellationToken)
+    private IQwenGenerationContext GetOrCreateContext(string modelDirectoryPath, string provider)
     {
-        var failureCode = provider switch
+        var normalizedPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(modelDirectoryPath));
+        var requestedKey = new QwenGenerationContextKey(normalizedPath, provider);
+        if (_cachedContext is not null && _cachedContextKey == requestedKey)
         {
-            DirectMlProvider => "qwen.directml-provider-load-failed",
-            CudaProvider => "qwen.cuda-provider-load-failed",
-            _ => "qwen.model-load-failed",
-        };
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (provider == CudaProvider)
-            {
-                CudaRuntimeDependencyLoader.Prepare();
-            }
-
-            // CPU and CUDA packages carry their qualified provider settings in
-            // genai_config.json. Keep those options intact; only DirectML needs
-            // a runtime override because it shares the CPU package.
-            using var config = provider == DirectMlProvider
-                ? CreateDirectMlConfig(modelDirectoryPath)
-                : null;
-            using var model = config is null ? new Model(modelDirectoryPath) : new Model(config);
-            failureCode = "qwen.model-inspection-failed";
-            if (!model.GetModelType().Equals("qwen3_vl", StringComparison.Ordinal))
-            {
-                throw new InvalidDataException("The loaded model is not a Qwen3-VL model.");
-            }
-
-            failureCode = "qwen.processor-load-failed";
-            using var processor = new MultiModalProcessor(model);
-            failureCode = "qwen.image-load-failed";
-            using var images = Images.Load([imageFilePath]);
-            failureCode = "qwen.generator-parameters-failed";
-            using var parameters = new GeneratorParams(model);
-            parameters.SetSearchOption("max_length", 4096d);
-            // Validation and normal structured generation must be repeatable.
-            // The publisher qualification path is greedy as well; sampling made
-            // the fixed self-test intermittently pass during import and fail on
-            // the identical package during a later slot switch.
-            parameters.SetSearchOption("do_sample", false);
-            parameters.SetGuidance("json_schema", jsonSchema);
-            var formattedPrompt =
-                $"<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>\n{prompt}<|im_end|>\n<|im_start|>assistant\n";
-            failureCode = "qwen.input-processing-failed";
-            using var inputs = processor.ProcessImages(formattedPrompt, images);
-            failureCode = "qwen.generator-create-failed";
-            using var generator = new Generator(model, parameters);
-            failureCode = "qwen.input-binding-failed";
-            generator.SetInputs(inputs);
-            failureCode = "qwen.tokenizer-stream-failed";
-            using var tokenizer = new Tokenizer(model);
-            using var stream = tokenizer.CreateStream();
-            var output = new StringBuilder();
-            var generatedTokens = 0;
-            while (!generator.IsDone() && generatedTokens < maximumOutputTokens)
-            {
-                failureCode = "qwen.generation-failed";
-                cancellationToken.ThrowIfCancellationRequested();
-                generator.GenerateNextToken();
-                if (generator.IsDone())
-                {
-                    break;
-                }
-
-                // MultiModalProcessor inputs use the next-token buffer for streaming;
-                // this matches the ONNX Runtime GenAI ModelMM C# reference flow.
-                var token = generator.GetNextTokens()[0];
-                output.Append(stream.Decode(token));
-                generatedTokens++;
-                if (QwenStructuredOutputParser.TryExtractCompleteJsonObject(
-                        output.ToString(),
-                        out var completeJson))
-                {
-                    return completeJson;
-                }
-
-                if (output.Length > QwenStructuredOutputParser.MaximumOutputCharacters)
-                {
-                    failureCode = "qwen.output-character-limit-exceeded";
-                    throw new InvalidDataException("The model output exceeded the configured limit.");
-                }
-            }
-
-            if (!generator.IsDone())
-            {
-                failureCode = "qwen.output-token-limit-exceeded";
-                throw new InvalidDataException("The model output exceeded the token limit.");
-            }
-
-            return output.ToString();
+            return _cachedContext;
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            throw new OcrProviderException(failureCode, isRetryable: false, exception);
-        }
+
+        var previousContext = _cachedContext;
+        _cachedContext = null;
+        _cachedContextKey = null;
+        previousContext?.Dispose();
+
+        var context = _contextFactory.Create(normalizedPath, provider);
+        _cachedContext = context;
+        _cachedContextKey = requestedKey;
+        return context;
     }
 
     private string ResolveProvider(InferenceAccelerationMode accelerationMode)
@@ -244,21 +166,46 @@ public sealed class OnnxRuntimeGenAiQwenRuntime : IQwenGenerationRuntime
         return provider;
     }
 
-    private static Config CreateDirectMlConfig(string modelDirectoryPath)
+    public async ValueTask DisposeAsync()
     {
-        var config = new Config(modelDirectoryPath);
+        await _inferenceGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            config.ClearProviders();
-            config.AppendProvider("DML");
-            config.SetProviderOption("DML", "device_id", "0");
-            return config;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            var context = _cachedContext;
+            _cachedContext = null;
+            _cachedContextKey = null;
+            context?.Dispose();
         }
-        catch
+        finally
         {
-            config.Dispose();
-            throw;
+            _inferenceGate.Release();
         }
     }
+}
 
+internal readonly record struct QwenGenerationContextKey
+{
+    public QwenGenerationContextKey(string modelDirectoryPath, string provider)
+    {
+        ModelDirectoryPath = modelDirectoryPath;
+        Provider = provider;
+    }
+
+    public string ModelDirectoryPath { get; }
+
+    public string Provider { get; }
+
+    public bool Equals(QwenGenerationContextKey other) =>
+        StringComparer.OrdinalIgnoreCase.Equals(ModelDirectoryPath, other.ModelDirectoryPath)
+        && StringComparer.Ordinal.Equals(Provider, other.Provider);
+
+    public override int GetHashCode() => HashCode.Combine(
+        StringComparer.OrdinalIgnoreCase.GetHashCode(ModelDirectoryPath),
+        StringComparer.Ordinal.GetHashCode(Provider));
 }
