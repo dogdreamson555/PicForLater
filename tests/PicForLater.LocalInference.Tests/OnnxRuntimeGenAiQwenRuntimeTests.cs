@@ -38,13 +38,23 @@ public sealed class OnnxRuntimeGenAiQwenRuntimeTests
         Assert.True(factory.Contexts[0].IsDisposed);
         Assert.False(factory.Contexts[1].IsDisposed);
 
+        var resolvedAcceleratedProvider = Assert.Single(
+            runtime.SupportedExecutionProviders,
+            provider => provider != OnnxRuntimeGenAiQwenRuntime.CpuProvider);
+        var explicitAcceleratedMode = resolvedAcceleratedProvider switch
+        {
+            OnnxRuntimeGenAiQwenRuntime.CudaProvider => InferenceAccelerationMode.CudaGpu,
+            OnnxRuntimeGenAiQwenRuntime.DirectMlProvider => InferenceAccelerationMode.DirectMlGpu,
+            _ => throw new InvalidOperationException("The test runtime reported an unexpected provider."),
+        };
+
         await GenerateAsync(runtime, ModelPath("model-b"), InferenceAccelerationMode.Automatic);
-        await GenerateAsync(runtime, ModelPath("model-b"), InferenceAccelerationMode.CudaGpu);
+        await GenerateAsync(runtime, ModelPath("model-b"), explicitAcceleratedMode);
 
         Assert.Equal(3, factory.Contexts.Count);
         Assert.True(factory.Contexts[1].IsDisposed);
         Assert.False(factory.Contexts[2].IsDisposed);
-        Assert.Equal(OnnxRuntimeGenAiQwenRuntime.CudaProvider, factory.Contexts[2].Provider);
+        Assert.Equal(resolvedAcceleratedProvider, factory.Contexts[2].Provider);
         Assert.Equal(2, factory.Contexts[2].GenerateCount);
         Assert.Equal(1, factory.MaximumActiveContextCount);
     }
