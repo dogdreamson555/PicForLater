@@ -70,6 +70,31 @@ public sealed class Qwen3VlProviderTests
     }
 
     [Fact]
+    public async Task Analyze_CanceledGeneration_DeletesTemporaryImage()
+    {
+        var workingDirectory = Path.Combine(Path.GetTempPath(), "PicForLater.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workingDirectory);
+        try
+        {
+            var package = CreatePackage(workingDirectory);
+            var provider = new Qwen3VlProvider(
+                new FakeModelPackageService(package),
+                new RecordingRuntime { CancelGeneration = true },
+                new RecordingPreprocessor(),
+                workingDirectory);
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                provider.AnalyzeAsync(CreateRequest(package)));
+
+            Assert.Empty(Directory.EnumerateFiles(workingDirectory));
+        }
+        finally
+        {
+            Directory.Delete(workingDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Analyze_RejectsDirectMlOnlyModeBeforeLoadingCpuOnlyPackage()
     {
         var workingDirectory = Path.Combine(Path.GetTempPath(), "PicForLater.Tests", Guid.NewGuid().ToString("N"));
@@ -278,6 +303,8 @@ public sealed class Qwen3VlProviderTests
 
         public string? JsonSchema { get; private set; }
 
+        public bool CancelGeneration { get; init; }
+
         public async Task<string> GenerateAsync(
             string modelDirectoryPath,
             string imageFilePath,
@@ -291,6 +318,11 @@ public sealed class Qwen3VlProviderTests
             AccelerationMode = accelerationMode;
             Prompt = prompt;
             JsonSchema = jsonSchema;
+            if (CancelGeneration)
+            {
+                throw new OperationCanceledException(cancellationToken);
+            }
+
             return """{"schemaVersion":"picforlater.analysis.v1","visualFacts":["Poster"],"title":"Generated title","summary":"Generated summary","categoryIds":[],"entities":[],"detectedLanguages":["en"],"warnings":[]}""";
         }
     }

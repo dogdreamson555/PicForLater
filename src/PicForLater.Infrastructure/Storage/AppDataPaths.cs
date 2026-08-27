@@ -26,6 +26,7 @@ public sealed class AppDataPaths
         OriginalDirectoryPath = Path.Combine(RootPath, "assets", "originals");
         ThumbnailDirectoryPath = Path.Combine(RootPath, "cache", "thumbnails");
         AnalysisCacheDirectoryPath = Path.Combine(RootPath, "cache", "analysis");
+        AnalysisWorkerCacheDirectoryPath = Path.Combine(AnalysisCacheDirectoryPath, "workers");
         ModelDownloadRecoveryDirectoryPath = Path.Combine(RootPath, "cache", "model-download-recovery");
         ModelPackagesDirectoryPath = Path.Combine(RootPath, "model-packages");
         ModelRuntimesDirectoryPath = Path.Combine(RootPath, "model-runtimes");
@@ -63,6 +64,8 @@ public sealed class AppDataPaths
 
     public string AnalysisCacheDirectoryPath { get; }
 
+    public string AnalysisWorkerCacheDirectoryPath { get; }
+
     public string ModelDownloadRecoveryDirectoryPath { get; }
 
     public string ModelPackagesDirectoryPath { get; }
@@ -90,6 +93,7 @@ public sealed class AppDataPaths
         EnsureManagedDirectory(OriginalDirectoryPath);
         EnsureManagedDirectory(ThumbnailDirectoryPath);
         EnsureManagedDirectory(AnalysisCacheDirectoryPath);
+        EnsureManagedDirectory(AnalysisWorkerCacheDirectoryPath);
         EnsureManagedDirectory(ModelDownloadRecoveryDirectoryPath);
         EnsureManagedDirectory(ModelPackagesDirectoryPath);
         EnsureManagedDirectory(ModelRuntimesDirectoryPath);
