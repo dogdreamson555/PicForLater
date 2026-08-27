@@ -289,6 +289,51 @@ public sealed class ReminderWorkflowTests
     }
 
     [Fact]
+    public async Task Reconcile_WhenProjectionIsUnchanged_DoesNotUpdateReminderRows()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var seeded = await SeedCandidateAsync(root.Paths);
+        var now = new DateTimeOffset(2026, 8, 27, 0, 0, 0, TimeSpan.Zero);
+        var scheduler = new FakeReminderNotificationScheduler();
+        using var service = new SqliteReminderService(
+            root.Paths,
+            scheduler,
+            new MutableTimeProvider(now));
+        await service.ConfirmAsync(new ReminderConfirmation(
+            seeded.ImageItemId,
+            seeded.DateCandidateId,
+            seeded.LocationCandidateId,
+            "No-op reconciliation",
+            new DateTime(2026, 9, 15, 12, 0, 0),
+            "UTC",
+            null));
+        await service.ReconcileAsync();
+        await using var connection = await OpenAsync(root.Paths.DatabasePath);
+        await using (var audit = connection.CreateCommand())
+        {
+            audit.CommandText =
+                """
+                CREATE TABLE ReminderUpdateAudit (Id INTEGER PRIMARY KEY);
+                CREATE TRIGGER TR_Reminders_UpdateAudit
+                AFTER UPDATE ON Reminders
+                BEGIN
+                    INSERT INTO ReminderUpdateAudit (Id) VALUES (NULL);
+                END;
+                """;
+            await audit.ExecuteNonQueryAsync();
+        }
+
+        var result = await service.ReconcileAsync();
+
+        Assert.Equal(0, result.MissedCount);
+        Assert.Equal(0, result.ScheduledCount);
+        Assert.Equal(0, result.CancelledCount);
+        Assert.Equal(0, result.FailedCount);
+        Assert.Equal(0L, await ScalarAsync(connection, "SELECT COUNT(*) FROM ReminderUpdateAudit;"));
+    }
+
+    [Fact]
     public async Task ConfirmManualReminder_WithoutCandidates_PersistsAndSchedules()
     {
         using var root = new TemporaryAppDataRoot();

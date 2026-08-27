@@ -510,5 +510,22 @@ internal static class SqliteSchema
                 ADD COLUMN ReasoningWireFormat INTEGER NOT NULL DEFAULT 0
                 CHECK (ReasoningWireFormat IN (0, 1, 2, 3, 4));
             """),
+        new SqliteMigration(
+            13,
+            "reminder-reconciliation-query-indexes",
+            """
+            CREATE INDEX IX_Reminders_State_DueAtUtc_Id
+                ON Reminders(State, DueAtUtc, Id);
+
+            UPDATE ReminderNotificationOutbox
+            SET Id = lower(
+                substr(replace(Id, '-', ''), 1, 8) || '-' ||
+                substr(replace(Id, '-', ''), 9, 4) || '-' ||
+                substr(replace(Id, '-', ''), 13, 4) || '-' ||
+                substr(replace(Id, '-', ''), 17, 4) || '-' ||
+                substr(replace(Id, '-', ''), 21, 12))
+            WHERE length(replace(Id, '-', '')) = 32
+              AND replace(Id, '-', '') NOT GLOB '*[^0-9A-Fa-f]*';
+            """),
     ];
 }
