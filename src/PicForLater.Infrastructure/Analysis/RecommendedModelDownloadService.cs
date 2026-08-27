@@ -131,6 +131,8 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
         string? stagingDirectoryPath = null;
         var completedDownloads = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var packageWasInstalled = false;
+        var packageWasInstalledAndEnabled = false;
+        var enablingProgressReported = false;
         try
         {
             progress?.Report(new ModelDownloadProgress(
@@ -198,23 +200,52 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
                         manifestPath,
                         JsonSerializer.Serialize(manifest, ManifestJsonOptions),
                         cancellationToken).ConfigureAwait(false);
-                    await _modelPackages.ImportAsync(manifestPath, cancellationToken).ConfigureAwait(false);
+                    if (_modelPackages is IRecommendedModelPackageInstaller recommendedInstaller)
+                    {
+                        await recommendedInstaller.InstallAndSwitchRecommendedAsync(
+                            stagingDirectoryPath,
+                            manifest,
+                            definition.Descriptor.Capabilities,
+                            () =>
+                            {
+                                progress?.Report(new ModelDownloadProgress(
+                                    modelId,
+                                    ModelDownloadStage.Enabling,
+                                    definition.Descriptor.DownloadBytes,
+                                    definition.Descriptor.DownloadBytes,
+                                    null));
+                                enablingProgressReported = true;
+                            },
+                            cancellationToken).ConfigureAwait(false);
+                        packageWasInstalledAndEnabled = true;
+                    }
+                    else
+                    {
+                        await _modelPackages.ImportAsync(manifestPath, cancellationToken).ConfigureAwait(false);
+                    }
+
                     packageWasInstalled = true;
                 }
             }
 
-            progress?.Report(new ModelDownloadProgress(
-                modelId,
-                ModelDownloadStage.Enabling,
-                definition.Descriptor.DownloadBytes,
-                definition.Descriptor.DownloadBytes,
-                null));
+            if (!enablingProgressReported)
+            {
+                progress?.Report(new ModelDownloadProgress(
+                    modelId,
+                    ModelDownloadStage.Enabling,
+                    definition.Descriptor.DownloadBytes,
+                    definition.Descriptor.DownloadBytes,
+                    null));
+            }
             if (definition.Descriptor.Kind == RecommendedModelPackageKind.Qwen3Vl2BInstruct)
             {
-                await _modelPackages.SwitchManyAsync(
-                    definition.Descriptor.Capabilities,
-                    GetPackageKey(definition),
-                    cancellationToken).ConfigureAwait(false);
+                if (!packageWasInstalledAndEnabled)
+                {
+                    await _modelPackages.SwitchManyAsync(
+                        definition.Descriptor.Capabilities,
+                        GetPackageKey(definition),
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
 
             progress?.Report(new ModelDownloadProgress(

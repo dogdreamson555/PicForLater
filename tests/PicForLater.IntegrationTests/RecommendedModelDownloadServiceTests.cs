@@ -1,7 +1,9 @@
 using System.Net;
 using System.Security.Cryptography;
+using PicForLater.Analysis;
 using PicForLater.Core.Analysis;
 using PicForLater.Infrastructure.Analysis;
+using PicForLater.Infrastructure.Storage;
 
 namespace PicForLater.IntegrationTests;
 
@@ -257,6 +259,48 @@ public sealed class RecommendedModelDownloadServiceTests
         Assert.Contains(requestedPaths, path => path.EndsWith("second.onnx", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task DownloadInstallAndEnable_QwenUsesOneVerifiedInstallAndSelfTest()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var (definition, contents) = CreateQwenDefinition();
+        var runtime = new RecordingQwenRuntime();
+        var validator = new RecordingModelPackageValidator(
+            new QwenModelPackageValidator(runtime, root.Paths.AnalysisCacheDirectoryPath));
+        var modelPackages = new SqliteModelPackageService(root.Paths, validator);
+        using var httpClient = new HttpClient(new DelegateResponseHandler(request =>
+        {
+            var fileName = Path.GetFileName(request.RequestUri!.AbsolutePath);
+            return Response(request, contents[fileName]);
+        }));
+        var progress = new InlineProgress<ModelDownloadProgress>();
+        var service = new RecommendedModelDownloadService(
+            root.Paths,
+            httpClient,
+            modelPackages,
+            new RecordingOcrInstaller(),
+            [definition]);
+
+        var result = await service.DownloadInstallAndEnableAsync(
+            definition.Descriptor.Id,
+            progress);
+
+        Assert.True(result.DownloadWasRequired);
+        Assert.True(result.Model.IsInstalled);
+        Assert.True(result.Model.IsEnabled);
+        Assert.Equal(0, validator.FullValidationCount);
+        Assert.Equal(1, validator.VerifiedStagingValidationCount);
+        Assert.Equal(1, runtime.CallCount);
+        Assert.Equal(
+            1,
+            progress.Values.Count(item => item.Stage == ModelDownloadStage.Enabling));
+        var state = await modelPackages.GetStateAsync();
+        var package = Assert.Single(state.Packages);
+        Assert.Equal(package.PackageKey, state.CurrentProfile.GetSlot(ModelCapability.VisionCaption).PackageKey);
+        Assert.Equal(package.PackageKey, state.CurrentProfile.GetSlot(ModelCapability.TextComposition).PackageKey);
+    }
+
     private static RecommendedModelDownloadDefinition CreateDefinition(byte[] payload, string sha256)
     {
         const string id = "test-pp-ocr-pinned";
@@ -319,6 +363,69 @@ public sealed class RecommendedModelDownloadServiceTests
             false,
             false);
         return new RecommendedModelDownloadDefinition(descriptor, [first, second], null);
+    }
+
+    private static (RecommendedModelDownloadDefinition Definition, Dictionary<string, byte[]> Contents)
+        CreateQwenDefinition()
+    {
+        var contents = new Dictionary<string, byte[]>(StringComparer.Ordinal)
+        {
+            ["genai_config.json"] = """{"model":{"type":"qwen3_vl","vision":{"filename":"vision.onnx"},"embedding":{"filename":"embedding.onnx"},"decoder":{"filename":"decoder.onnx"}}}"""u8.ToArray(),
+            ["tokenizer.json"] = "{}"u8.ToArray(),
+            ["vision.onnx"] = [1, 2, 3],
+            ["embedding.onnx"] = [4, 5, 6],
+            ["decoder.onnx"] = [7, 8, 9],
+        };
+        var files = contents.Select(entry => new RecommendedModelDownloadFile(
+            entry.Key,
+            new Uri($"https://huggingface.co/PicForLater/test/resolve/pinned/{entry.Key}"),
+            entry.Value.LongLength,
+            Hash(entry.Value))).ToArray();
+        var totalBytes = files.Sum(file => file.ByteLength);
+        var manifest = new ModelPackageManifest(
+            1,
+            "picforlater.qwen3-vl-2b-instruct-recommended-test",
+            "0.1.0",
+            "onnxruntime-genai",
+            "onnx",
+            "qwen3-vl-2b-instruct",
+            "int4",
+            [ModelCapability.VisionCaption, ModelCapability.TextComposition],
+            ["und", "en"],
+            ["en"],
+            ["Latn"],
+            true,
+            files.Select(file => new ModelPackageFile(
+                file.RelativePath,
+                file.ByteLength,
+                file.Sha256)).ToArray(),
+            "Apache-2.0",
+            "https://huggingface.co/PicForLater/test",
+            totalBytes,
+            totalBytes,
+            1,
+            "Test CPU",
+            "qwen3-vl.image+text.v1",
+            QwenStructuredOutputParser.SchemaVersion,
+            ["CPU"]);
+        var descriptor = new RecommendedModelDescriptor(
+            "test-qwen-pinned",
+            RecommendedModelPackageKind.Qwen3Vl2BInstruct,
+            "Test Qwen",
+            manifest.Version,
+            "Test-only Qwen package.",
+            manifest.Capabilities,
+            totalBytes,
+            totalBytes,
+            1,
+            "Test CPU",
+            manifest.License,
+            manifest.SourceUrl,
+            true,
+            "TestOnly",
+            false,
+            false);
+        return (new RecommendedModelDownloadDefinition(descriptor, files, manifest), contents);
     }
 
     private static HttpResponseMessage Response(HttpRequestMessage request, byte[] bytes) => new(HttpStatusCode.OK)
@@ -409,6 +516,60 @@ public sealed class RecommendedModelDownloadServiceTests
             Directory.Delete(downloadedPackageDirectoryPath, recursive: true);
             IsInstalled = true;
             return new LocalOcrPackageInstallResult(AlreadyInstalled: false);
+        }
+    }
+
+    private sealed class RecordingModelPackageValidator(IModelPackageValidator inner)
+        : IModelPackageValidator
+    {
+        public int FullValidationCount { get; private set; }
+
+        public int VerifiedStagingValidationCount { get; private set; }
+
+        public Task<ValidatedModelPackage> ValidateAsync(
+            string packageDirectoryPath,
+            bool runInferenceSelfTest,
+            CancellationToken cancellationToken = default)
+        {
+            FullValidationCount++;
+            return inner.ValidateAsync(
+                packageDirectoryPath,
+                runInferenceSelfTest,
+                cancellationToken);
+        }
+
+        public Task<ValidatedModelPackage> ValidateVerifiedStagingAsync(
+            string packageDirectoryPath,
+            ModelPackageManifest expectedManifest,
+            CancellationToken cancellationToken = default)
+        {
+            VerifiedStagingValidationCount++;
+            return inner.ValidateVerifiedStagingAsync(
+                packageDirectoryPath,
+                expectedManifest,
+                cancellationToken);
+        }
+    }
+
+    private sealed class RecordingQwenRuntime : IQwenGenerationRuntime
+    {
+        public IReadOnlySet<string> SupportedExecutionProviders { get; } =
+            new HashSet<string>(["CPU"], StringComparer.Ordinal);
+
+        public int CallCount { get; private set; }
+
+        public Task<string> GenerateAsync(
+            string modelDirectoryPath,
+            string imageFilePath,
+            string prompt,
+            string jsonSchema,
+            int maximumOutputTokens,
+            InferenceAccelerationMode accelerationMode,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(
+                """{"schemaVersion":"picforlater.analysis.v1","visualFacts":[],"title":"Self test","summary":"","categoryIds":[],"entities":[],"detectedLanguages":["und"],"warnings":[]}""");
         }
     }
 
