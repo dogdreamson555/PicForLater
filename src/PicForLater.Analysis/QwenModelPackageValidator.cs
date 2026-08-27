@@ -52,7 +52,34 @@ public sealed partial class QwenModelPackageValidator : IModelPackageValidator
     public async Task<ValidatedModelPackage> ValidateAsync(
         string packageDirectoryPath,
         bool runInferenceSelfTest,
+        CancellationToken cancellationToken = default) =>
+        await ValidateCoreAsync(
+            packageDirectoryPath,
+            runInferenceSelfTest,
+            expectedManifest: null,
+            skipFileHashes: false,
+            cancellationToken).ConfigureAwait(false);
+
+    public async Task<ValidatedModelPackage> ValidateVerifiedStagingAsync(
+        string packageDirectoryPath,
+        ModelPackageManifest expectedManifest,
         CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedManifest);
+        return await ValidateCoreAsync(
+            packageDirectoryPath,
+            runInferenceSelfTest: true,
+            expectedManifest,
+            skipFileHashes: true,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<ValidatedModelPackage> ValidateCoreAsync(
+        string packageDirectoryPath,
+        bool runInferenceSelfTest,
+        ModelPackageManifest? expectedManifest,
+        bool skipFileHashes,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageDirectoryPath);
         var rootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(packageDirectoryPath));
@@ -83,6 +110,14 @@ public sealed partial class QwenModelPackageValidator : IModelPackageValidator
         }
 
         ValidateManifest(manifest);
+        if (expectedManifest is not null
+            && !CanonicalManifestJson(manifest).Equals(
+                CanonicalManifestJson(expectedManifest),
+                StringComparison.Ordinal))
+        {
+            throw new ModelPackageValidationException("model.staged-package-mismatch");
+        }
+
         var totalBytes = 0L;
         foreach (var file in manifest.Files)
         {
@@ -101,18 +136,22 @@ public sealed partial class QwenModelPackageValidator : IModelPackageValidator
                 throw new ModelPackageValidationException("model.package-too-large");
             }
 
-            await using var stream = new FileStream(
-                absolutePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                131_072,
-                FileOptions.Asynchronous | FileOptions.SequentialScan);
-            var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false))
-                .ToLowerInvariant();
-            if (!hash.Equals(file.Sha256, StringComparison.Ordinal))
+            if (!skipFileHashes)
             {
-                throw new ModelPackageValidationException("model.file-hash-mismatch");
+                await using var stream = new FileStream(
+                    absolutePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read,
+                    131_072,
+                    FileOptions.Asynchronous | FileOptions.SequentialScan);
+                var hash = Convert.ToHexString(
+                        await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false))
+                    .ToLowerInvariant();
+                if (!hash.Equals(file.Sha256, StringComparison.Ordinal))
+                {
+                    throw new ModelPackageValidationException("model.file-hash-mismatch");
+                }
             }
         }
 
@@ -133,6 +172,9 @@ public sealed partial class QwenModelPackageValidator : IModelPackageValidator
             manifestJson,
             _timeProvider.GetUtcNow());
     }
+
+    private static string CanonicalManifestJson(ModelPackageManifest manifest) =>
+        JsonSerializer.Serialize(manifest, JsonOptions);
 
     private static void ValidateManifest(ModelPackageManifest manifest)
     {

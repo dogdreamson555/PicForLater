@@ -1,4 +1,6 @@
+using System.Buffers;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Data.Sqlite;
@@ -7,7 +9,9 @@ using PicForLater.Infrastructure.Storage;
 
 namespace PicForLater.Infrastructure.Analysis;
 
-public sealed class SqliteModelPackageService : IModelPackageService
+public sealed class SqliteModelPackageService :
+    IModelPackageService,
+    IRecommendedModelPackageInstaller
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -236,6 +240,150 @@ public sealed class SqliteModelPackageService : IModelPackageService
         }
     }
 
+    async Task<ModelPackageImportResult> IRecommendedModelPackageInstaller.InstallAndSwitchRecommendedAsync(
+        string packageDirectoryPath,
+        ModelPackageManifest expectedManifest,
+        IReadOnlyCollection<ModelCapability> capabilities,
+        Action? onReadyToEnable,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packageDirectoryPath);
+        ArgumentNullException.ThrowIfNull(expectedManifest);
+        ArgumentNullException.ThrowIfNull(capabilities);
+        var selectedCapabilities = capabilities.Distinct().ToArray();
+        if (selectedCapabilities.Length == 0
+            || selectedCapabilities.Any(capability =>
+                !Enum.IsDefined(capability)
+                || capability is not ModelCapability.VisionCaption
+                    and not ModelCapability.TextComposition)
+            || selectedCapabilities.Any(capability =>
+                !expectedManifest.Capabilities.Contains(capability)))
+        {
+            throw new ArgumentException(
+                "The recommended package capabilities are invalid.",
+                nameof(capabilities));
+        }
+
+        var sourceDirectoryPath = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(packageDirectoryPath));
+        EnsureRecommendedDownloadPath(sourceDirectoryPath);
+        await _mutationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        string? stagingDirectoryPath = null;
+        string? installedDirectoryPath = null;
+        var movedToInstalledDirectory = false;
+        var registrationCommitted = false;
+        try
+        {
+            var packageKey = $"{expectedManifest.Id}@{expectedManifest.Version}";
+            var existing = await ResolveAsync(packageKey, cancellationToken).ConfigureAwait(false);
+            if (existing is not null)
+            {
+                if (!PackageFilesEqual(existing.Manifest.Files, expectedManifest.Files))
+                {
+                    throw new ModelPackageImportException("model.same-version-content-conflict");
+                }
+
+                var revalidated = await _validator.ValidateAsync(
+                    existing.InstalledDirectoryPath,
+                    runInferenceSelfTest: true,
+                    cancellationToken).ConfigureAwait(false);
+                EnsurePackageMatchesExpected(revalidated, expectedManifest);
+                onReadyToEnable?.Invoke();
+                await SwitchValidatedPackageAsync(
+                    selectedCapabilities,
+                    existing,
+                    packageToRegister: null,
+                    cancellationToken).ConfigureAwait(false);
+                return new ModelPackageImportResult(existing, ReplacedExistingPackage: false);
+            }
+
+            installedDirectoryPath = Path.Combine(
+                _paths.ModelPackagesDirectoryPath,
+                expectedManifest.Id,
+                expectedManifest.Version);
+            EnsureManagedModelPath(installedDirectoryPath);
+            ValidatedModelPackage validatedPackage;
+            if (Directory.Exists(installedDirectoryPath))
+            {
+                validatedPackage = await _validator.ValidateAsync(
+                    installedDirectoryPath,
+                    runInferenceSelfTest: true,
+                    cancellationToken).ConfigureAwait(false);
+                EnsurePackageMatchesExpected(validatedPackage, expectedManifest);
+            }
+            else
+            {
+                var stagingRoot = Path.Combine(_paths.ModelPackagesDirectoryPath, ".staging");
+                EnsureManagedModelPath(stagingRoot);
+                Directory.CreateDirectory(stagingRoot);
+                stagingDirectoryPath = Path.Combine(stagingRoot, Guid.NewGuid().ToString("N"));
+                EnsureManagedModelPath(stagingDirectoryPath);
+                Directory.CreateDirectory(stagingDirectoryPath);
+                await CopyVerifiedRecommendedPackageAsync(
+                    sourceDirectoryPath,
+                    stagingDirectoryPath,
+                    expectedManifest,
+                    cancellationToken).ConfigureAwait(false);
+                validatedPackage = await _validator.ValidateVerifiedStagingAsync(
+                    stagingDirectoryPath,
+                    expectedManifest,
+                    cancellationToken).ConfigureAwait(false);
+                EnsurePackageMatchesExpected(validatedPackage, expectedManifest);
+
+                if (Directory.Exists(installedDirectoryPath))
+                {
+                    throw new ModelPackageImportException("model.install-directory-conflict");
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(installedDirectoryPath)!);
+                Directory.Move(stagingDirectoryPath, installedDirectoryPath);
+                movedToInstalledDirectory = true;
+                stagingDirectoryPath = null;
+            }
+
+            var installedAtUtc = DateTimeOffset.UtcNow;
+            var installedPackage = new InstalledModelPackage(
+                validatedPackage.PackageKey,
+                validatedPackage.Manifest,
+                installedDirectoryPath,
+                installedAtUtc,
+                validatedPackage.SelfTestedAtUtc,
+                "SelfTestPassed");
+            onReadyToEnable?.Invoke();
+            await SwitchValidatedPackageAsync(
+                selectedCapabilities,
+                installedPackage,
+                validatedPackage,
+                cancellationToken).ConfigureAwait(false);
+            registrationCommitted = true;
+            return new ModelPackageImportResult(
+                installedPackage,
+                ReplacedExistingPackage: false);
+        }
+        catch (ModelPackageImportException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            throw new ModelPackageImportException("model.import-failed", exception);
+        }
+        finally
+        {
+            if (stagingDirectoryPath is not null)
+            {
+                TryDeleteManagedDirectory(stagingDirectoryPath);
+            }
+
+            if (movedToInstalledDirectory && !registrationCommitted && installedDirectoryPath is not null)
+            {
+                TryDeleteManagedDirectory(installedDirectoryPath);
+            }
+
+            _mutationGate.Release();
+        }
+    }
+
     public Task SwitchAsync(
         ModelCapability capability,
         string? packageKey,
@@ -385,10 +533,74 @@ public sealed class SqliteModelPackageService : IModelPackageService
         DateTimeOffset installedAtUtc,
         CancellationToken cancellationToken)
     {
-        var relativePath = Path.GetRelativePath(_paths.RootPath, installedDirectoryPath)
-            .Replace(Path.DirectorySeparatorChar, '/');
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = connection.BeginTransaction(deferred: false);
+        await InsertPackageAsync(
+            connection,
+            transaction,
+            package,
+            installedDirectoryPath,
+            installedAtUtc,
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task SwitchValidatedPackageAsync(
+        IReadOnlyCollection<ModelCapability> capabilities,
+        InstalledModelPackage installedPackage,
+        ValidatedModelPackage? packageToRegister,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = connection.BeginTransaction(deferred: false);
+        if (packageToRegister is not null)
+        {
+            await InsertPackageAsync(
+                connection,
+                transaction,
+                packageToRegister,
+                installedPackage.InstalledDirectoryPath,
+                installedPackage.InstalledAtUtc,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var revision = await IncrementProfileRevisionAsync(
+            connection,
+            transaction,
+            now,
+            cancellationToken).ConfigureAwait(false);
+        foreach (var capability in capabilities)
+        {
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                UPDATE ModelCapabilityProfiles
+                SET ProviderId = 'local.qwen3-vl', PackageKey = @packageKey,
+                    Revision = @revision, UpdatedAtUtc = @updated
+                WHERE Capability = @capability;
+                """,
+                cancellationToken,
+                ("@packageKey", installedPackage.PackageKey),
+                ("@revision", revision),
+                ("@updated", ToDb(now)),
+                ("@capability", (int)capability)).ConfigureAwait(false);
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task InsertPackageAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        ValidatedModelPackage package,
+        string installedDirectoryPath,
+        DateTimeOffset installedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        var relativePath = Path.GetRelativePath(_paths.RootPath, installedDirectoryPath)
+            .Replace(Path.DirectorySeparatorChar, '/');
         await ExecuteAsync(
             connection,
             transaction,
@@ -412,7 +624,6 @@ public sealed class SqliteModelPackageService : IModelPackageService
             ("@path", relativePath),
             ("@installed", ToDb(installedAtUtc)),
             ("@selfTested", ToDb(package.SelfTestedAtUtc))).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private InstalledModelPackage ReadPackage(SqliteDataReader reader)
@@ -466,6 +677,150 @@ public sealed class SqliteModelPackageService : IModelPackageService
             .SequenceEqual(
                 right.OrderBy(file => file.Path, StringComparer.OrdinalIgnoreCase),
                 ModelPackageFileComparer.Instance);
+
+    private static void EnsurePackageMatchesExpected(
+        ValidatedModelPackage package,
+        ModelPackageManifest expectedManifest)
+    {
+        var expectedPackageKey = $"{expectedManifest.Id}@{expectedManifest.Version}";
+        if (!package.PackageKey.Equals(expectedPackageKey, StringComparison.Ordinal)
+            || !CanonicalManifestJson(package.Manifest).Equals(
+                CanonicalManifestJson(expectedManifest),
+                StringComparison.Ordinal))
+        {
+            throw new ModelPackageImportException("model.staged-package-mismatch");
+        }
+    }
+
+    private static string CanonicalManifestJson(ModelPackageManifest manifest) =>
+        JsonSerializer.Serialize(manifest, JsonOptions);
+
+    private async Task CopyVerifiedRecommendedPackageAsync(
+        string sourceDirectoryPath,
+        string destinationDirectoryPath,
+        ModelPackageManifest expectedManifest,
+        CancellationToken cancellationToken)
+    {
+        var manifestJson = CanonicalManifestJson(expectedManifest);
+        await File.WriteAllTextAsync(
+            Path.Combine(destinationDirectoryPath, "manifest.json"),
+            manifestJson,
+            cancellationToken).ConfigureAwait(false);
+        var totalBytes = 0L;
+        foreach (var file in expectedManifest.Files)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var sourcePath = ResolveContainedPackagePath(sourceDirectoryPath, file.Path);
+            var destinationPath = ResolveContainedPackagePath(destinationDirectoryPath, file.Path);
+            _paths.EnsureSafePath(sourcePath);
+            EnsureManagedModelPath(destinationPath);
+            var sourceInfo = new FileInfo(sourcePath);
+            if (!sourceInfo.Exists
+                || sourceInfo.Length != file.ByteLength
+                || (sourceInfo.Attributes & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new ModelPackageImportException("model.staged-package-mismatch");
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            await CopyAndVerifyFileAsync(
+                sourcePath,
+                destinationPath,
+                file,
+                cancellationToken).ConfigureAwait(false);
+            totalBytes = checked(totalBytes + file.ByteLength);
+        }
+
+        if (totalBytes != expectedManifest.InstalledBytes)
+        {
+            throw new ModelPackageImportException("model.staged-package-mismatch");
+        }
+    }
+
+    private static async Task CopyAndVerifyFileAsync(
+        string sourcePath,
+        string destinationPath,
+        ModelPackageFile expectedFile,
+        CancellationToken cancellationToken)
+    {
+        await using var source = new FileStream(
+            sourcePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            1024 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var destination = new FileStream(
+            destinationPath,
+            FileMode.CreateNew,
+            FileAccess.Write,
+            FileShare.None,
+            1024 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
+        var copiedBytes = 0L;
+        try
+        {
+            while (true)
+            {
+                var read = await source.ReadAsync(
+                    buffer.AsMemory(0, buffer.Length),
+                    cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    break;
+                }
+
+                copiedBytes = checked(copiedBytes + read);
+                if (copiedBytes > expectedFile.ByteLength)
+                {
+                    throw new ModelPackageImportException("model.staged-package-mismatch");
+                }
+
+                hash.AppendData(buffer, 0, read);
+                await destination.WriteAsync(
+                    buffer.AsMemory(0, read),
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            await destination.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
+        }
+
+        var actualHash = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+        if (copiedBytes != expectedFile.ByteLength
+            || !actualHash.Equals(expectedFile.Sha256, StringComparison.Ordinal))
+        {
+            throw new ModelPackageImportException("model.staged-package-mismatch");
+        }
+    }
+
+    private static string ResolveContainedPackagePath(string rootPath, string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath)
+            || Path.IsPathFullyQualified(relativePath)
+            || relativePath.Contains(':', StringComparison.Ordinal)
+            || relativePath.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries)
+                .Any(segment => segment is "." or ".."))
+        {
+            throw new ModelPackageImportException("model.staged-package-mismatch");
+        }
+
+        var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootPath));
+        var candidate = Path.GetFullPath(Path.Combine(
+            root,
+            relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        if (!candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ModelPackageImportException("model.staged-package-mismatch");
+        }
+
+        return candidate;
+    }
 
     private static async Task CopyPackageAsync(
         string sourceDirectoryPath,
@@ -521,6 +876,21 @@ public sealed class SqliteModelPackageService : IModelPackageService
             && !candidate.StartsWith(modelRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("The model path is outside the managed model directory.");
+        }
+    }
+
+    private void EnsureRecommendedDownloadPath(string path)
+    {
+        _paths.EnsureSafePath(path);
+        var downloadRoot = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(_paths.ModelDownloadStagingDirectoryPath));
+        var candidate = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        if (!candidate.StartsWith(
+                downloadRoot + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "The recommended package source is outside the managed download staging directory.");
         }
     }
 
