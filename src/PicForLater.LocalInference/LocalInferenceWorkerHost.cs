@@ -20,6 +20,7 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
     private ManagedImageStorage? _storage;
     private WindowsOnnxPpOcrRuntime? _ppOcrRuntime;
     private OnnxRuntimeGenAiQwenRuntime? _qwenRuntime;
+    private WorkerAnalysisTemporaryDirectory? _analysisTemporaryDirectory;
     private IOcrProvider? _ocrProvider;
     private IVisionCaptionProvider? _visionProvider;
     private TimeSpan _idleTimeout;
@@ -191,6 +192,10 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
         _idleTimeout = TimeSpan.FromSeconds(hello.IdleTimeoutSeconds);
         _paths = new AppDataPaths(hello.AppDataRootPath);
         _storage = new ManagedImageStorage(_paths);
+        _analysisTemporaryDirectory = await WorkerAnalysisTemporaryDirectory.CreateAsync(
+                _paths,
+                timeout.Token)
+            .ConfigureAwait(false);
         CudaRuntimeDependencyLoader.ConfigureManagedRuntimeDirectory(
             _paths.ModelRuntimesDirectoryPath);
         _ppOcrRuntime = new WindowsOnnxPpOcrRuntime(_acceleration);
@@ -207,7 +212,7 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
             modelPackages,
             _qwenRuntime,
             new WindowsImageContentProcessor(),
-            _paths.AnalysisCacheDirectoryPath,
+            _analysisTemporaryDirectory.DirectoryPath,
             _acceleration);
 
         var response = new LocalInferenceEnvelope(
@@ -556,7 +561,17 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
             }
             finally
             {
-                _pipe.Dispose();
+                try
+                {
+                    if (_analysisTemporaryDirectory is not null)
+                    {
+                        await _analysisTemporaryDirectory.DisposeAsync().ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    _pipe.Dispose();
+                }
             }
         }
     }
