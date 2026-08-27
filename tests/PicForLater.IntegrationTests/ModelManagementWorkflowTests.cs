@@ -242,6 +242,94 @@ public sealed class ModelManagementWorkflowTests
     }
 
     [Fact]
+    public async Task RecommendedInstall_TamperedDownloadedFileFailsBeforeRegistration()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var runtime = new FakeQwenRuntime();
+        var service = new SqliteModelPackageService(
+            root.Paths,
+            new QwenModelPackageValidator(
+                runtime,
+                root.Paths.AnalysisCacheDirectoryPath));
+        var manifestPath = await CreatePackageAsync(root.Paths.ModelDownloadStagingDirectoryPath);
+        var manifest = JsonSerializer.Deserialize<ModelPackageManifest>(
+            await File.ReadAllTextAsync(manifestPath),
+            ManifestJsonOptions)!;
+        await File.WriteAllBytesAsync(
+            Path.Combine(Path.GetDirectoryName(manifestPath)!, "vision.onnx"),
+            [9, 9, 9]);
+
+        var exception = await Assert.ThrowsAsync<ModelPackageImportException>(() =>
+            ((IRecommendedModelPackageInstaller)service).InstallAndSwitchRecommendedAsync(
+                Path.GetDirectoryName(manifestPath)!,
+                manifest,
+                manifest.Capabilities,
+                onReadyToEnable: null));
+
+        Assert.Equal("model.staged-package-mismatch", exception.ErrorCode);
+        Assert.Equal(0, runtime.CallCount);
+        Assert.Empty((await service.GetStateAsync()).Packages);
+        var profile = await service.GetCurrentSnapshotAsync();
+        Assert.Null(profile.GetSlot(ModelCapability.VisionCaption).PackageKey);
+        Assert.Null(profile.GetSlot(ModelCapability.TextComposition).PackageKey);
+    }
+
+    [Fact]
+    public async Task RecommendedInstall_SwitchTransactionFailurePreservesOldProfileAndRemovesNewPackage()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var runtime = new FakeQwenRuntime();
+        var service = new SqliteModelPackageService(
+            root.Paths,
+            new QwenModelPackageValidator(
+                runtime,
+                root.Paths.AnalysisCacheDirectoryPath));
+        var manifestPath = await CreatePackageAsync(root.Paths.ModelDownloadStagingDirectoryPath);
+        var manifest = JsonSerializer.Deserialize<ModelPackageManifest>(
+            await File.ReadAllTextAsync(manifestPath),
+            ManifestJsonOptions)!;
+        await using (var connection = await OpenAsync(root.Paths.DatabasePath))
+        await using (var trigger = connection.CreateCommand())
+        {
+            trigger.CommandText =
+                """
+                CREATE TRIGGER TR_ModelCapabilityProfiles_RejectRecommendedSwitch
+                BEFORE UPDATE ON ModelCapabilityProfiles
+                WHEN NEW.PackageKey IS NOT NULL
+                BEGIN
+                    SELECT RAISE(ABORT, 'synthetic switch failure');
+                END;
+                """;
+            await trigger.ExecuteNonQueryAsync();
+        }
+
+        var before = await service.GetCurrentSnapshotAsync();
+        var exception = await Assert.ThrowsAsync<ModelPackageImportException>(() =>
+            ((IRecommendedModelPackageInstaller)service).InstallAndSwitchRecommendedAsync(
+                Path.GetDirectoryName(manifestPath)!,
+                manifest,
+                manifest.Capabilities,
+                onReadyToEnable: null));
+
+        Assert.Equal("model.import-failed", exception.ErrorCode);
+        Assert.Equal(1, runtime.CallCount);
+        Assert.Empty((await service.GetStateAsync()).Packages);
+        var after = await service.GetCurrentSnapshotAsync();
+        Assert.Equal(before.AnalysisMode, after.AnalysisMode);
+        Assert.Equal(before.Revision, after.Revision);
+        Assert.Equal(before.ExecutionBackend, after.ExecutionBackend);
+        Assert.Equal(before.RemoteInputMode, after.RemoteInputMode);
+        Assert.Equal(before.RemoteApiProfile, after.RemoteApiProfile);
+        Assert.Equal(before.Slots, after.Slots);
+        Assert.False(Directory.Exists(Path.Combine(
+            root.Paths.ModelPackagesDirectoryPath,
+            manifest.Id,
+            manifest.Version)));
+    }
+
+    [Fact]
     public async Task SelectiveReanalysis_PinsCurrentProfileAndIsIdempotentPerItemRevision()
     {
         using var root = new TemporaryAppDataRoot();

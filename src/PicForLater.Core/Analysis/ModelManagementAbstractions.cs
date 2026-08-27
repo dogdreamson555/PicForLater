@@ -11,6 +11,20 @@ public interface IModelPackageValidator
         string packageDirectoryPath,
         bool runInferenceSelfTest,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates a private staging directory whose file bytes were already checked against
+    /// <paramref name="expectedManifest"/> while they were copied into that directory.
+    /// Callers must not use this path for arbitrary or user-controlled package directories.
+    /// </summary>
+    Task<ValidatedModelPackage> ValidateVerifiedStagingAsync(
+        string packageDirectoryPath,
+        ModelPackageManifest expectedManifest,
+        CancellationToken cancellationToken = default) =>
+        ValidateAsync(
+            packageDirectoryPath,
+            runInferenceSelfTest: true,
+            cancellationToken);
 }
 
 public interface IModelPackageService : IAnalysisProfileSnapshotProvider
