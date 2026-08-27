@@ -707,12 +707,6 @@ public sealed class SqliteReminderService :
                 cancellationToken).ConfigureAwait(false);
         }
 
-        await ExecuteAsync(
-            connection,
-            transaction,
-            "UPDATE Reminders SET LastReconciledAtUtc = @updated WHERE 1 = 1;",
-            cancellationToken,
-            ("@updated", ToDb(now))).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -859,11 +853,11 @@ public sealed class SqliteReminderService :
                 """
                 UPDATE ReminderNotificationOutbox
                 SET State = 2, AttemptCount = AttemptCount + 1, UpdatedAtUtc = @updated
-                WHERE replace(Id, '-', '') = @id AND State IN (1, 4);
+                WHERE Id = @id AND State IN (1, 4);
                 """,
                 cancellationToken,
                 ("@updated", ToDb(now)),
-                ("@id", ToDbCompact(row.Id))).ConfigureAwait(false);
+                ("@id", ToDb(row.Id))).ConfigureAwait(false);
         }
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -885,11 +879,11 @@ public sealed class SqliteReminderService :
             UPDATE ReminderNotificationOutbox
             SET State = 3, LastErrorCode = NULL, UpdatedAtUtc = @updated,
                 CompletedAtUtc = @updated
-            WHERE replace(Id, '-', '') = @id;
+            WHERE Id = @id;
             """,
             cancellationToken,
             ("@updated", ToDb(now)),
-            ("@id", ToDbCompact(operation.Id))).ConfigureAwait(false);
+            ("@id", ToDb(operation.Id))).ConfigureAwait(false);
         if (operation.ReminderId is Guid reminderId)
         {
             await ExecuteAsync(
@@ -929,14 +923,14 @@ public sealed class SqliteReminderService :
             SET State = @state, LastErrorCode = @error,
                 NotBeforeUtc = @notBefore, UpdatedAtUtc = @updated,
                 CompletedAtUtc = CASE WHEN @state = 3 THEN @updated ELSE NULL END
-            WHERE replace(Id, '-', '') = @id;
+            WHERE Id = @id;
             """,
             cancellationToken,
             ("@state", exhausted ? 3 : 4),
             ("@error", errorCode),
             ("@notBefore", ToDb(now.AddMinutes(Math.Min(30, operation.AttemptCount + 1)))),
             ("@updated", ToDb(now)),
-            ("@id", ToDbCompact(operation.Id))).ConfigureAwait(false);
+            ("@id", ToDb(operation.Id))).ConfigureAwait(false);
         if (operation.ReminderId is Guid reminderId)
         {
             await ExecuteAsync(
@@ -972,11 +966,11 @@ public sealed class SqliteReminderService :
             UPDATE ReminderNotificationOutbox
             SET State = 3, LastErrorCode = 'DueTimeElapsed',
                 UpdatedAtUtc = @updated, CompletedAtUtc = @updated
-            WHERE replace(Id, '-', '') = @id;
+            WHERE Id = @id;
             """,
             cancellationToken,
             ("@updated", ToDb(now)),
-            ("@id", ToDbCompact(operation.Id))).ConfigureAwait(false);
+            ("@id", ToDb(operation.Id))).ConfigureAwait(false);
         if (operation.ReminderId is Guid reminderId)
         {
             await ExecuteAsync(
@@ -1684,9 +1678,6 @@ public sealed class SqliteReminderService :
         DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
 
     private static string ToDb(Guid value) => value.ToString("D", CultureInfo.InvariantCulture);
-
-    private static string ToDbCompact(Guid value) =>
-        value.ToString("N", CultureInfo.InvariantCulture);
 
     private static string ToDb(DateTimeOffset value) =>
         value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);

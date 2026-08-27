@@ -574,7 +574,11 @@ internal sealed class SqliteLibraryStore
                 Title, Body, Location, State, AttemptCount, NotBeforeUtc,
                 LastErrorCode, CreatedAtUtc, UpdatedAtUtc, CompletedAtUtc)
             SELECT
-                lower(hex(randomblob(16))), r.Id, r.SchedulerId, 2, NULL,
+                lower(
+                    hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' ||
+                    hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' ||
+                    hex(randomblob(6))),
+                r.Id, r.SchedulerId, 2, NULL,
                 NULL, NULL, NULL, 1, 0, @updated,
                 NULL, @updated, @updated, NULL
             FROM Reminders r
