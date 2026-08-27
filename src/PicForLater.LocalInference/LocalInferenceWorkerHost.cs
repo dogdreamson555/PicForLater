@@ -539,10 +539,25 @@ internal sealed class LocalInferenceWorkerHost : IAsyncDisposable
     private OnnxRuntimeGenAiQwenRuntime RequireQwenRuntime() =>
         _qwenRuntime ?? throw new InvalidOperationException("The worker handshake is incomplete.");
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        _ppOcrRuntime?.Dispose();
-        _pipe.Dispose();
-        return ValueTask.CompletedTask;
+        try
+        {
+            _ppOcrRuntime?.Dispose();
+        }
+        finally
+        {
+            try
+            {
+                if (_qwenRuntime is not null)
+                {
+                    await _qwenRuntime.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                _pipe.Dispose();
+            }
+        }
     }
 }

@@ -11,5 +11,6 @@
     <Project Path="tests/PicForLater.Core.Tests/PicForLater.Core.Tests.csproj" />
     <Project Path="tests/PicForLater.Analysis.Tests/PicForLater.Analysis.Tests.csproj" />
     <Project Path="tests/PicForLater.IntegrationTests/PicForLater.IntegrationTests.csproj" />
+    <Project Path="tests/PicForLater.LocalInference.Tests/PicForLater.LocalInference.Tests.csproj" />
   </Folder>
 </Solution>

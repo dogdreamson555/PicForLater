@@ -57,3 +57,4 @@ model-packages/
 *.safetensors
 *.gguf
 *.bin
+problems&improve/问题与改进.md
