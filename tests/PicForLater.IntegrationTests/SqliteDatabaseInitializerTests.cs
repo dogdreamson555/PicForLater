@@ -15,7 +15,7 @@ public sealed class SqliteDatabaseInitializerTests
         var result = await initializer.InitializeAsync();
 
         Assert.Equal(0, result.PreviousVersion);
-        Assert.Equal(12, result.CurrentVersion);
+        Assert.Equal(13, result.CurrentVersion);
         Assert.Null(result.BackupFilePath);
         Assert.True(File.Exists(temporaryRoot.Paths.DatabasePath));
 
@@ -37,8 +37,8 @@ public sealed class SqliteDatabaseInitializerTests
         Assert.Contains("Reminders", tableNames);
         Assert.Contains("ReminderNotificationOutbox", tableNames);
         Assert.Contains("DeletionJobs", tableNames);
-        Assert.Equal(12L, await ExecuteScalarLongAsync(connection, "SELECT COUNT(*) FROM SchemaMigrations;"));
-        Assert.Equal(12L, await ExecuteScalarLongAsync(connection, "PRAGMA user_version;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(connection, "SELECT COUNT(*) FROM SchemaMigrations;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(connection, "PRAGMA user_version;"));
     }
 
     [Fact]
@@ -50,8 +50,8 @@ public sealed class SqliteDatabaseInitializerTests
 
         var secondResult = await initializer.InitializeAsync();
 
-        Assert.Equal(12, secondResult.PreviousVersion);
-        Assert.Equal(12, secondResult.CurrentVersion);
+        Assert.Equal(13, secondResult.PreviousVersion);
+        Assert.Equal(13, secondResult.CurrentVersion);
         Assert.Null(secondResult.BackupFilePath);
         Assert.Empty(Directory.EnumerateFiles(temporaryRoot.Paths.BackupDirectoryPath));
     }
@@ -222,7 +222,7 @@ public sealed class SqliteDatabaseInitializerTests
             .InitializeAsync();
 
         Assert.Equal(4, upgraded.PreviousVersion);
-        Assert.Equal(12, upgraded.CurrentVersion);
+        Assert.Equal(13, upgraded.CurrentVersion);
         Assert.NotNull(upgraded.BackupFilePath);
         await using var connection = await OpenAsync(temporaryRoot.Paths.DatabasePath);
         Assert.Equal(1L, await ExecuteScalarLongAsync(
@@ -441,7 +441,9 @@ public sealed class SqliteDatabaseInitializerTests
                 0, 0, 1, 0, NULL, 0, 0);
             """);
 
-        var upgraded = await new SqliteDatabaseInitializer(temporaryRoot.Paths)
+        var upgraded = await new SqliteDatabaseInitializer(
+            temporaryRoot.Paths,
+            SqliteSchema.Migrations.Take(12).ToArray())
             .InitializeAsync();
 
         Assert.Equal(11, upgraded.PreviousVersion);
@@ -463,29 +465,100 @@ public sealed class SqliteDatabaseInitializerTests
     }
 
     [Fact]
+    public async Task Migration13_NormalizesOutboxIdsAndAddsReminderQueryIndexes()
+    {
+        using var temporaryRoot = new TemporaryAppDataRoot();
+        var v12Initializer = new SqliteDatabaseInitializer(
+            temporaryRoot.Paths,
+            SqliteSchema.Migrations.Take(12).ToArray());
+        await v12Initializer.InitializeAsync();
+        var outboxId = Guid.NewGuid();
+        await ExecuteNonQueryAsync(
+            temporaryRoot.Paths.DatabasePath,
+            $"""
+            INSERT INTO ReminderNotificationOutbox (
+                Id, ReminderId, SchedulerId, Operation, DueAtUtc,
+                Title, Body, Location, State, AttemptCount, NotBeforeUtc,
+                LastErrorCode, CreatedAtUtc, UpdatedAtUtc, CompletedAtUtc)
+            VALUES (
+                '{outboxId:N}', NULL, 'migration13', 2, NULL,
+                NULL, NULL, NULL, 1, 0, '2026-08-27T00:00:00.0000000+00:00',
+                NULL, '2026-08-27T00:00:00.0000000+00:00',
+                '2026-08-27T00:00:00.0000000+00:00', NULL);
+            """);
+
+        var upgraded = await new SqliteDatabaseInitializer(temporaryRoot.Paths)
+            .InitializeAsync();
+
+        Assert.Equal(12, upgraded.PreviousVersion);
+        Assert.Equal(13, upgraded.CurrentVersion);
+        Assert.NotNull(upgraded.BackupFilePath);
+        await using var connection = await OpenAsync(temporaryRoot.Paths.DatabasePath);
+        Assert.Equal(
+            outboxId.ToString("D"),
+            await ExecuteScalarStringAsync(
+                connection,
+                "SELECT Id FROM ReminderNotificationOutbox WHERE SchedulerId = 'migration13';"));
+
+        await using var reminderPlan = connection.CreateCommand();
+        reminderPlan.CommandText =
+            "EXPLAIN QUERY PLAN SELECT MIN(DueAtUtc) FROM Reminders WHERE State = 1;";
+        var reminderPlanDetails = new List<string>();
+        await using (var reader = await reminderPlan.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                reminderPlanDetails.Add(reader.GetString(3));
+            }
+        }
+
+        Assert.Contains(
+            reminderPlanDetails,
+            detail => detail.Contains("IX_Reminders_State_DueAtUtc_Id", StringComparison.Ordinal));
+
+        await using var outboxPlan = connection.CreateCommand();
+        outboxPlan.CommandText =
+            $"EXPLAIN QUERY PLAN UPDATE ReminderNotificationOutbox SET State = 2 WHERE Id = '{outboxId:D}';";
+        var outboxPlanDetails = new List<string>();
+        await using (var reader = await outboxPlan.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                outboxPlanDetails.Add(reader.GetString(3));
+            }
+        }
+
+        Assert.Contains(
+            outboxPlanDetails,
+            detail => detail.Contains(
+                "sqlite_autoindex_ReminderNotificationOutbox_1",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task PendingMigration_CreatesVerifiedBackupBeforeCommit()
     {
         using var temporaryRoot = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(temporaryRoot.Paths).InitializeAsync();
         var migrations = SqliteSchema.Migrations
-            .Concat([new SqliteMigration(13, "test-upgrade", "CREATE TABLE UpgradeMarker (Id INTEGER PRIMARY KEY);")])
+            .Concat([new SqliteMigration(14, "test-upgrade", "CREATE TABLE UpgradeMarker (Id INTEGER PRIMARY KEY);")])
             .ToArray();
         var upgradingInitializer = new SqliteDatabaseInitializer(temporaryRoot.Paths, migrations);
 
         var result = await upgradingInitializer.InitializeAsync();
 
-        Assert.Equal(12, result.PreviousVersion);
-        Assert.Equal(13, result.CurrentVersion);
+        Assert.Equal(13, result.PreviousVersion);
+        Assert.Equal(14, result.CurrentVersion);
         Assert.NotNull(result.BackupFilePath);
         Assert.True(File.Exists(result.BackupFilePath));
 
         await using var backup = await OpenAsync(result.BackupFilePath!, readOnly: true);
-        Assert.Equal(12L, await ExecuteScalarLongAsync(backup, "PRAGMA user_version;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(backup, "PRAGMA user_version;"));
         Assert.Equal("ok", await ExecuteScalarStringAsync(backup, "PRAGMA quick_check;"));
 
         await using var upgraded = await OpenAsync(temporaryRoot.Paths.DatabasePath);
         Assert.Contains("UpgradeMarker", await ReadTableNamesAsync(upgraded));
-        Assert.Equal(13L, await ExecuteScalarLongAsync(upgraded, "PRAGMA user_version;"));
+        Assert.Equal(14L, await ExecuteScalarLongAsync(upgraded, "PRAGMA user_version;"));
     }
 
     [Fact]
@@ -497,7 +570,7 @@ public sealed class SqliteDatabaseInitializerTests
             .Concat(
             [
                 new SqliteMigration(
-                    13,
+                    14,
                     "broken-test-upgrade",
                     "CREATE TABLE MustRollback (Id INTEGER PRIMARY KEY); THIS IS NOT SQL;"),
             ])
@@ -513,8 +586,8 @@ public sealed class SqliteDatabaseInitializerTests
 
         await using var main = await OpenAsync(temporaryRoot.Paths.DatabasePath);
         Assert.DoesNotContain("MustRollback", await ReadTableNamesAsync(main));
-        Assert.Equal(12L, await ExecuteScalarLongAsync(main, "SELECT MAX(Version) FROM SchemaMigrations;"));
-        Assert.Equal(12L, await ExecuteScalarLongAsync(main, "PRAGMA user_version;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(main, "SELECT MAX(Version) FROM SchemaMigrations;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(main, "PRAGMA user_version;"));
         Assert.Equal("ok", await ExecuteScalarStringAsync(main, "PRAGMA quick_check;"));
     }
 
@@ -524,7 +597,7 @@ public sealed class SqliteDatabaseInitializerTests
         using var temporaryRoot = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(temporaryRoot.Paths).InitializeAsync();
         var migrations = SqliteSchema.Migrations
-            .Concat([new SqliteMigration(13, "concurrent-test-upgrade", "CREATE TABLE ConcurrentMarker (Id INTEGER PRIMARY KEY);")])
+            .Concat([new SqliteMigration(14, "concurrent-test-upgrade", "CREATE TABLE ConcurrentMarker (Id INTEGER PRIMARY KEY);")])
             .ToArray();
         var firstInitializer = new SqliteDatabaseInitializer(temporaryRoot.Paths, migrations);
         var secondInitializer = new SqliteDatabaseInitializer(temporaryRoot.Paths, migrations);
@@ -533,10 +606,10 @@ public sealed class SqliteDatabaseInitializerTests
             firstInitializer.InitializeAsync(),
             secondInitializer.InitializeAsync());
 
-        Assert.All(results, result => Assert.Equal(13, result.CurrentVersion));
+        Assert.All(results, result => Assert.Equal(14, result.CurrentVersion));
         Assert.Single(Directory.EnumerateFiles(temporaryRoot.Paths.BackupDirectoryPath, "*.db"));
         await using var connection = await OpenAsync(temporaryRoot.Paths.DatabasePath);
-        Assert.Equal(13L, await ExecuteScalarLongAsync(connection, "SELECT COUNT(*) FROM SchemaMigrations;"));
+        Assert.Equal(14L, await ExecuteScalarLongAsync(connection, "SELECT COUNT(*) FROM SchemaMigrations;"));
         Assert.Contains("ConcurrentMarker", await ReadTableNamesAsync(connection));
     }
 
@@ -549,7 +622,7 @@ public sealed class SqliteDatabaseInitializerTests
         var releaseLockBoundary = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         var migrations = SqliteSchema.Migrations
-            .Concat([new SqliteMigration(13, "racing-upgrade", "CREATE TABLE RacingMarker (Id INTEGER PRIMARY KEY);")])
+            .Concat([new SqliteMigration(14, "racing-upgrade", "CREATE TABLE RacingMarker (Id INTEGER PRIMARY KEY);")])
             .ToArray();
         var upgradingInitializer = new SqliteDatabaseInitializer(
             temporaryRoot.Paths,
@@ -573,11 +646,11 @@ public sealed class SqliteDatabaseInitializerTests
 
         var result = await upgradeTask;
 
-        Assert.Equal(12, result.PreviousVersion);
-        Assert.Equal(13, result.CurrentVersion);
+        Assert.Equal(13, result.PreviousVersion);
+        Assert.Equal(14, result.CurrentVersion);
         Assert.NotNull(result.BackupFilePath);
         await using var backup = await OpenAsync(result.BackupFilePath!, readOnly: true);
-        Assert.Equal(12L, await ExecuteScalarLongAsync(backup, "PRAGMA user_version;"));
+        Assert.Equal(13L, await ExecuteScalarLongAsync(backup, "PRAGMA user_version;"));
         Assert.DoesNotContain("RacingMarker", await ReadTableNamesAsync(backup));
     }
 
