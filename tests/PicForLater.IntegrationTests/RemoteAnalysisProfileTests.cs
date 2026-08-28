@@ -53,7 +53,7 @@ public sealed class RemoteAnalysisProfileTests
         var upgraded = await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
 
         Assert.Equal(7, upgraded.PreviousVersion);
-        Assert.Equal(13, upgraded.CurrentVersion);
+        Assert.Equal(14, upgraded.CurrentVersion);
         Assert.NotNull(upgraded.BackupFilePath);
         using var remoteProfiles = new SqliteRemoteApiProfileService(root.Paths);
         var execution = await remoteProfiles.GetExecutionStateAsync();
