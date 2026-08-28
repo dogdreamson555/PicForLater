@@ -63,7 +63,8 @@
                 IsClosable="False"
                 IsOpen="{x:Bind ViewModel.HasFault, Mode=OneWay}"
                 Message="{x:Bind ViewModel.FaultMessage, Mode=OneWay}"
-                Severity="Error">
+                Severity="Error"
+                Visibility="{x:Bind local:MainPage.BoolToVisibility(ViewModel.HasFault), Mode=OneWay}">
                 <InfoBar.ActionButton>
                     <Button
                         x:Uid="BackgroundWorkersRetryButton"
