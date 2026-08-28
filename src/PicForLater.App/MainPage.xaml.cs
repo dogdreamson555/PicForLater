@@ -31,6 +31,9 @@ public sealed partial class MainPage : Page
 
     public static bool Not(bool value) => !value;
 
+    public static Visibility BoolToVisibility(bool value) =>
+        value ? Visibility.Visible : Visibility.Collapsed;
+
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         SubscribeToNavigationRequests();
