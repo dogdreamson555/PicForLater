@@ -17,6 +17,12 @@
           "System.Drawing.Common": "4.7.0"
         }
       },
+      "LocalSendDotNet.Core": {
+        "type": "Direct",
+        "requested": "[0.2.0-preview.5, 0.2.0-preview.5]",
+        "resolved": "0.2.0-preview.5",
+        "contentHash": "JRVBFrhBt7fAuO60JYwGeG5nKy4IdoZ+TSn3ATuPhn80s8adOYXDi74juYCHvvc2ZTZOSTNGcU7aKbS5LygVLQ=="
+      },
       "Microsoft.Windows.SDK.BuildTools": {
         "type": "Direct",
         "requested": "[10.0.26100.8249, )",
@@ -311,7 +317,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Recognizers.Text.DateTime": "[1.8.13, )",
-          "PicForLater.Core": "[1.0.0, )"
+          "PicForLater.Core": "[1.0.5, )"
         }
       },
       "picforlater.core": {
@@ -321,14 +327,14 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Data.Sqlite": "[10.0.10, )",
-          "PicForLater.Core": "[1.0.0, )",
+          "PicForLater.Core": "[1.0.5, )",
           "SQLitePCLRaw.lib.e_sqlite3": "[3.53.3, )"
         }
       },
       "picforlater.localinference.protocol": {
         "type": "Project",
         "dependencies": {
-          "PicForLater.Core": "[1.0.0, )"
+          "PicForLater.Core": "[1.0.5, )"
         }
       }
     },

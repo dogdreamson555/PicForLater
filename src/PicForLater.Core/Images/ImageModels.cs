@@ -13,6 +13,7 @@ public enum ImageSourceKind
 {
     File = 1,
     Clipboard = 2,
+    LocalSend = 3,
 }
 
 public enum ContentFieldSource
