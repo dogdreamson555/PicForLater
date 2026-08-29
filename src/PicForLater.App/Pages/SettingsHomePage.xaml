@@ -19,12 +19,18 @@
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
         <Grid>
-            <StackPanel
+            <Grid
                 x:Name="ContentPanel"
                 MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
                 Margin="{StaticResource AppPagePaddingNarrow}"
                 HorizontalAlignment="Stretch"
-                Spacing="{StaticResource AppSpacingXl}">
+                RowSpacing="{StaticResource AppSpacingXl}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="WidthStates">
                         <VisualState x:Name="Narrow" />
@@ -47,12 +53,12 @@
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
 
-                <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                <StackPanel Grid.Row="0" Spacing="{StaticResource AppSpacingXs}">
                     <TextBlock x:Uid="SettingsPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" />
                     <TextBlock x:Uid="SettingsPageSubtitle" Style="{StaticResource AppPageSubtitleTextBlockStyle}" />
                 </StackPanel>
 
-                <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="2" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="LocalSendSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border Style="{StaticResource AppSettingsListGroupStyle}">
                         <StackPanel>
@@ -85,9 +91,13 @@
                                     x:Name="LocalSendReceiveToggle"
                                     x:Uid="LocalSendReceiveToggle"
                                     Grid.Column="1"
+                                    HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     AutomationProperties.AutomationId="LocalSendReceiveToggle"
                                     IsEnabled="{x:Bind ViewModel.CanToggleLocalSend, Mode=OneWay}"
+                                    MinWidth="0"
+                                    OffContent="{x:Null}"
+                                    OnContent="{x:Null}"
                                     Toggled="LocalSendReceiveToggle_Toggled" />
                             </Grid>
 
@@ -96,19 +106,33 @@
                             <StackPanel
                                 Padding="12"
                                 Spacing="{StaticResource AppSpacingSm}">
-                                <StackPanel Spacing="{StaticResource AppSpacingXs}">
-                                    <TextBlock
-                                        AutomationProperties.AutomationId="LocalSendReceiverNameText"
-                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
-                                        Text="{x:Bind ViewModel.LocalSendReceiverName, Mode=OneWay}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        AutomationProperties.AutomationId="LocalSendStatusText"
-                                        AutomationProperties.LiveSetting="Polite"
-                                        FontWeight="SemiBold"
-                                        Text="{x:Bind ViewModel.LocalSendStatus, Mode=OneWay}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
+                                <Grid ColumnSpacing="{StaticResource AppSpacingMd}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="LocalSendReceiverNameText"
+                                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                            Text="{x:Bind ViewModel.LocalSendReceiverName, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="LocalSendStatusText"
+                                            AutomationProperties.LiveSetting="Polite"
+                                            FontWeight="SemiBold"
+                                            Text="{x:Bind ViewModel.LocalSendStatus, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button
+                                        x:Uid="BeginLocalSendPairingButton"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.AutomationId="BeginLocalSendPairingButton"
+                                        Click="BeginLocalSendPairingButton_Click"
+                                        IsEnabled="{x:Bind ViewModel.CanPairLocalSend, Mode=OneWay}" />
+                                </Grid>
 
                                 <InfoBar
                                     x:Name="LocalSendStatusInfoBar"
@@ -119,13 +143,6 @@
                                     Message="{x:Bind ViewModel.LocalSendInfoMessage, Mode=OneWay}"
                                     Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ViewModel.LocalSendInfoKind), Mode=OneWay}"
                                     Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsLocalSendInfoOpen), Mode=OneWay}" />
-
-                                <Button
-                                    x:Uid="BeginLocalSendPairingButton"
-                                    HorizontalAlignment="Left"
-                                    AutomationProperties.AutomationId="BeginLocalSendPairingButton"
-                                    Click="BeginLocalSendPairingButton_Click"
-                                    IsEnabled="{x:Bind ViewModel.CanPairLocalSend, Mode=OneWay}" />
 
                                 <StackPanel
                                     x:Name="LocalSendPairingPanel"
@@ -222,7 +239,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="1" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="CurrentExecutionSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border
                         Padding="0,0,0,3"
@@ -329,7 +346,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="3" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="AppearanceSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border
                         Padding="12,0,12,8"
@@ -352,7 +369,7 @@
                         </RadioButtons>
                     </Border>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </Page>

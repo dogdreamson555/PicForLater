@@ -885,12 +885,10 @@
   <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>允许通过 LocalSend 自动接收图片</value></data>
   <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>仅建议在可信的家庭或个人局域网中开启。</value></data>
   <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>收到的图片会按当前分析方式处理；API 分析可能发送到已配置的服务。</value></data>
-  <data name="LocalSendReceiveToggle.OnContent" xml:space="preserve"><value>开</value></data>
-  <data name="LocalSendReceiveToggle.OffContent" xml:space="preserve"><value>关</value></data>
   <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>允许通过 LocalSend 自动接收图片</value></data>
   <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>手机接收状态</value></data>
-  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>配对新手机</value></data>
-  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>配对新手机</value></data>
+  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>配对新设备</value></data>
+  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>配对新设备</value></data>
   <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>在手机 LocalSend 中选择 PicForLater，并发送至少一张支持的图片。</value></data>
   <data name="LocalSendPairingPinLabel.Text" xml:space="preserve"><value>临时 PIN</value></data>
   <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>取消配对</value></data>

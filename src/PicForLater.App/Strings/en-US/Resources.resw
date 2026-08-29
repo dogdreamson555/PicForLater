@@ -885,12 +885,10 @@
   <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
   <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>Enable this only on a trusted home or personal local network.</value></data>
   <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>Received images use the current analysis mode. API analysis may send them to the configured service.</value></data>
-  <data name="LocalSendReceiveToggle.OnContent" xml:space="preserve"><value>On</value></data>
-  <data name="LocalSendReceiveToggle.OffContent" xml:space="preserve"><value>Off</value></data>
   <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
   <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>Phone receive status</value></data>
-  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>Pair a new phone</value></data>
-  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Pair a new phone</value></data>
+  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>Pair a new device</value></data>
+  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Pair a new device</value></data>
   <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>Select PicForLater in LocalSend on your phone, then send at least one supported image.</value></data>
   <data name="LocalSendPairingPinLabel.Text" xml:space="preserve"><value>Temporary PIN</value></data>
   <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>Cancel pairing</value></data>
