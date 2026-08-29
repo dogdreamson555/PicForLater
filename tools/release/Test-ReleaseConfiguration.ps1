@@ -120,6 +120,19 @@ if ($null -eq $windowsAppSdkReference -or
     $windowsAppSdkReference.GetAttribute('Version') -ne $runtimeManifest.version) {
     throw 'The Windows App SDK package and pinned offline Runtime versions differ.'
 }
+$localSendReference = $appProject.SelectSingleNode(
+    "/Project/ItemGroup/PackageReference[@Include='LocalSendDotNet.Core']")
+if ($null -eq $localSendReference -or
+    $localSendReference.GetAttribute('Version') -ne '[0.2.0-preview.5]') {
+    throw 'The reviewed LocalSendDotNet.Core package version must remain exactly pinned.'
+}
+foreach ($localSendDistributionPath in @(
+    (Join-Path $repositoryRoot 'licenses\localsenddotnet-core\LICENSE'),
+    (Join-Path $repositoryRoot 'licenses\localsenddotnet-core\NOTICE'))) {
+    if (-not (Test-Path -LiteralPath $localSendDistributionPath -PathType Leaf)) {
+        throw "The LocalSendDotNet.Core distribution text is missing: $localSendDistributionPath"
+    }
+}
 $applicationIcon = $appProject.SelectSingleNode('/Project/PropertyGroup/ApplicationIcon')
 if ($null -eq $applicationIcon -or $applicationIcon.InnerText -ne 'Assets\AppIcon.ico') {
     throw 'The App executable must embed Assets\AppIcon.ico for installed shortcuts.'

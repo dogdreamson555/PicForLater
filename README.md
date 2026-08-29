@@ -171,9 +171,14 @@ PicForLater 默认本地运行，但不能笼统称为“完全离线”。以�
 | OCR 文字 API (`RemoteOcrText`) | 有长度上限的 OCR 纯文本、语言标签、输出语言策略、参考 UTC 时间 / 时区，以及所选模型、prompt / schema 和输出限制                                                              | 图片、缩略图、文件名、路径、内容哈希、内部 ID、框坐标、分类和其他资料库内容 |
 | 图片 API (`RemoteVision`)      | 从不可变原图解码、按方向处理、转换到 sRGB、优先保留原分辨率（超过 1600 万像素或请求上限时才等比例缩小）、重新编码的临时 PNG；另含参考时间 / 时区、输出语言策略和固定请求契约 | 原图字节、EXIF / XMP、文件名、路径、哈希、内部 ID、OCR、分类和资料库上下文  |
 | API 连接测试                     | 固定合成文字，或用户明确运行图片测试时发送仓库内授权猫图；测试可能计费                                                                                                       | 用户图片、用户 OCR 和资料库内容                                             |
+| 手机接收（兼容 LocalSend）       | 用户开启后，在局域网监听 TCP/UDP `53317`，通过本地发现、TLS 和临时 PIN 接收已选择的图片；传输不经过 PicForLater 或 LocalSend 的云端中继                                      | 仅仅接收图片不会自动把图片发送给远程分析 API                                |
 | 按需下载                         | 用户确认后访问清单固定的 GitHub Releases、Hugging Face 或 NVIDIA 来源以取得组件、模型或运行库                                                                                | 不会后台自动下载大型模型；核心 Setup 的 Windows App Runtime 已离线携带      |
 
 第三方 API 的数据保留、训练、地域、账号政策和费用取决于用户选择的供应商与计划；PicForLater 不能替供应商承诺零保留或不训练。取消任务可以阻止尚未发送的请求，但不能召回供应商已经收到的数据或费用。应用禁用 HTTP redirect 和 Cookie，不绕过 TLS 证书验证；公共自定义 endpoint 只允许 HTTPS，loopback 服务是受限例外。
+
+手机接收默认关闭，开启时 Windows 防火墙可能在首次监听局域网时请求授权。设备信任基于 PicForLater 在本地保存的 TLS 证书 SHA-256 指纹；临时 PIN 验证并成功保存指纹后，后续发送才可免 PIN。手机重装、清除数据或证书身份变化后会被视为新设备，需要重新配对；用户也可以随时在设置中移除信任。LocalSend 传输本身发生在局域网，但接收成功的图片会成为普通资料库项目：如果用户之后选择并同意远程 API 分析，图片或 OCR 文字仍可能按上表发送到用户配置的服务。
+
+PicForLater 只是“兼容 LocalSend”并支持“通过 LocalSend 接收”的独立应用，不是 LocalSend 官方产品，也未获得其官方认可或背书。
 
 生产数据位于 `%LocalAppData%\PicForLater`，包括 SQLite 数据库及备份、不可变原图、缩略图与缓存、staging、设置、模型和可选组件。远程图片副本只在内存中有界持有并在调用后释放。API Key 保存在当前 Windows 用户的 Credential Locker (`PasswordVault`) 中，不写入 SQLite、`settings.json`、任务快照或日志。
 

@@ -58,6 +58,21 @@ The umbrella package declares these top-level transitive components: `Microsoft.
 - License: MIT.
 - Source: https://github.com/CommunityToolkit/WindowsCommunityToolkit
 
+## LocalSendDotNet.Core 0.2.0-preview.5
+
+- Purpose: independent, UI-free implementation of LocalSend v2.2-compatible LAN
+  discovery, TLS identity, pairing and receive-node behavior.
+- License: Apache License 2.0.
+- Source: https://github.com/kusutori/Tonarink at package commit
+  `ec45f9e589f016c077788306cccc19101c2beba7`.
+- Distribution texts: `licenses/localsenddotnet-core/LICENSE` and
+  `licenses/localsenddotnet-core/NOTICE`.
+
+LocalSendDotNet.Core and PicForLater are independent compatibility implementations.
+LocalSend is a separate project created by Tien Do Nam and contributors. PicForLater is
+not affiliated with or endorsed by the official LocalSend project; references to
+LocalSend identify protocol compatibility and interoperability only.
+
 ## System.Drawing.Common 10.0.11
 
 - Purpose: security override for an older transitive version selected by the

@@ -249,6 +249,20 @@ foreach ($requiredUiAsset in @('PicForLater.App.pri', 'App.xbf', 'MainWindow.xbf
     }
 }
 
+# LocalSendDotNet.Core brings Microsoft.AspNetCore.App as a framework reference.
+# The unpackaged app is self-contained, so the hosting and Kestrel implementation
+# must be present in the application publish instead of relying on a machine-wide
+# ASP.NET Core runtime.
+foreach ($requiredAspNetCoreAsset in @(
+    'Microsoft.AspNetCore.Hosting.dll',
+    'Microsoft.AspNetCore.Server.Kestrel.Core.dll',
+    'Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll',
+    'Microsoft.Extensions.Hosting.dll')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $publishRoot $requiredAspNetCoreAsset) -PathType Leaf)) {
+        throw "The self-contained publish is missing a LocalSend server dependency: $requiredAspNetCoreAsset"
+    }
+}
+
 $requiredDistributionFiles = @(
     'LICENSE.txt',
     'THIRD-PARTY-NOTICES.md',
@@ -261,6 +275,8 @@ $requiredDistributionFiles = @(
     'licenses\communitytoolkit-mvvm\LICENSE.md',
     'licenses\communitytoolkit-mvvm\ThirdPartyNotices.txt',
     'licenses\communitytoolkit-winui-notifications\LICENSE.md',
+    'licenses\localsenddotnet-core\LICENSE',
+    'licenses\localsenddotnet-core\NOTICE',
     'licenses\fluent-ui-system-icons\LICENSE.txt',
     'licenses\managed-dependencies\MICROSOFT-MIT.txt',
     'licenses\sqlite\LICENSE.txt',
