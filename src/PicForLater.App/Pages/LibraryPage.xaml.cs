@@ -15,6 +15,7 @@ using PicForLater.App.Models;
 using PicForLater.App.ViewModels;
 using PicForLater.Core.Images;
 using PicForLater.Core.Library;
+using PicForLater.Infrastructure.LocalSend;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
@@ -35,6 +36,7 @@ public sealed partial class LibraryPage : Page
     private readonly HashSet<Guid> _selectedItemIds = [];
     private bool _synchronizingSelection;
     private AnalysisQueueWakeSignal? _analysisUpdatesSource;
+    private ILocalSendReceiverService? _localSendReceiverSource;
     private bool _viewModelSubscribed = true;
     private int _loadGeneration;
     private LibraryDisplayMode _displayMode = LibraryDisplayMode.Grid;
@@ -119,6 +121,7 @@ public sealed partial class LibraryPage : Page
         }
 
         TrySubscribeAnalysisUpdates();
+        TrySubscribeLocalSendReceiver();
         UpdateSortMenuChecks();
         UpdateResponsiveLayout();
     }
@@ -142,6 +145,7 @@ public sealed partial class LibraryPage : Page
         }
 
         UnsubscribeAnalysisUpdates();
+        UnsubscribeLocalSendReceiver();
     }
 
     private void AnalysisUpdates_ItemChanged(object? sender, AnalysisItemChangedEventArgs e)
@@ -209,6 +213,107 @@ public sealed partial class LibraryPage : Page
         {
             source.ItemChanged -= AnalysisUpdates_ItemChanged;
         }
+    }
+
+    private void TrySubscribeLocalSendReceiver()
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        var source = App.LocalSendReceiver;
+        if (ReferenceEquals(source, _localSendReceiverSource))
+        {
+            return;
+        }
+
+        UnsubscribeLocalSendReceiver();
+        _localSendReceiverSource = source;
+        if (source is not null)
+        {
+            source.SnapshotChanged += LocalSendReceiver_SnapshotChanged;
+            source.TransferCompleted += LocalSendReceiver_TransferCompleted;
+        }
+    }
+
+    private void UnsubscribeLocalSendReceiver()
+    {
+        var source = _localSendReceiverSource;
+        _localSendReceiverSource = null;
+        if (source is not null)
+        {
+            source.SnapshotChanged -= LocalSendReceiver_SnapshotChanged;
+            source.TransferCompleted -= LocalSendReceiver_TransferCompleted;
+        }
+    }
+
+    private void LocalSendReceiver_SnapshotChanged(LocalSendReceiverSnapshot snapshot)
+    {
+        if (snapshot.Status != LocalSendReceiverStatus.Receiving)
+        {
+            return;
+        }
+
+        var source = _localSendReceiverSource;
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (IsCurrentLoad(loadGeneration)
+                && ReferenceEquals(source, _localSendReceiverSource))
+            {
+                ViewModel.ShowStatus(_resources.GetString("LocalSendLibraryReceivingStatus"));
+            }
+        });
+    }
+
+    private void LocalSendReceiver_TransferCompleted(LocalSendReceiveSummary summary)
+    {
+        var source = _localSendReceiverSource;
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(async () =>
+        {
+            if (!IsCurrentLoad(loadGeneration)
+                || !ReferenceEquals(source, _localSendReceiverSource))
+            {
+                return;
+            }
+
+            var message = summary.TransferState == LocalSendReceiveTransferState.Cancelled
+                ? string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    _resources.GetString("LocalSendLibraryCancelledFormat"),
+                    summary.ImportedCount,
+                    summary.DuplicateCount)
+                : summary.FailedCount > 0
+                    ? string.Format(
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        _resources.GetString("LocalSendLibraryCompletedWithFailuresFormat"),
+                        summary.ImportedCount,
+                        summary.DuplicateCount,
+                        summary.FailedCount)
+                    : string.Format(
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        _resources.GetString("LocalSendLibraryCompletedFormat"),
+                        summary.ImportedCount,
+                        summary.DuplicateCount);
+
+            ViewModel.ShowStatus(message);
+            if (summary.ImportedCount == 0)
+            {
+                return;
+            }
+
+            await ViewModel.RefreshItemsAsync();
+            if (!IsCurrentLoad(loadGeneration)
+                || !ReferenceEquals(source, _localSendReceiverSource))
+            {
+                return;
+            }
+
+            RestoreCollectionSelection();
+            UpdateResponsiveLayout();
+        });
     }
 
     private bool IsCurrentLoad(int loadGeneration) =>
