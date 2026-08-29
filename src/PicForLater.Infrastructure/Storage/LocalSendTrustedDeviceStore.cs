@@ -12,7 +12,31 @@ public sealed record LocalSendTrustedDevice(
     DateTimeOffset FirstPairedAtUtc,
     DateTimeOffset? LastReceivedAtUtc);
 
-public sealed class LocalSendTrustedDeviceStore
+public interface ILocalSendTrustedDeviceStore
+{
+    Task<IReadOnlyList<LocalSendTrustedDevice>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<LocalSendTrustedDevice?> FindAsync(
+        string? fingerprint,
+        CancellationToken cancellationToken = default);
+
+    Task<LocalSendTrustedDevice> AddAsync(
+        string fingerprint,
+        string displayName,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> MarkReceivedAsync(
+        string fingerprint,
+        string displayName,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RemoveAsync(
+        string fingerprint,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class LocalSendTrustedDeviceStore : ILocalSendTrustedDeviceStore
 {
     public const int MaximumDeviceCount = 64;
     public const int MaximumDisplayNameLength = 80;

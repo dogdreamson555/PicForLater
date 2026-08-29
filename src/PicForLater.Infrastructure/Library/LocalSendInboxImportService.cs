@@ -35,7 +35,17 @@ public sealed record LocalSendInboxRecoveryResult(
     public int RetryPendingCount => Items.Count(item => item.Status == LocalSendInboxImportStatus.RetryPending);
 }
 
-public sealed class LocalSendInboxImportService
+public interface ILocalSendInboxImportService
+{
+    Task<LocalSendInboxImportResult> ImportAsync(
+        string absolutePath,
+        CancellationToken cancellationToken = default);
+
+    Task<LocalSendInboxRecoveryResult> RecoverAsync(
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class LocalSendInboxImportService : ILocalSendInboxImportService
 {
     public const int MaximumInboxFileNameLength = 120;
     public static readonly TimeSpan StalePartialFileAge = TimeSpan.FromHours(24);
