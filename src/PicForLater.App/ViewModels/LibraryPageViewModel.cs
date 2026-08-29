@@ -304,6 +304,8 @@ public partial class LibraryPageViewModel : ObservableObject
         }
     }
 
+    public Task RefreshItemsAsync() => LoadItemsAsync(reset: true);
+
     public async Task RefreshAnalysisResultAsync(Guid imageItemId)
     {
         var entry = await GetLibrary().GetAsync(imageItemId).ConfigureAwait(true);

@@ -25,10 +25,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\src\PicForLater.App\Models\StorageReadiness.cs"
+             Link="AppSource\StorageReadiness.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IStorageReadinessService.cs"
+             Link="AppSource\IStorageReadinessService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\RemoteApiSettingsItems.cs"
              Link="AppSource\RemoteApiSettingsItems.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\RemoteApiProviderCatalog.cs"
              Link="AppSource\RemoteApiProviderCatalog.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\StorageReadinessService.cs"
+             Link="AppSource\StorageReadinessService.cs" />
   </ItemGroup>
 
 </Project>

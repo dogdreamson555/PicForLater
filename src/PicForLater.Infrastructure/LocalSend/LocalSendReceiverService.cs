@@ -310,7 +310,11 @@ public sealed class LocalSendReceiverService : ILocalSendReceiverService
         var runtime = _runtime;
         if (runtime is null)
         {
-            SetSnapshot(new(LocalSendReceiverStatus.Disabled));
+            SetSnapshot(Volatile.Read(ref _cleanupFailed) == 0
+                ? new(LocalSendReceiverStatus.Disabled)
+                : new(
+                    LocalSendReceiverStatus.Faulted,
+                    LastErrorCode: "ReceiverStopFailed"));
             return;
         }
 
