@@ -82,6 +82,10 @@
              Link="licenses\communitytoolkit-winui-notifications\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\localsenddotnet-core\**\*.*"
+             Link="licenses\localsenddotnet-core\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\licenses\fluent-ui-system-icons\**\*.*"
              Link="licenses\fluent-ui-system-icons\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"

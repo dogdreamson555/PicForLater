@@ -1,0 +1,15 @@
+Tonarink and LocalSendDotNet
+Copyright 2026 kusutori and contributors.
+
+Tonarink is an independent, unofficial application built on LocalSendDotNet.Core,
+an independent implementation of the LocalSend protocol.
+
+LocalSend is a separate project created by Tien Do Nam and contributors and is
+licensed under the Apache License, Version 2.0.
+
+Tonarink and LocalSendDotNet are not affiliated with or endorsed by the official
+LocalSend project. References to LocalSend are used for protocol compatibility
+and identification purposes.
+
+We thank Tien Do Nam and all LocalSend contributors for creating LocalSend and
+making its protocol and source code available to the community.

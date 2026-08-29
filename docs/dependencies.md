@@ -11,6 +11,8 @@ Complete attribution and redistribution notices are in [`THIRD-PARTY-NOTICES.md`
 | Microsoft.Windows.SDK.BuildTools.WinApp | 0.4.0 | Windows application build tooling | Microsoft package terms | Build time |
 | CommunityToolkit.Mvvm | 8.4.2 | MVVM observable and command infrastructure | MIT | Core application |
 | CommunityToolkit.WinUI.Notifications | 7.1.2 | Unpackaged desktop notification scheduling and activation | MIT | Core application |
+| LocalSendDotNet.Core | 0.2.0-preview.5 | UI-independent LocalSend v2.2-compatible LAN discovery, TLS and receive-node implementation | Apache-2.0 | Core application; independent compatibility implementation, not an official LocalSend component |
+| Microsoft.AspNetCore.App | .NET 10 framework reference (10.0.11 in the locally verified publish) | Kestrel HTTPS server and hosting primitives required by the LocalSend receive node | MIT and .NET third-party notices | Version is resolved by the pinned .NET 10.0.3xx SDK; included in the unpackaged self-contained publish, so no separately installed ASP.NET Core runtime is required |
 | System.Drawing.Common | 10.0.11 | Security override for a vulnerable transitive version | MIT | Core application |
 | Microsoft.Recognizers.Text.DateTime | 1.8.13 | Local natural-language date/time candidates | MIT | Core application; no model or network runtime |
 | NuGet.CommandLine | 7.6.0 (`PrivateAssets=all`) | Security override for an obsolete build dependency | Apache-2.0 | Build only; command-line tools are not published |
@@ -26,6 +28,13 @@ Complete attribution and redistribution notices are in [`THIRD-PARTY-NOTICES.md`
 - API credentials are stored through Windows user credential storage and are never part
   of dependency manifests, logs, or published artifacts.
 - Local inference runtimes and model files are excluded from the core application publish.
+- LocalSendDotNet.Core contributes a `Microsoft.AspNetCore.App` framework reference. The
+  self-contained publish must carry the resolved ASP.NET Core/Kestrel assemblies, while
+  Windows App SDK remains an architecture-specific offline Setup prerequisite.
+- LocalSend-compatible receive traffic is confined to the local network. A received image
+  becomes an ordinary PicForLater library item, so a later user-selected remote analysis
+  action may send derived text or a re-encoded image to that configured API under the same
+  consent and data-boundary rules as any other imported image.
 - Optional component manifests are authenticated and their declared sizes, hashes, paths,
   and file sets are checked before activation.
 - Repository and CI builds treat NuGet vulnerability warnings `NU1901` through `NU1904`
