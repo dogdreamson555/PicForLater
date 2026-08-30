@@ -27,6 +27,14 @@
   <ItemGroup>
     <Compile Include="..\..\src\PicForLater.App\Models\StorageReadiness.cs"
              Link="AppSource\StorageReadiness.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Models\AppReleaseVersion.cs"
+             Link="AppSource\AppReleaseVersion.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Models\UpdateCheckModels.cs"
+             Link="AppSource\UpdateCheckModels.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IUpdateCheckService.cs"
+             Link="AppSource\IUpdateCheckService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\GitHubUpdateCheckService.cs"
+             Link="AppSource\GitHubUpdateCheckService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\IStorageReadinessService.cs"
              Link="AppSource\IStorageReadinessService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\RemoteApiSettingsItems.cs"
