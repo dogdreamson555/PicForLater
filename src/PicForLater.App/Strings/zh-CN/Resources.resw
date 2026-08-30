@@ -115,6 +115,20 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>浅色主题</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
+  <data name="AboutUpdatesSectionTitle.Text" xml:space="preserve"><value>关于与更新</value></data>
+  <data name="AboutUpdatesAppName.Text" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="CurrentAppVersionFormat" xml:space="preserve"><value>当前版本 {0}</value></data>
+  <data name="CheckForUpdatesButton.AutomationProperties.Name" xml:space="preserve"><value>检查 PicForLater 更新</value></data>
+  <data name="CheckForUpdatesButtonText.Text" xml:space="preserve"><value>检查更新</value></data>
+  <data name="UpdateStatusInfoBar.Title" xml:space="preserve"><value>更新状态</value></data>
+  <data name="ViewReleasePageButton.Content" xml:space="preserve"><value>查看发布页</value></data>
+  <data name="ViewReleasePageButton.AutomationProperties.Name" xml:space="preserve"><value>在浏览器中查看新版本发布页</value></data>
+  <data name="UpdateCheckingStatus" xml:space="preserve"><value>正在检查 GitHub 上的最新稳定版本…</value></data>
+  <data name="UpdateUpToDateStatusFormat" xml:space="preserve"><value>当前已是最新版本（{0}）。</value></data>
+  <data name="UpdateAvailableStatusFormat" xml:space="preserve"><value>发现新版本 {0}，当前版本为 {1}。</value></data>
+  <data name="UpdateLocalAheadStatusFormat" xml:space="preserve"><value>当前版本 {0} 高于最新发布版本 {1}，可能是开发或测试构建。</value></data>
+  <data name="UpdateUnavailableStatus" xml:space="preserve"><value>暂时无法检查更新，请稍后重试。</value></data>
+  <data name="UpdateReleasePageOpenFailedStatus" xml:space="preserve"><value>无法打开发布页；版本检查结果仍然有效，可以稍后重试。</value></data>
   <data name="SettingsEmptyState.Title" xml:space="preserve"><value>暂无其他设置</value></data>
   <data name="SettingsEmptyState.Message" xml:space="preserve"><value>相关功能加入后，它们的本地设置会显示在这里。</value></data>
   <data name="AnalysisStatePending" xml:space="preserve"><value>等待分析</value></data>
