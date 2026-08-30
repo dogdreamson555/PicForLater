@@ -17,6 +17,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
     private readonly Func<IRemoteApiCredentialService?> _credentialServiceAccessor;
     private readonly Func<ILocalSendReceiverService?> _localSendReceiverAccessor;
     private readonly ILocalSendReceivePreferenceService _localSendReceivePreference;
+    private readonly IUpdateCheckService _updateCheckService;
+    private int _updateCheckGeneration;
 
     public SettingsHomePageViewModel(
         IThemePreferenceService themePreferenceService,
@@ -24,7 +26,9 @@ public partial class SettingsHomePageViewModel : ObservableObject
         Func<IRemoteApiProfileService?> profileServiceAccessor,
         Func<IRemoteApiCredentialService?> credentialServiceAccessor,
         ILocalSendReceivePreferenceService localSendReceivePreference,
-        Func<ILocalSendReceiverService?> localSendReceiverAccessor)
+        Func<ILocalSendReceiverService?> localSendReceiverAccessor,
+        IUpdateCheckService updateCheckService,
+        AppReleaseVersion currentVersion)
     {
         _themePreferenceService = themePreferenceService
             ?? throw new ArgumentNullException(nameof(themePreferenceService));
@@ -38,8 +42,14 @@ public partial class SettingsHomePageViewModel : ObservableObject
             ?? throw new ArgumentNullException(nameof(localSendReceivePreference));
         _localSendReceiverAccessor = localSendReceiverAccessor
             ?? throw new ArgumentNullException(nameof(localSendReceiverAccessor));
+        _updateCheckService = updateCheckService
+            ?? throw new ArgumentNullException(nameof(updateCheckService));
         SelectedThemeIndex = (int)_themePreferenceService.CurrentPreference;
         IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
+        CurrentAppVersion = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            Resources.GetString("CurrentAppVersionFormat"),
+            currentVersion);
     }
 
     [ObservableProperty]
@@ -116,6 +126,30 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     public bool CanChangeAnalysisSource => IsInitialized && !IsWorking;
 
+    public string CurrentAppVersion { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCheckForUpdates))]
+    public partial bool IsCheckingForUpdates { get; set; }
+
+    public bool CanCheckForUpdates => !IsCheckingForUpdates;
+
+    [ObservableProperty]
+    public partial SettingsStatusKind UpdateStatusKind { get; set; } =
+        SettingsStatusKind.Informational;
+
+    [ObservableProperty]
+    public partial string UpdateStatusMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsUpdateStatusOpen { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsReleasePageAvailable { get; set; }
+
+    [ObservableProperty]
+    public partial Uri? ReleasePageUri { get; set; }
+
     public ObservableCollection<LocalSendTrustedDeviceItem> LocalSendTrustedDevices { get; } = [];
 
     partial void OnSelectedThemeIndexChanged(int value)
@@ -124,6 +158,130 @@ public partial class SettingsHomePageViewModel : ObservableObject
         {
             _themePreferenceService.SetPreference((AppThemePreference)value);
         }
+    }
+
+    public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
+    {
+        if (IsCheckingForUpdates)
+        {
+            return;
+        }
+
+        var checkGeneration = ++_updateCheckGeneration;
+        IsCheckingForUpdates = true;
+        UpdateStatusKind = SettingsStatusKind.Informational;
+        UpdateStatusMessage = Resources.GetString("UpdateCheckingStatus");
+        IsUpdateStatusOpen = true;
+        IsReleasePageAvailable = false;
+        ReleasePageUri = null;
+
+        try
+        {
+            var result = await _updateCheckService
+                .CheckForUpdatesAsync(cancellationToken)
+                .ConfigureAwait(true);
+            if (!IsCurrentUpdateCheck(checkGeneration, cancellationToken))
+            {
+                return;
+            }
+
+            ApplyUpdateCheckResult(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if (checkGeneration == _updateCheckGeneration)
+            {
+                UpdateStatusMessage = string.Empty;
+                IsUpdateStatusOpen = false;
+            }
+        }
+        catch
+        {
+            if (checkGeneration == _updateCheckGeneration)
+            {
+                ShowUpdateCheckUnavailable();
+            }
+        }
+        finally
+        {
+            if (checkGeneration == _updateCheckGeneration)
+            {
+                IsCheckingForUpdates = false;
+            }
+        }
+    }
+
+    public void CancelUpdateCheck()
+    {
+        _updateCheckGeneration++;
+        if (!IsCheckingForUpdates)
+        {
+            return;
+        }
+
+        IsCheckingForUpdates = false;
+        UpdateStatusMessage = string.Empty;
+        IsUpdateStatusOpen = false;
+        IsReleasePageAvailable = false;
+        ReleasePageUri = null;
+    }
+
+    public void ShowReleasePageOpenFailure()
+    {
+        UpdateStatusKind = SettingsStatusKind.Error;
+        UpdateStatusMessage = Resources.GetString("UpdateReleasePageOpenFailedStatus");
+        IsUpdateStatusOpen = true;
+    }
+
+    private bool IsCurrentUpdateCheck(
+        int checkGeneration,
+        CancellationToken cancellationToken) =>
+        checkGeneration == _updateCheckGeneration
+        && !cancellationToken.IsCancellationRequested;
+
+    private void ApplyUpdateCheckResult(UpdateCheckResult result)
+    {
+        ReleasePageUri = result.Outcome == UpdateCheckOutcome.UpdateAvailable
+            ? result.ReleasePageUri
+            : null;
+        IsReleasePageAvailable = ReleasePageUri is not null;
+        UpdateStatusKind = result.Outcome switch
+        {
+            UpdateCheckOutcome.UpToDate => SettingsStatusKind.Success,
+            UpdateCheckOutcome.UpdateAvailable => SettingsStatusKind.Informational,
+            UpdateCheckOutcome.LocalAhead => SettingsStatusKind.Warning,
+            _ => SettingsStatusKind.Error,
+        };
+        UpdateStatusMessage = result.Outcome switch
+        {
+            UpdateCheckOutcome.UpToDate => string.Format(
+                System.Globalization.CultureInfo.CurrentCulture,
+                Resources.GetString("UpdateUpToDateStatusFormat"),
+                result.CurrentVersion),
+            UpdateCheckOutcome.UpdateAvailable when result.LatestVersion is { } latestVersion =>
+                string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    Resources.GetString("UpdateAvailableStatusFormat"),
+                    latestVersion,
+                    result.CurrentVersion),
+            UpdateCheckOutcome.LocalAhead when result.LatestVersion is { } latestVersion =>
+                string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    Resources.GetString("UpdateLocalAheadStatusFormat"),
+                    result.CurrentVersion,
+                    latestVersion),
+            _ => Resources.GetString("UpdateUnavailableStatus"),
+        };
+        IsUpdateStatusOpen = true;
+    }
+
+    private void ShowUpdateCheckUnavailable()
+    {
+        ReleasePageUri = null;
+        IsReleasePageAvailable = false;
+        UpdateStatusKind = SettingsStatusKind.Error;
+        UpdateStatusMessage = Resources.GetString("UpdateUnavailableStatus");
+        IsUpdateStatusOpen = true;
     }
 
     public async Task InitializeAsync()
