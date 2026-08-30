@@ -17,6 +17,7 @@ public sealed partial class SettingsHomePage : Page
     private bool _synchronizingAnalysisSource;
     private bool _synchronizingLocalSendToggle;
     private int _loadGeneration;
+    private CancellationTokenSource? _updateCheckCancellation;
 
     public SettingsHomePageViewModel ViewModel { get; } = new(
         ThemePreferenceService.Instance,
@@ -24,7 +25,9 @@ public sealed partial class SettingsHomePage : Page
         () => App.RemoteApiProfiles,
         () => App.RemoteApiCredentials,
         App.LocalSendReceivePreference,
-        () => App.LocalSendReceiver);
+        () => App.LocalSendReceiver,
+        App.UpdateCheck,
+        App.CurrentVersion);
 
     public SettingsHomePage()
     {
@@ -67,6 +70,9 @@ public sealed partial class SettingsHomePage : Page
         _synchronizingLocalSendToggle = false;
         UnsubscribeLocalSendReceiver();
         StopLocalSendPairingTimer();
+        _updateCheckCancellation?.Cancel();
+        _updateCheckCancellation = null;
+        ViewModel.CancelUpdateCheck();
     }
 
     public static bool IsSelected(int selectedIndex, int candidateIndex) =>
@@ -117,6 +123,53 @@ public sealed partial class SettingsHomePage : Page
 
     private void OpenApiAnalysisSettingsButton_Click(object sender, RoutedEventArgs e) =>
         SettingsPage.RequestNavigation(typeof(ApiAnalysisSettingsPage));
+
+    private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!ViewModel.CanCheckForUpdates)
+        {
+            return;
+        }
+
+        var cancellation = new CancellationTokenSource();
+        _updateCheckCancellation = cancellation;
+        try
+        {
+            await ViewModel.CheckForUpdatesAsync(cancellation.Token);
+        }
+        finally
+        {
+            if (ReferenceEquals(_updateCheckCancellation, cancellation))
+            {
+                _updateCheckCancellation = null;
+            }
+
+            cancellation.Dispose();
+        }
+    }
+
+    private async void ViewReleasePageButton_Click(object sender, RoutedEventArgs e)
+    {
+        var releasePageUri = ViewModel.ReleasePageUri;
+        if (releasePageUri is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (await Windows.System.Launcher.LaunchUriAsync(releasePageUri))
+            {
+                return;
+            }
+        }
+        catch
+        {
+            // Browser activation failures are presented inline below.
+        }
+
+        ViewModel.ShowReleasePageOpenFailure();
+    }
 
     private async void LocalSendReceiveToggle_Toggled(object sender, RoutedEventArgs e)
     {

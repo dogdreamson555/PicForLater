@@ -30,6 +30,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="WidthStates">
@@ -367,6 +368,79 @@
                                 x:Uid="DarkThemeOption"
                                 AutomationProperties.AutomationId="DarkThemeOption" />
                         </RadioButtons>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="4" Spacing="{StaticResource AppSpacingSm}">
+                    <TextBlock
+                        x:Uid="AboutUpdatesSectionTitle"
+                        Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                    <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                        <StackPanel>
+                            <Grid
+                                MinHeight="72"
+                                Padding="12,8"
+                                ColumnSpacing="{StaticResource AppSpacingMd}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel
+                                    VerticalAlignment="Center"
+                                    Spacing="{StaticResource AppSpacingXs}">
+                                    <TextBlock
+                                        x:Uid="AboutUpdatesAppName"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        AutomationProperties.AutomationId="CurrentAppVersionText"
+                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                        Text="{x:Bind ViewModel.CurrentAppVersion, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <Button
+                                    x:Name="CheckForUpdatesButton"
+                                    x:Uid="CheckForUpdatesButton"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="CheckForUpdatesButton"
+                                    Click="CheckForUpdatesButton_Click"
+                                    IsEnabled="{x:Bind ViewModel.CanCheckForUpdates, Mode=OneWay}">
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="{StaticResource AppSpacingSm}">
+                                        <ProgressRing
+                                            Width="16"
+                                            Height="16"
+                                            IsActive="{x:Bind ViewModel.IsCheckingForUpdates, Mode=OneWay}"
+                                            IsTabStop="False"
+                                            Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsCheckingForUpdates), Mode=OneWay}" />
+                                        <TextBlock x:Uid="CheckForUpdatesButtonText" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <InfoBar
+                                x:Name="UpdateStatusInfoBar"
+                                x:Uid="UpdateStatusInfoBar"
+                                Margin="12,0,12,12"
+                                AutomationProperties.AutomationId="UpdateStatusInfoBar"
+                                AutomationProperties.LiveSetting="Polite"
+                                IsClosable="False"
+                                IsOpen="{x:Bind ViewModel.IsUpdateStatusOpen, Mode=OneWay}"
+                                Message="{x:Bind ViewModel.UpdateStatusMessage, Mode=OneWay}"
+                                Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ViewModel.UpdateStatusKind), Mode=OneWay}"
+                                Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsUpdateStatusOpen), Mode=OneWay}">
+                                <InfoBar.ActionButton>
+                                    <Button
+                                        x:Uid="ViewReleasePageButton"
+                                        AutomationProperties.AutomationId="ViewReleasePageButton"
+                                        Click="ViewReleasePageButton_Click"
+                                        Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsReleasePageAvailable), Mode=OneWay}" />
+                                </InfoBar.ActionButton>
+                            </InfoBar>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
             </Grid>
