@@ -68,6 +68,7 @@ public sealed class SqliteDatabaseInitializer
 
         return await ApplyPendingMigrationsAsync(
             connection,
+            pending.Any(static migration => migration.RequiresForeignKeysDisabled),
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -94,8 +95,17 @@ public sealed class SqliteDatabaseInitializer
 
     private async Task<DatabaseInitializationResult> ApplyPendingMigrationsAsync(
         SqliteConnection connection,
+        bool requiresForeignKeysDisabled,
         CancellationToken cancellationToken)
     {
+        if (requiresForeignKeysDisabled)
+        {
+            await ExecuteNonQueryAsync(
+                connection,
+                "PRAGMA foreign_keys = OFF;",
+                cancellationToken).ConfigureAwait(false);
+        }
+
         try
         {
             await ExecuteNonQueryAsync(connection, "BEGIN IMMEDIATE;", cancellationToken).ConfigureAwait(false);
@@ -106,6 +116,14 @@ public sealed class SqliteDatabaseInitializer
         }
         catch (Exception exception)
         {
+            if (requiresForeignKeysDisabled)
+            {
+                await ExecuteNonQueryAsync(
+                    connection,
+                    "PRAGMA foreign_keys = ON;",
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+
             throw new DatabaseInitializationException(
                 "The database migration lock could not be acquired.",
                 exception);
@@ -159,6 +177,11 @@ public sealed class SqliteDatabaseInitializer
             try
             {
                 await ApplyMigrationStatementsAsync(connection, pending, cancellationToken).ConfigureAwait(false);
+                if (requiresForeignKeysDisabled)
+                {
+                    await VerifyForeignKeysAsync(connection, cancellationToken).ConfigureAwait(false);
+                }
+
                 await ExecuteNonQueryAsync(connection, "COMMIT;", cancellationToken).ConfigureAwait(false);
                 transactionOpen = false;
             }
@@ -181,6 +204,27 @@ public sealed class SqliteDatabaseInitializer
             {
                 await TryRollbackAsync(connection).ConfigureAwait(false);
             }
+
+            if (requiresForeignKeysDisabled)
+            {
+                await ExecuteNonQueryAsync(
+                    connection,
+                    "PRAGMA foreign_keys = ON;",
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private static async Task VerifyForeignKeysAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA foreign_key_check;";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidDataException("The database migration produced an invalid foreign-key reference.");
         }
     }
 

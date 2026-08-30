@@ -881,4 +881,42 @@
   <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>签名清单、来源、体积、SHA-256、压缩包布局或安装文件未通过验证；当前组件保持不变。</value></data>
   <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>无法安装或激活本地分析组件；当前组件和用户数据保持不变。</value></data>
   <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} 错误代码：{1}</value></data>
+  <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>手机接收</value></data>
+  <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>允许通过 LocalSend 自动接收图片</value></data>
+  <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>仅建议在可信的家庭或个人局域网中开启。</value></data>
+  <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>收到的图片会按当前分析方式处理；API 分析可能发送到已配置的服务。</value></data>
+  <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>允许通过 LocalSend 自动接收图片</value></data>
+  <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>手机接收状态</value></data>
+  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>配对新设备</value></data>
+  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>配对新设备</value></data>
+  <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>在手机 LocalSend 中选择 PicForLater，并发送至少一张支持的图片。</value></data>
+  <data name="LocalSendPairingPinLabel.Text" xml:space="preserve"><value>临时 PIN</value></data>
+  <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>取消配对</value></data>
+  <data name="CancelLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>取消当前手机配对</value></data>
+  <data name="LocalSendTrustedDevicesTitle.Text" xml:space="preserve"><value>已信任设备</value></data>
+  <data name="LocalSendTrustedDevicesEmpty.Text" xml:space="preserve"><value>尚未配对可信设备。</value></data>
+  <data name="LocalSendTrustedDevicesList.AutomationProperties.Name" xml:space="preserve"><value>已信任的 LocalSend 设备</value></data>
+  <data name="LocalSendRemoveDeviceButton.Content" xml:space="preserve"><value>移除</value></data>
+  <data name="LocalSendRemoveDeviceAutomationNameFormat" xml:space="preserve"><value>移除可信设备 {0}</value></data>
+  <data name="LocalSendReceiverNameFormat" xml:space="preserve"><value>接收名称：{0}</value></data>
+  <data name="LocalSendStatusDisabled" xml:space="preserve"><value>状态：已关闭</value></data>
+  <data name="LocalSendStatusStarting" xml:space="preserve"><value>状态：正在启动</value></data>
+  <data name="LocalSendStatusListening" xml:space="preserve"><value>状态：正在监听</value></data>
+  <data name="LocalSendStatusDiscoveryLimited" xml:space="preserve"><value>状态：正在监听（发现受限）</value></data>
+  <data name="LocalSendStatusPairing" xml:space="preserve"><value>状态：配对中</value></data>
+  <data name="LocalSendStatusReceiving" xml:space="preserve"><value>状态：正在接收</value></data>
+  <data name="LocalSendStatusStopping" xml:space="preserve"><value>状态：正在停止</value></data>
+  <data name="LocalSendStatusFaulted" xml:space="preserve"><value>状态：服务异常</value></data>
+  <data name="LocalSendDiscoveryLimitedMessage" xml:space="preserve"><value>局域网发现受限，但接收服务仍在运行。请检查防火墙或网络接口设置。</value></data>
+  <data name="LocalSendReceiverFailedMessage" xml:space="preserve"><value>手机接收服务未能正常启动或停止。关闭后重试；若问题持续，请检查端口与防火墙。</value></data>
+  <data name="LocalSendReceiverUnavailableMessage" xml:space="preserve"><value>手机接收服务暂不可用。请先解决本地存储初始化问题。</value></data>
+  <data name="LocalSendPairingRemainingFormat" xml:space="preserve"><value>剩余 {0}</value></data>
+  <data name="LocalSendTrustedDevicePairedFormat" xml:space="preserve"><value>已配对 {0:d}</value></data>
+  <data name="LocalSendRemoveDeviceDialogTitle" xml:space="preserve"><value>移除可信设备？</value></data>
+  <data name="LocalSendRemoveDeviceDialogMessageFormat" xml:space="preserve"><value>移除“{0}”后，其下一次发送会被拒绝，直到重新配对。</value></data>
+  <data name="LocalSendRemoveDeviceDialogRemove" xml:space="preserve"><value>移除</value></data>
+  <data name="LocalSendLibraryReceivingStatus" xml:space="preserve"><value>正在从手机接收图片…</value></data>
+  <data name="LocalSendLibraryCancelledFormat" xml:space="preserve"><value>手机已取消本次发送；已导入 {0} 张，{1} 张已存在。</value></data>
+  <data name="LocalSendLibraryCompletedFormat" xml:space="preserve"><value>已导入 {0} 张，{1} 张已存在。</value></data>
+  <data name="LocalSendLibraryCompletedWithFailuresFormat" xml:space="preserve"><value>已导入 {0} 张，{1} 张已存在；另有 {2} 张未能导入。</value></data>
 </root>

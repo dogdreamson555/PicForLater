@@ -1,8 +1,10 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Models;
 using PicForLater.App.Services;
 using PicForLater.Core.Analysis;
+using PicForLater.Infrastructure.LocalSend;
 
 namespace PicForLater.App.ViewModels;
 
@@ -13,12 +15,16 @@ public partial class SettingsHomePageViewModel : ObservableObject
     private readonly IStorageReadinessService _storageReadinessService;
     private readonly Func<IRemoteApiProfileService?> _profileServiceAccessor;
     private readonly Func<IRemoteApiCredentialService?> _credentialServiceAccessor;
+    private readonly Func<ILocalSendReceiverService?> _localSendReceiverAccessor;
+    private readonly ILocalSendReceivePreferenceService _localSendReceivePreference;
 
     public SettingsHomePageViewModel(
         IThemePreferenceService themePreferenceService,
         IStorageReadinessService storageReadinessService,
         Func<IRemoteApiProfileService?> profileServiceAccessor,
-        Func<IRemoteApiCredentialService?> credentialServiceAccessor)
+        Func<IRemoteApiCredentialService?> credentialServiceAccessor,
+        ILocalSendReceivePreferenceService localSendReceivePreference,
+        Func<ILocalSendReceiverService?> localSendReceiverAccessor)
     {
         _themePreferenceService = themePreferenceService
             ?? throw new ArgumentNullException(nameof(themePreferenceService));
@@ -28,7 +34,12 @@ public partial class SettingsHomePageViewModel : ObservableObject
             ?? throw new ArgumentNullException(nameof(profileServiceAccessor));
         _credentialServiceAccessor = credentialServiceAccessor
             ?? throw new ArgumentNullException(nameof(credentialServiceAccessor));
+        _localSendReceivePreference = localSendReceivePreference
+            ?? throw new ArgumentNullException(nameof(localSendReceivePreference));
+        _localSendReceiverAccessor = localSendReceiverAccessor
+            ?? throw new ArgumentNullException(nameof(localSendReceiverAccessor));
         SelectedThemeIndex = (int)_themePreferenceService.CurrentPreference;
+        IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
     }
 
     [ObservableProperty]
@@ -47,6 +58,55 @@ public partial class SettingsHomePageViewModel : ObservableObject
     public partial int SelectedAnalysisSourceIndex { get; set; }
 
     [ObservableProperty]
+    public partial bool IsLocalSendEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool CanToggleLocalSend { get; set; }
+
+    [ObservableProperty]
+    public partial bool CanPairLocalSend { get; set; }
+
+    [ObservableProperty]
+    public partial bool CanManageLocalSendDevices { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLocalSendPairing { get; set; }
+
+    [ObservableProperty]
+    public partial bool HasLocalSendTrustedDevices { get; set; }
+
+    [ObservableProperty]
+    public partial bool HasNoLocalSendTrustedDevices { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsLocalSendInfoOpen { get; set; }
+
+    [ObservableProperty]
+    public partial SettingsStatusKind LocalSendInfoKind { get; set; } =
+        SettingsStatusKind.Informational;
+
+    [ObservableProperty]
+    public partial string LocalSendInfoMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LocalSendReceiverName { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LocalSendStatus { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LocalSendPairingPin { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LocalSendPairingRemaining { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsLocalSendWorking { get; set; }
+
+    partial void OnIsLocalSendWorkingChanged(bool value) =>
+        UpdateLocalSendCapabilities(_localSendReceiverAccessor()?.Snapshot);
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
     public partial bool IsWorking { get; set; }
 
@@ -55,6 +115,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
     public partial bool IsInitialized { get; set; }
 
     public bool CanChangeAnalysisSource => IsInitialized && !IsWorking;
+
+    public ObservableCollection<LocalSendTrustedDeviceItem> LocalSendTrustedDevices { get; } = [];
 
     partial void OnSelectedThemeIndexChanged(int value)
     {
@@ -70,6 +132,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
         try
         {
             var readiness = await _storageReadinessService.EnsureReadyAsync(forceRetry: false)
+                .ConfigureAwait(true);
+            await InitializeLocalSendAsync(readiness.Status == StorageReadinessStatus.Ready)
                 .ConfigureAwait(true);
             var profiles = _profileServiceAccessor();
             if (readiness.Status != StorageReadinessStatus.Ready || profiles is null)
@@ -94,6 +158,275 @@ public partial class SettingsHomePageViewModel : ObservableObject
         {
             ApplyUnavailableState();
         }
+    }
+
+    public void ApplyLocalSendSnapshot(LocalSendReceiverSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
+        LocalSendReceiverName = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            Resources.GetString("LocalSendReceiverNameFormat"),
+            LocalSendReceiverService.ReceiverAlias);
+        LocalSendStatus = Resources.GetString(snapshot.DiscoveryLimited
+            && snapshot.Status == LocalSendReceiverStatus.Listening
+                ? "LocalSendStatusDiscoveryLimited"
+                : $"LocalSendStatus{snapshot.Status}");
+        IsLocalSendPairing = snapshot.Status == LocalSendReceiverStatus.Pairing
+                             && !string.IsNullOrWhiteSpace(snapshot.PairingPin);
+        LocalSendPairingPin = IsLocalSendPairing ? snapshot.PairingPin! : string.Empty;
+        UpdateLocalSendPairingRemaining(snapshot, DateTimeOffset.UtcNow);
+        IsLocalSendInfoOpen = snapshot.Status == LocalSendReceiverStatus.Faulted
+                              || snapshot.DiscoveryLimited;
+        LocalSendInfoKind = snapshot.Status == LocalSendReceiverStatus.Faulted
+            ? SettingsStatusKind.Error
+            : SettingsStatusKind.Warning;
+        LocalSendInfoMessage = snapshot.Status == LocalSendReceiverStatus.Faulted
+            ? Resources.GetString("LocalSendReceiverFailedMessage")
+            : snapshot.DiscoveryLimited
+                ? Resources.GetString("LocalSendDiscoveryLimitedMessage")
+                : string.Empty;
+        UpdateLocalSendCapabilities(snapshot);
+    }
+
+    public void UpdateLocalSendPairingRemaining(
+        LocalSendReceiverSnapshot snapshot,
+        DateTimeOffset nowUtc)
+    {
+        if (snapshot.Status != LocalSendReceiverStatus.Pairing
+            || snapshot.PairingExpiresAtUtc is not { } expiresAtUtc)
+        {
+            LocalSendPairingRemaining = string.Empty;
+            return;
+        }
+
+        var remaining = expiresAtUtc - nowUtc.ToUniversalTime();
+        if (remaining < TimeSpan.Zero)
+        {
+            remaining = TimeSpan.Zero;
+        }
+
+        var display = $"{(int)remaining.TotalMinutes:D2}:{remaining.Seconds:D2}";
+        LocalSendPairingRemaining = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            Resources.GetString("LocalSendPairingRemainingFormat"),
+            display);
+    }
+
+    public async Task SetLocalSendEnabledAsync(bool isEnabled)
+    {
+        if (IsLocalSendWorking || !CanToggleLocalSend)
+        {
+            return;
+        }
+
+        IsLocalSendWorking = true;
+        try
+        {
+            _localSendReceivePreference.SetEnabled(isEnabled);
+            IsLocalSendEnabled = isEnabled;
+            var receiver = _localSendReceiverAccessor();
+            if (receiver is null)
+            {
+                ApplyLocalSendUnavailableState();
+                return;
+            }
+
+            if (isEnabled)
+            {
+                await receiver.StartAsync().ConfigureAwait(true);
+            }
+            else
+            {
+                await receiver.StopAsync().ConfigureAwait(true);
+            }
+
+            ApplyLocalSendSnapshot(receiver.Snapshot);
+            await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+        }
+        catch
+        {
+            IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
+            var receiver = _localSendReceiverAccessor();
+            if (receiver is not null)
+            {
+                ApplyLocalSendSnapshot(receiver.Snapshot);
+            }
+            else
+            {
+                ApplyLocalSendUnavailableState();
+            }
+        }
+        finally
+        {
+            IsLocalSendWorking = false;
+            UpdateLocalSendCapabilities(_localSendReceiverAccessor()?.Snapshot);
+        }
+    }
+
+    public async Task BeginLocalSendPairingAsync()
+    {
+        var receiver = _localSendReceiverAccessor();
+        if (receiver is null || !CanPairLocalSend || IsLocalSendWorking)
+        {
+            return;
+        }
+
+        IsLocalSendWorking = true;
+        try
+        {
+            await receiver.BeginPairingAsync().ConfigureAwait(true);
+            ApplyLocalSendSnapshot(receiver.Snapshot);
+        }
+        catch
+        {
+            ApplyLocalSendSnapshot(receiver.Snapshot);
+        }
+        finally
+        {
+            IsLocalSendWorking = false;
+            UpdateLocalSendCapabilities(receiver.Snapshot);
+        }
+    }
+
+    public async Task CancelLocalSendPairingAsync()
+    {
+        var receiver = _localSendReceiverAccessor();
+        if (receiver is null || !IsLocalSendPairing || IsLocalSendWorking)
+        {
+            return;
+        }
+
+        IsLocalSendWorking = true;
+        try
+        {
+            await receiver.CancelPairingAsync().ConfigureAwait(true);
+            ApplyLocalSendSnapshot(receiver.Snapshot);
+        }
+        catch
+        {
+            ApplyLocalSendSnapshot(receiver.Snapshot);
+        }
+        finally
+        {
+            IsLocalSendWorking = false;
+            UpdateLocalSendCapabilities(receiver.Snapshot);
+        }
+    }
+
+    public async Task<bool> RemoveLocalSendTrustedDeviceAsync(string deviceId)
+    {
+        var receiver = _localSendReceiverAccessor();
+        if (receiver is null || !CanManageLocalSendDevices || IsLocalSendWorking)
+        {
+            return false;
+        }
+
+        IsLocalSendWorking = true;
+        try
+        {
+            var removed = await receiver.RemoveTrustedDeviceAsync(deviceId).ConfigureAwait(true);
+            await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+            return removed;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            IsLocalSendWorking = false;
+            UpdateLocalSendCapabilities(receiver.Snapshot);
+        }
+    }
+
+    public async Task RefreshLocalSendTrustedDevicesAsync()
+    {
+        var receiver = _localSendReceiverAccessor();
+        if (receiver is null)
+        {
+            LocalSendTrustedDevices.Clear();
+            UpdateLocalSendTrustedDeviceVisibility();
+            return;
+        }
+
+        try
+        {
+            var devices = await receiver.GetTrustedDevicesAsync().ConfigureAwait(true);
+            LocalSendTrustedDevices.Clear();
+            foreach (var device in devices.OrderBy(static device => device.DisplayName))
+            {
+                LocalSendTrustedDevices.Add(new(
+                    device.DeviceId,
+                    device.DisplayName,
+                    string.Format(
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        Resources.GetString("LocalSendTrustedDevicePairedFormat"),
+                        device.FirstPairedAtUtc.ToLocalTime()),
+                    string.Format(
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        Resources.GetString("LocalSendRemoveDeviceAutomationNameFormat"),
+                        device.DisplayName)));
+            }
+        }
+        catch
+        {
+            LocalSendTrustedDevices.Clear();
+        }
+
+        UpdateLocalSendTrustedDeviceVisibility();
+    }
+
+    private async Task InitializeLocalSendAsync(bool storageReady)
+    {
+        IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
+        var receiver = storageReady ? _localSendReceiverAccessor() : null;
+        if (receiver is null)
+        {
+            ApplyLocalSendUnavailableState();
+            await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+            return;
+        }
+
+        ApplyLocalSendSnapshot(receiver.Snapshot);
+        await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+    }
+
+    private void ApplyLocalSendUnavailableState()
+    {
+        LocalSendReceiverName = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            Resources.GetString("LocalSendReceiverNameFormat"),
+            LocalSendReceiverService.ReceiverAlias);
+        LocalSendStatus = Resources.GetString("LocalSendStatusFaulted");
+        IsLocalSendPairing = false;
+        LocalSendPairingPin = string.Empty;
+        LocalSendPairingRemaining = string.Empty;
+        IsLocalSendInfoOpen = true;
+        LocalSendInfoKind = SettingsStatusKind.Error;
+        LocalSendInfoMessage = Resources.GetString("LocalSendReceiverUnavailableMessage");
+        CanToggleLocalSend = false;
+        CanPairLocalSend = false;
+        CanManageLocalSendDevices = false;
+    }
+
+    private void UpdateLocalSendCapabilities(LocalSendReceiverSnapshot? snapshot)
+    {
+        CanToggleLocalSend = snapshot is not null
+                             && !IsLocalSendWorking
+                             && snapshot.Status is not
+                                 LocalSendReceiverStatus.Starting and not
+                                 LocalSendReceiverStatus.Stopping;
+        CanPairLocalSend = !IsLocalSendWorking
+                           && snapshot?.CanPair == true;
+        CanManageLocalSendDevices = !IsLocalSendWorking
+                                    && snapshot?.CanManageTrustedDevices == true;
+    }
+
+    private void UpdateLocalSendTrustedDeviceVisibility()
+    {
+        HasLocalSendTrustedDevices = LocalSendTrustedDevices.Count > 0;
+        HasNoLocalSendTrustedDevices = !HasLocalSendTrustedDevices;
     }
 
     public async Task<AnalysisSourceSelectionOutcome> SelectAnalysisSourceAsync(int selectedIndex)

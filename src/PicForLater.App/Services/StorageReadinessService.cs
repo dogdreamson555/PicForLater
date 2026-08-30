@@ -25,7 +25,9 @@ public sealed class StorageReadinessService : IStorageReadinessService
         Task<DatabaseInitializationResult> task;
         lock (_syncRoot)
         {
-            if (forceRetry && _initializationTask.IsCompleted)
+            if (forceRetry
+                && _initializationTask.IsCompleted
+                && !_initializationTask.IsCompletedSuccessfully)
             {
                 _initializationTask = _initializationFactory();
             }

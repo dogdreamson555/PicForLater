@@ -21,6 +21,13 @@ public sealed class AppDataPaths
         DatabaseDirectoryPath = Path.Combine(RootPath, "data");
         DatabasePath = Path.Combine(DatabaseDirectoryPath, "picforlater.db");
         BackupDirectoryPath = Path.Combine(DatabaseDirectoryPath, "backups");
+        LocalSendTrustedDevicesFilePath = Path.Combine(
+            DatabaseDirectoryPath,
+            "localsend-trusted-devices.json");
+        IdentityDirectoryPath = Path.Combine(RootPath, "identity");
+        LocalSendIdentityDirectoryPath = Path.Combine(IdentityDirectoryPath, "localsend");
+        InboxDirectoryPath = Path.Combine(RootPath, "inbox");
+        LocalSendInboxDirectoryPath = Path.Combine(InboxDirectoryPath, "localsend");
         StagingDirectoryPath = Path.Combine(RootPath, "staging");
         ModelDownloadStagingDirectoryPath = Path.Combine(StagingDirectoryPath, "model-downloads");
         OriginalDirectoryPath = Path.Combine(RootPath, "assets", "originals");
@@ -53,6 +60,16 @@ public sealed class AppDataPaths
     public string DatabasePath { get; }
 
     public string BackupDirectoryPath { get; }
+
+    public string LocalSendTrustedDevicesFilePath { get; }
+
+    public string IdentityDirectoryPath { get; }
+
+    public string LocalSendIdentityDirectoryPath { get; }
+
+    public string InboxDirectoryPath { get; }
+
+    public string LocalSendInboxDirectoryPath { get; }
 
     public string StagingDirectoryPath { get; }
 
@@ -88,6 +105,10 @@ public sealed class AppDataPaths
         EnsureSafePath(RootPath);
         EnsureManagedDirectory(DatabaseDirectoryPath);
         EnsureManagedDirectory(BackupDirectoryPath);
+        EnsureManagedDirectory(IdentityDirectoryPath);
+        EnsureManagedDirectory(LocalSendIdentityDirectoryPath);
+        EnsureManagedDirectory(InboxDirectoryPath);
+        EnsureManagedDirectory(LocalSendInboxDirectoryPath);
         EnsureManagedDirectory(StagingDirectoryPath);
         EnsureManagedDirectory(ModelDownloadStagingDirectoryPath);
         EnsureManagedDirectory(OriginalDirectoryPath);

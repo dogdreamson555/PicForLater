@@ -11,6 +11,7 @@ using PicForLater.Core.Reminders;
 using PicForLater.Core.Runtime;
 using PicForLater.Infrastructure.Analysis;
 using PicForLater.Infrastructure.Library;
+using PicForLater.Infrastructure.LocalSend;
 using PicForLater.Infrastructure.Reminders;
 using PicForLater.Infrastructure.Storage;
 
@@ -77,6 +78,11 @@ public partial class App : Application
     public static ILibraryService? Library { get; private set; }
 
     public static IImageImportService? ImageImporter { get; private set; }
+
+    public static ILocalSendReceiverService? LocalSendReceiver { get; private set; }
+
+    public static ILocalSendReceivePreferenceService LocalSendReceivePreference { get; } =
+        LocalSendReceivePreferenceService.Instance;
 
     public static IReminderService? Reminders { get; private set; }
 
@@ -415,6 +421,11 @@ public partial class App : Application
                     _analysisWakeSignal,
                     analysisProfiles);
                 ImageImporter = imageImporter;
+                await InitializeLocalSendAsync(
+                        paths,
+                        imageImporter,
+                        AnalysisCancellation.Token)
+                    .ConfigureAwait(false);
                 _analysisWorkerSupervisor = CreateBackgroundWorkerSupervisor(
                     BackgroundWorkerKind.Analysis,
                     worker.RunAsync,
@@ -456,6 +467,41 @@ public partial class App : Application
 
         Program.UnregisterInstanceKey();
         AnalysisCancellation.Cancel();
+        try
+        {
+            await StorageReadiness.EnsureReadyAsync(forceRetry: false).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Cancellation or a storage failure still completes the initialization
+            // task, preventing it from publishing a receiver after shutdown proceeds.
+        }
+
+        var localSendReceiver = LocalSendReceiver;
+        LocalSendReceiver = null;
+        if (localSendReceiver is not null)
+        {
+            try
+            {
+                await localSendReceiver.StopAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // Receiver state fails closed when a LocalSend node cannot be stopped.
+                // Process shutdown remains the final listener containment boundary.
+            }
+
+            try
+            {
+                await localSendReceiver.DisposeAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // Process shutdown is the final containment boundary for a listener
+                // that could not complete best-effort disposal.
+            }
+        }
+
         var supervisedTasks = new[]
         {
             _analysisWorkerSupervisor?.Completion,
@@ -499,6 +545,70 @@ public partial class App : Application
 #endif
         _analysisWakeSignal?.Dispose();
         AnalysisCancellation.Dispose();
+    }
+
+    private static async Task InitializeLocalSendAsync(
+        AppDataPaths paths,
+        IImageImportService imageImporter,
+        CancellationToken cancellationToken)
+    {
+        ILocalSendReceiverService? receiver = null;
+        try
+        {
+            var inboxImporter = new LocalSendInboxImportService(paths, imageImporter);
+            await inboxImporter.RecoverAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+#if PICFORLATER_UI_TESTING
+            receiver = new UiTestLocalSendReceiverService();
+#else
+            receiver = new LocalSendReceiverService(
+                paths,
+                new LocalSendNodeFactory(),
+                new LocalSendTrustedDeviceStore(paths),
+                inboxImporter);
+#endif
+            cancellationToken.ThrowIfCancellationRequested();
+            LocalSendReceiver = receiver;
+            if (LocalSendReceivePreference.IsEnabled)
+            {
+                try
+                {
+                    await receiver.StartAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // The receiver publishes a safe Faulted snapshot. Network startup
+                    // must not make the main library unavailable.
+                }
+            }
+        }
+        catch
+        {
+            if (receiver is not null)
+            {
+                try
+                {
+                    await receiver.DisposeAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                }
+            }
+
+            if (ReferenceEquals(LocalSendReceiver, receiver))
+            {
+                LocalSendReceiver = null;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
     }
 
     public static IReadOnlyList<BackgroundWorkerStatus> GetBackgroundWorkerStatuses()

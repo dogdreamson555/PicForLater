@@ -6,11 +6,12 @@
 
 | 目录 | 固定来源 | 用途 |
 | --- | --- | --- |
-| `dotnet-runtime/` | 本地 .NET 10.0.10 runtime（SDK 10.0.302 安装） | self-contained .NET runtime 许可证及第三方 notices |
+| `dotnet-runtime/` | 本地 .NET 10.0.11 runtime（SDK 10.0.303 安装；文本哈希与上一固定副本一致） | self-contained .NET/ASP.NET Core runtime 许可证及第三方 notices |
 | `windows-app-sdk/` | `Microsoft.WindowsAppSDK` 2.3.1 | WinUI/Windows App SDK Runtime 条款与 notices |
 | `webview2/` | `Microsoft.Web.WebView2` 1.0.3719.77 | Windows App SDK 的传递依赖条款与 notices；应用不直接托管 WebView |
 | `communitytoolkit-mvvm/` | `CommunityToolkit.Mvvm` 8.4.2 | MVVM 运行库许可证及 notices |
 | `communitytoolkit-winui-notifications/` | `CommunityToolkit.WinUI.Notifications` 7.1.2 | unpackaged 通知兼容层许可证 |
+| `localsenddotnet-core/` | `LocalSendDotNet.Core` 0.2.0-preview.5 NuGet 包 | Apache-2.0 LICENSE 与上游 NOTICE；独立的 LocalSend 协议兼容实现 |
 | `fluent-ui-system-icons/` | Microsoft Fluent UI System Icons | 应用图标 SVG 组合及其 PNG/ICO 派生文件的 MIT 许可证 |
 | `managed-dependencies/` | Microsoft MIT license text | Microsoft.Data.Sqlite、Recognizers Text、System.Drawing.Common 等 MIT managed dependencies |
 | `sqlite/` | `SQLitePCLRaw.lib.e_sqlite3` 3.53.3 | 捆绑 SQLite 的 public-domain 声明 |
