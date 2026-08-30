@@ -8,6 +8,20 @@ namespace PicForLater.IntegrationTests;
 public sealed class RemoteApiProviderCatalogTests
 {
     [Fact]
+    public async Task StartupSync_ReadsExistingProfilesInSingleBatch()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        var countingProfiles = new CountingRemoteApiProfileService(profiles);
+
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(countingProfiles);
+
+        Assert.Equal(1, countingProfiles.GetProfilesCallCount);
+        Assert.Equal(0, countingProfiles.GetProfileCallCount);
+    }
+
+    [Fact]
     public async Task StartupSync_UpgradesSelectedLegacyPresetAndReturnsExecutionToLocal()
     {
         using var root = new TemporaryAppDataRoot();
@@ -108,5 +122,51 @@ public sealed class RemoteApiProviderCatalogTests
         }
 
         await command.ExecuteNonQueryAsync();
+    }
+
+    private sealed class CountingRemoteApiProfileService(IRemoteApiProfileService inner)
+        : IRemoteApiProfileService
+    {
+        public int GetProfilesCallCount { get; private set; }
+
+        public int GetProfileCallCount { get; private set; }
+
+        public Task<RemoteAnalysisExecutionState> GetExecutionStateAsync(
+            CancellationToken cancellationToken = default) =>
+            inner.GetExecutionStateAsync(cancellationToken);
+
+        public Task<IReadOnlyList<RemoteApiProfile>> GetProfilesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            GetProfilesCallCount++;
+            return inner.GetProfilesAsync(cancellationToken);
+        }
+
+        public Task<RemoteApiProfile?> GetProfileAsync(
+            string profileId,
+            CancellationToken cancellationToken = default)
+        {
+            GetProfileCallCount++;
+            return inner.GetProfileAsync(profileId, cancellationToken);
+        }
+
+        public Task<RemoteApiProfile> SaveProfileAsync(
+            RemoteApiProfile profile,
+            CancellationToken cancellationToken = default) =>
+            inner.SaveProfileAsync(profile, cancellationToken);
+
+        public Task DeleteProfileAsync(
+            string profileId,
+            CancellationToken cancellationToken = default) =>
+            inner.DeleteProfileAsync(profileId, cancellationToken);
+
+        public Task SelectLocalAsync(CancellationToken cancellationToken = default) =>
+            inner.SelectLocalAsync(cancellationToken);
+
+        public Task SelectRemoteAsync(
+            string profileId,
+            RemoteInputMode inputMode,
+            CancellationToken cancellationToken = default) =>
+            inner.SelectRemoteAsync(profileId, inputMode, cancellationToken);
     }
 }

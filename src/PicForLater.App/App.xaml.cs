@@ -33,6 +33,7 @@ public partial class App : Application
     private static HttpClient? _modelDownloadHttpClient;
     private static HttpClient? _componentDownloadHttpClient;
     private static HttpClient? _remoteAnalysisHttpClient;
+    private static Task? _localSendStartupTask;
 #if PICFORLATER_UI_TESTING
     private static UiTestLocalInferenceRuntime? _uiTestInferenceRuntime;
 #else
@@ -477,6 +478,19 @@ public partial class App : Application
             // task, preventing it from publishing a receiver after shutdown proceeds.
         }
 
+        if (_localSendStartupTask is { } localSendStartupTask)
+        {
+            try
+            {
+                await localSendStartupTask.ConfigureAwait(false);
+            }
+            catch
+            {
+                // Startup is best-effort and reports failures through the receiver
+                // snapshot. Shutdown must still release any partially started node.
+            }
+        }
+
         var localSendReceiver = LocalSendReceiver;
         LocalSendReceiver = null;
         if (localSendReceiver is not null)
@@ -571,19 +585,9 @@ public partial class App : Application
             LocalSendReceiver = receiver;
             if (LocalSendReceivePreference.IsEnabled)
             {
-                try
-                {
-                    await receiver.StartAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch
-                {
-                    // The receiver publishes a safe Faulted snapshot. Network startup
-                    // must not make the main library unavailable.
-                }
+                _localSendStartupTask = StartLocalSendReceiverAsync(
+                    receiver,
+                    cancellationToken);
             }
         }
         catch
@@ -608,6 +612,28 @@ public partial class App : Application
             {
                 cancellationToken.ThrowIfCancellationRequested();
             }
+        }
+    }
+
+    private static async Task StartLocalSendReceiverAsync(
+        ILocalSendReceiverService receiver,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Keep node construction, certificate setup, and listener startup out of
+            // the storage-readiness continuation even when their first awaits complete
+            // synchronously.
+            await Task.Yield();
+            await receiver.StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            // The receiver publishes a safe Faulted snapshot. Network startup is
+            // independent from storage readiness and must not hide the library.
         }
     }
 
