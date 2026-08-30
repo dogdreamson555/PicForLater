@@ -65,7 +65,8 @@ public sealed class GitHubUpdateCheckService : IUpdateCheckService
                     responseStream,
                     cancellationToken: timeout.Token)
                 .ConfigureAwait(false);
-            if (!document.RootElement.TryGetProperty("tag_name", out var tagElement)
+            if (document.RootElement.ValueKind != JsonValueKind.Object
+                || !document.RootElement.TryGetProperty("tag_name", out var tagElement)
                 || tagElement.ValueKind != JsonValueKind.String
                 || !AppReleaseVersion.TryParseReleaseTag(
                     tagElement.GetString(),
