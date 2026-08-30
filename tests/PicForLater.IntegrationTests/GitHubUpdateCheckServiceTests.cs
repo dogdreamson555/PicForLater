@@ -86,6 +86,10 @@ public sealed class GitHubUpdateCheckServiceTests
 
     [Theory]
     [InlineData("not-json")]
+    [InlineData("[]")]
+    [InlineData("null")]
+    [InlineData("\"text\"")]
+    [InlineData("42")]
     [InlineData("{}")]
     [InlineData("{\"tag_name\":null}")]
     [InlineData("{\"tag_name\":\"V1.2.0\"}")]
