@@ -176,9 +176,13 @@ public partial class App : Application
         {
             Timeout = Timeout.InfiniteTimeSpan,
         };
+#if PICFORLATER_UI_TESTING
+        UpdateCheck = new UiTestUpdateCheckService(CurrentVersion);
+#else
         UpdateCheck = new GitHubUpdateCheckService(
             _updateCheckHttpClient,
             CurrentVersion);
+#endif
     }
 
     private static AppReleaseVersion ReadCurrentVersion()
