@@ -162,11 +162,15 @@ public static class RemoteApiProviderCatalog
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profileService);
+        var existingProfiles = await profileService.GetProfilesAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var profilesById = existingProfiles.ToDictionary(
+            static profile => profile.ProfileId,
+            StringComparer.Ordinal);
         var options = new List<RemoteApiProviderOption>(Presets.Count);
         foreach (var preset in Presets)
         {
-            var existing = await profileService.GetProfileAsync(preset.ProfileId, cancellationToken)
-                .ConfigureAwait(false);
+            profilesById.TryGetValue(preset.ProfileId, out var existing);
             var desired = CreateProfile(preset, existing);
             if (existing is null || !ProfileEquals(existing, desired))
             {

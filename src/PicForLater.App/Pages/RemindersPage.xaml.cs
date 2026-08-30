@@ -532,7 +532,8 @@ public sealed partial class RemindersPage : Page
         _isSynchronizingSelection = true;
         try
         {
-            if (!isActive)
+            if (!isActive
+                && ConfirmedRemindersList.SelectionMode != ListViewSelectionMode.None)
             {
                 ConfirmedRemindersList.SelectedItems.Clear();
             }
