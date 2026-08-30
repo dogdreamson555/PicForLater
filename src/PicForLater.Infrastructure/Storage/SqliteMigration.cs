@@ -5,7 +5,11 @@ namespace PicForLater.Infrastructure.Storage;
 
 internal sealed record SqliteMigration
 {
-    public SqliteMigration(int version, string name, string sql)
+    public SqliteMigration(
+        int version,
+        string name,
+        string sql,
+        bool requiresForeignKeysDisabled = false)
     {
         if (version <= 0)
         {
@@ -19,6 +23,7 @@ internal sealed record SqliteMigration
         Name = name;
         Sql = sql;
         Checksum = ComputeChecksum(sql);
+        RequiresForeignKeysDisabled = requiresForeignKeysDisabled;
     }
 
     public int Version { get; }
@@ -28,6 +33,8 @@ internal sealed record SqliteMigration
     public string Sql { get; }
 
     public string Checksum { get; }
+
+    public bool RequiresForeignKeysDisabled { get; }
 
     private static string ComputeChecksum(string sql)
     {

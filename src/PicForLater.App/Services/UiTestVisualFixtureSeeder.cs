@@ -12,7 +12,6 @@ using PicForLater.Core.Images;
 using PicForLater.Core.Library;
 using PicForLater.Core.Reminders;
 using PicForLater.Infrastructure.Storage;
-using Windows.Globalization;
 
 namespace PicForLater.App.Services;
 
@@ -269,7 +268,6 @@ internal static class UiTestVisualFixtureSeeder
     {
         const string languageTag = "zh-CN";
         var culture = CultureInfo.GetCultureInfo(languageTag);
-        ApplicationLanguages.PrimaryLanguageOverride = languageTag;
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
         CultureInfo.CurrentCulture = culture;

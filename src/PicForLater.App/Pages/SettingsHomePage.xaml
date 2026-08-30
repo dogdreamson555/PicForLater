@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:PicForLater.App.Pages"
+    xmlns:models="using:PicForLater.App.Models"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="768"
     d:DesignWidth="1024"
@@ -18,12 +19,18 @@
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
         <Grid>
-            <StackPanel
+            <Grid
                 x:Name="ContentPanel"
                 MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
                 Margin="{StaticResource AppPagePaddingNarrow}"
                 HorizontalAlignment="Stretch"
-                Spacing="{StaticResource AppSpacingXl}">
+                RowSpacing="{StaticResource AppSpacingXl}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="WidthStates">
                         <VisualState x:Name="Narrow" />
@@ -46,12 +53,193 @@
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
 
-                <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                <StackPanel Grid.Row="0" Spacing="{StaticResource AppSpacingXs}">
                     <TextBlock x:Uid="SettingsPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" />
                     <TextBlock x:Uid="SettingsPageSubtitle" Style="{StaticResource AppPageSubtitleTextBlockStyle}" />
                 </StackPanel>
 
-                <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="2" Spacing="{StaticResource AppSpacingSm}">
+                    <TextBlock x:Uid="LocalSendSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                    <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                        <StackPanel>
+                            <Grid
+                                MinHeight="72"
+                                Padding="12,8"
+                                ColumnSpacing="{StaticResource AppSpacingMd}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel
+                                    VerticalAlignment="Center"
+                                    Spacing="{StaticResource AppSpacingXs}">
+                                    <TextBlock
+                                        x:Uid="LocalSendReceiveToggleTitle"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Uid="LocalSendReceiveToggleDescription"
+                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Uid="LocalSendAnalysisDisclosure"
+                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch
+                                    x:Name="LocalSendReceiveToggle"
+                                    x:Uid="LocalSendReceiveToggle"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="LocalSendReceiveToggle"
+                                    IsEnabled="{x:Bind ViewModel.CanToggleLocalSend, Mode=OneWay}"
+                                    MinWidth="0"
+                                    OffContent="{x:Null}"
+                                    OnContent="{x:Null}"
+                                    Toggled="LocalSendReceiveToggle_Toggled" />
+                            </Grid>
+
+                            <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
+
+                            <StackPanel
+                                Padding="12"
+                                Spacing="{StaticResource AppSpacingSm}">
+                                <Grid ColumnSpacing="{StaticResource AppSpacingMd}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="LocalSendReceiverNameText"
+                                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                            Text="{x:Bind ViewModel.LocalSendReceiverName, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="LocalSendStatusText"
+                                            AutomationProperties.LiveSetting="Polite"
+                                            FontWeight="SemiBold"
+                                            Text="{x:Bind ViewModel.LocalSendStatus, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button
+                                        x:Uid="BeginLocalSendPairingButton"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.AutomationId="BeginLocalSendPairingButton"
+                                        Click="BeginLocalSendPairingButton_Click"
+                                        IsEnabled="{x:Bind ViewModel.CanPairLocalSend, Mode=OneWay}" />
+                                </Grid>
+
+                                <InfoBar
+                                    x:Name="LocalSendStatusInfoBar"
+                                    x:Uid="LocalSendStatusInfoBar"
+                                    AutomationProperties.AutomationId="LocalSendStatusInfoBar"
+                                    IsClosable="False"
+                                    IsOpen="{x:Bind ViewModel.IsLocalSendInfoOpen, Mode=OneWay}"
+                                    Message="{x:Bind ViewModel.LocalSendInfoMessage, Mode=OneWay}"
+                                    Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ViewModel.LocalSendInfoKind), Mode=OneWay}"
+                                    Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsLocalSendInfoOpen), Mode=OneWay}" />
+
+                                <StackPanel
+                                    x:Name="LocalSendPairingPanel"
+                                    AutomationProperties.AutomationId="LocalSendPairingPanel"
+                                    Spacing="{StaticResource AppSpacingSm}"
+                                    Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsLocalSendPairing), Mode=OneWay}">
+                                    <TextBlock
+                                        x:Uid="LocalSendPairingInstructions"
+                                        TextWrapping="Wrap" />
+                                    <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                                        <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                            <TextBlock
+                                                x:Uid="LocalSendPairingPinLabel"
+                                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                                Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <TextBlock
+                                                AutomationProperties.AutomationId="LocalSendPairingPinText"
+                                                AutomationProperties.LiveSetting="Polite"
+                                                FontFamily="Consolas"
+                                                FontWeight="SemiBold"
+                                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                                Text="{x:Bind ViewModel.LocalSendPairingPin, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="LocalSendPairingRemainingText"
+                                            Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                            Text="{x:Bind ViewModel.LocalSendPairingRemaining, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            x:Uid="CancelLocalSendPairingButton"
+                                            HorizontalAlignment="Left"
+                                            AutomationProperties.AutomationId="CancelLocalSendPairingButton"
+                                            Click="CancelLocalSendPairingButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
+
+                            <StackPanel
+                                Padding="12"
+                                Spacing="{StaticResource AppSpacingSm}">
+                                <TextBlock
+                                    x:Uid="LocalSendTrustedDevicesTitle"
+                                    FontWeight="SemiBold" />
+                                <TextBlock
+                                    x:Uid="LocalSendTrustedDevicesEmpty"
+                                    AutomationProperties.AutomationId="LocalSendTrustedDevicesEmpty"
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    TextWrapping="Wrap"
+                                    Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.HasNoLocalSendTrustedDevices), Mode=OneWay}" />
+                                <ItemsControl
+                                    x:Name="LocalSendTrustedDevicesList"
+                                    x:Uid="LocalSendTrustedDevicesList"
+                                    AutomationProperties.AutomationId="LocalSendTrustedDevicesList"
+                                    IsEnabled="{x:Bind ViewModel.CanManageLocalSendDevices, Mode=OneWay}"
+                                    ItemsSource="{x:Bind ViewModel.LocalSendTrustedDevices, Mode=OneWay}"
+                                    Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.HasLocalSendTrustedDevices), Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:LocalSendTrustedDeviceItem">
+                                            <Grid
+                                                MinHeight="52"
+                                                Padding="0,6"
+                                                ColumnSpacing="{StaticResource AppSpacingMd}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel
+                                                    VerticalAlignment="Center"
+                                                    Spacing="{StaticResource AppSpacingXs}">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{x:Bind DisplayName, Mode=OneTime}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                                        Text="{x:Bind PairedDescription, Mode=OneTime}" />
+                                                </StackPanel>
+                                                <Button
+                                                    x:Uid="LocalSendRemoveDeviceButton"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    AutomationProperties.AutomationId="{x:Bind RemoveAutomationId, Mode=OneTime}"
+                                                    AutomationProperties.Name="{x:Bind RemoveAutomationName, Mode=OneTime}"
+                                                    Click="RemoveLocalSendTrustedDeviceButton_Click" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="CurrentExecutionSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border
                         Padding="0,0,0,3"
@@ -158,7 +346,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="3" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="AppearanceSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border
                         Padding="12,0,12,8"
@@ -181,7 +369,7 @@
                         </RadioButtons>
                     </Border>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </Page>

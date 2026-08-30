@@ -881,4 +881,42 @@
   <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>The signed manifest, source, size, SHA-256, archive layout, or installed files failed validation. The current component was kept.</value></data>
   <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>The local analysis component could not be installed or activated. The current component and user data were kept.</value></data>
   <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} Error code: {1}</value></data>
+  <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>Phone receive</value></data>
+  <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
+  <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>Enable this only on a trusted home or personal local network.</value></data>
+  <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>Received images use the current analysis mode. API analysis may send them to the configured service.</value></data>
+  <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
+  <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>Phone receive status</value></data>
+  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>Pair a new device</value></data>
+  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Pair a new device</value></data>
+  <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>Select PicForLater in LocalSend on your phone, then send at least one supported image.</value></data>
+  <data name="LocalSendPairingPinLabel.Text" xml:space="preserve"><value>Temporary PIN</value></data>
+  <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>Cancel pairing</value></data>
+  <data name="CancelLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Cancel the current phone pairing</value></data>
+  <data name="LocalSendTrustedDevicesTitle.Text" xml:space="preserve"><value>Trusted devices</value></data>
+  <data name="LocalSendTrustedDevicesEmpty.Text" xml:space="preserve"><value>No trusted device has been paired.</value></data>
+  <data name="LocalSendTrustedDevicesList.AutomationProperties.Name" xml:space="preserve"><value>Trusted LocalSend devices</value></data>
+  <data name="LocalSendRemoveDeviceButton.Content" xml:space="preserve"><value>Remove</value></data>
+  <data name="LocalSendRemoveDeviceAutomationNameFormat" xml:space="preserve"><value>Remove trusted device {0}</value></data>
+  <data name="LocalSendReceiverNameFormat" xml:space="preserve"><value>Receiver name: {0}</value></data>
+  <data name="LocalSendStatusDisabled" xml:space="preserve"><value>Status: Off</value></data>
+  <data name="LocalSendStatusStarting" xml:space="preserve"><value>Status: Starting</value></data>
+  <data name="LocalSendStatusListening" xml:space="preserve"><value>Status: Listening</value></data>
+  <data name="LocalSendStatusDiscoveryLimited" xml:space="preserve"><value>Status: Listening (discovery limited)</value></data>
+  <data name="LocalSendStatusPairing" xml:space="preserve"><value>Status: Pairing</value></data>
+  <data name="LocalSendStatusReceiving" xml:space="preserve"><value>Status: Receiving</value></data>
+  <data name="LocalSendStatusStopping" xml:space="preserve"><value>Status: Stopping</value></data>
+  <data name="LocalSendStatusFaulted" xml:space="preserve"><value>Status: Service fault</value></data>
+  <data name="LocalSendDiscoveryLimitedMessage" xml:space="preserve"><value>Local-network discovery is limited, but the receiver is still running. Check the firewall or network interface settings.</value></data>
+  <data name="LocalSendReceiverFailedMessage" xml:space="preserve"><value>The phone receiver could not start or stop normally. Turn it off and retry; if the problem continues, check the port and firewall.</value></data>
+  <data name="LocalSendReceiverUnavailableMessage" xml:space="preserve"><value>The phone receiver is unavailable. Resolve the local storage initialization issue first.</value></data>
+  <data name="LocalSendPairingRemainingFormat" xml:space="preserve"><value>{0} remaining</value></data>
+  <data name="LocalSendTrustedDevicePairedFormat" xml:space="preserve"><value>Paired {0:d}</value></data>
+  <data name="LocalSendRemoveDeviceDialogTitle" xml:space="preserve"><value>Remove trusted device?</value></data>
+  <data name="LocalSendRemoveDeviceDialogMessageFormat" xml:space="preserve"><value>After “{0}” is removed, its next transfer will be declined until you pair it again.</value></data>
+  <data name="LocalSendRemoveDeviceDialogRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="LocalSendLibraryReceivingStatus" xml:space="preserve"><value>Receiving images from a phone…</value></data>
+  <data name="LocalSendLibraryCancelledFormat" xml:space="preserve"><value>The phone cancelled this transfer. Imported {0}; {1} already existed.</value></data>
+  <data name="LocalSendLibraryCompletedFormat" xml:space="preserve"><value>Imported {0}; {1} already existed.</value></data>
+  <data name="LocalSendLibraryCompletedWithFailuresFormat" xml:space="preserve"><value>Imported {0}; {1} already existed; {2} could not be imported.</value></data>
 </root>

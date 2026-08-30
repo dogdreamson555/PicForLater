@@ -527,5 +527,79 @@ internal static class SqliteSchema
             WHERE length(replace(Id, '-', '')) = 32
               AND replace(Id, '-', '') NOT GLOB '*[^0-9A-Fa-f]*';
             """),
+        new SqliteMigration(
+            14,
+            "localsend-image-source-kind",
+            """
+            CREATE TABLE ImageItems_LocalSendMigration (
+                Id TEXT NOT NULL PRIMARY KEY,
+                AssetId TEXT NOT NULL,
+                OriginalFileName TEXT NOT NULL,
+                SourceKind INTEGER NOT NULL CHECK (SourceKind IN (1, 2, 3)),
+                Title TEXT NOT NULL,
+                Summary TEXT NOT NULL,
+                TitleSource INTEGER NOT NULL CHECK (TitleSource IN (1, 2, 3)),
+                SummarySource INTEGER NOT NULL CHECK (SummarySource IN (1, 2, 3)),
+                AnalysisState INTEGER NOT NULL CHECK (AnalysisState IN (1, 2, 3, 4)),
+                Revision INTEGER NOT NULL CHECK (Revision >= 0),
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL,
+                DeletedAtUtc TEXT NULL,
+                FOREIGN KEY (AssetId) REFERENCES ImageAssets(Id) ON DELETE RESTRICT
+            );
+
+            INSERT INTO ImageItems_LocalSendMigration (
+                Id, AssetId, OriginalFileName, SourceKind, Title, Summary,
+                TitleSource, SummarySource, AnalysisState, Revision,
+                CreatedAtUtc, UpdatedAtUtc, DeletedAtUtc)
+            SELECT
+                Id, AssetId, OriginalFileName, SourceKind, Title, Summary,
+                TitleSource, SummarySource, AnalysisState, Revision,
+                CreatedAtUtc, UpdatedAtUtc, DeletedAtUtc
+            FROM ImageItems;
+
+            DROP TABLE ImageItems;
+            ALTER TABLE ImageItems_LocalSendMigration RENAME TO ImageItems;
+            CREATE INDEX IX_ImageItems_Active_CreatedAtUtc
+                ON ImageItems(DeletedAtUtc, CreatedAtUtc DESC);
+            CREATE INDEX IX_ImageItems_AssetId
+                ON ImageItems(AssetId);
+
+            CREATE TABLE ImportJobs_LocalSendMigration (
+                Id TEXT NOT NULL PRIMARY KEY,
+                StagingRelativePath TEXT NULL,
+                FinalRelativePath TEXT NULL,
+                OriginalFileName TEXT NOT NULL,
+                SourceKind INTEGER NOT NULL CHECK (SourceKind IN (1, 2, 3)),
+                State INTEGER NOT NULL CHECK (State IN (1, 2, 3, 4, 5, 6)),
+                ContentHash TEXT NULL CHECK (ContentHash IS NULL OR length(ContentHash) = 64),
+                ImageItemId TEXT NULL,
+                AttemptCount INTEGER NOT NULL CHECK (AttemptCount >= 0),
+                LeaseExpiresAtUtc TEXT NULL,
+                LastErrorCode TEXT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL,
+                CompletedAtUtc TEXT NULL,
+                FOREIGN KEY (ImageItemId) REFERENCES ImageItems(Id) ON DELETE SET NULL
+            );
+
+            INSERT INTO ImportJobs_LocalSendMigration (
+                Id, StagingRelativePath, FinalRelativePath, OriginalFileName,
+                SourceKind, State, ContentHash, ImageItemId, AttemptCount,
+                LeaseExpiresAtUtc, LastErrorCode, CreatedAtUtc, UpdatedAtUtc,
+                CompletedAtUtc)
+            SELECT
+                Id, StagingRelativePath, FinalRelativePath, OriginalFileName,
+                SourceKind, State, ContentHash, ImageItemId, AttemptCount,
+                LeaseExpiresAtUtc, LastErrorCode, CreatedAtUtc, UpdatedAtUtc,
+                CompletedAtUtc
+            FROM ImportJobs;
+
+            DROP TABLE ImportJobs;
+            ALTER TABLE ImportJobs_LocalSendMigration RENAME TO ImportJobs;
+            CREATE INDEX IX_ImportJobs_State_Lease
+                ON ImportJobs(State, LeaseExpiresAtUtc, CreatedAtUtc);
+            """,
+            requiresForeignKeysDisabled: true),
     ];
 }
