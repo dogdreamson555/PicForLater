@@ -80,6 +80,7 @@
                     x:Uid="ApiConnectionStatusInfoBar"
                     AutomationProperties.AutomationId="ApiConnectionStatusInfoBar"
                     AutomationProperties.HelpText="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                    AutomationProperties.LiveSetting="Polite"
                     IsClosable="True"
                     IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
                     Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
@@ -300,6 +301,54 @@
                                         IsEnabled="{x:Bind ViewModel.CanUseDirectImage, Mode=OneWay}" />
                                 </RadioButtons>
                             </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="{StaticResource AppSpacingSm}">
+                        <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                            <TextBlock
+                                x:Uid="ApiOutputLanguageSectionTitle"
+                                Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                            <TextBlock
+                                x:Uid="ApiOutputLanguageSectionDescription"
+                                Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                            <Grid
+                                x:Name="ApiOutputLanguageRow"
+                                MinHeight="60"
+                                Padding="12,14"
+                                ColumnSpacing="{StaticResource AppSpacingLg}"
+                                RowSpacing="{StaticResource AppSpacingSm}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition x:Name="ApiOutputLanguageControlColumn" Width="400" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    x:Uid="ApiOutputLanguageRowTitle"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold" />
+                                <ComboBox
+                                    x:Name="ApiOutputLanguageComboBox"
+                                    x:Uid="ApiOutputLanguageComboBox"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="ApiOutputLanguageComboBox"
+                                    IsEnabled="{x:Bind ViewModel.CanChangeOutputLanguage, Mode=OneWay}"
+                                    SelectedIndex="{x:Bind ViewModel.SelectedOutputLanguageIndex, Mode=OneWay}"
+                                    SelectionChanged="ApiOutputLanguageComboBox_SelectionChanged">
+                                    <ComboBoxItem x:Uid="ApiOutputLanguageModelDefault" />
+                                    <ComboBoxItem x:Uid="ApiOutputLanguageSimplifiedChinese" />
+                                    <ComboBoxItem x:Uid="ApiOutputLanguageTraditionalChineseTaiwan" />
+                                    <ComboBoxItem x:Uid="ApiOutputLanguageEnglish" />
+                                </ComboBox>
+                            </Grid>
                         </Border>
                     </StackPanel>
 
