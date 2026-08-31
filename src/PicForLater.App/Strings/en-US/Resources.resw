@@ -115,6 +115,20 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Light theme</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>Dark</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Dark theme</value></data>
+  <data name="AboutUpdatesSectionTitle.Text" xml:space="preserve"><value>About and updates</value></data>
+  <data name="AboutUpdatesAppName.Text" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="CurrentAppVersionFormat" xml:space="preserve"><value>Current version {0}</value></data>
+  <data name="CheckForUpdatesButton.AutomationProperties.Name" xml:space="preserve"><value>Check for PicForLater updates</value></data>
+  <data name="CheckForUpdatesButtonText.Text" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="UpdateStatusInfoBar.Title" xml:space="preserve"><value>Update status</value></data>
+  <data name="ViewReleasePageButton.Content" xml:space="preserve"><value>View release page</value></data>
+  <data name="ViewReleasePageButton.AutomationProperties.Name" xml:space="preserve"><value>View the new version release page in your browser</value></data>
+  <data name="UpdateCheckingStatus" xml:space="preserve"><value>Checking the latest stable release on GitHub…</value></data>
+  <data name="UpdateUpToDateStatusFormat" xml:space="preserve"><value>You already have the latest version ({0}).</value></data>
+  <data name="UpdateAvailableStatusFormat" xml:space="preserve"><value>Version {0} is available. Your current version is {1}.</value></data>
+  <data name="UpdateLocalAheadStatusFormat" xml:space="preserve"><value>Your version {0} is newer than the latest release {1}. This may be a development or test build.</value></data>
+  <data name="UpdateUnavailableStatus" xml:space="preserve"><value>Updates cannot be checked right now. Try again later.</value></data>
+  <data name="UpdateReleasePageOpenFailedStatus" xml:space="preserve"><value>The release page could not be opened. The version check result is still valid; try again later.</value></data>
   <data name="SettingsEmptyState.Title" xml:space="preserve"><value>No other settings yet</value></data>
   <data name="SettingsEmptyState.Message" xml:space="preserve"><value>Local settings for additional features will appear here when those features are added.</value></data>
   <data name="AnalysisStatePending" xml:space="preserve"><value>Waiting for analysis</value></data>
