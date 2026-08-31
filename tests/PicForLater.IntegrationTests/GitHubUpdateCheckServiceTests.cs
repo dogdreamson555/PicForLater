@@ -50,15 +50,17 @@ public sealed class GitHubUpdateCheckServiceTests
     public async Task Request_UsesOnlyPinnedEndpointAndRequiredGitHubHeaders()
     {
         HttpRequestMessage? captured = null;
-        using var client = new HttpClient(new RecordingHandler((request, _) =>
+        var handler = new RecordingHandler((request, _) =>
         {
             captured = request;
             return Task.FromResult(JsonResponse("v1.1.1"));
-        }));
+        });
+        using var client = new HttpClient(handler);
         var service = new GitHubUpdateCheckService(client, CurrentVersion);
 
         await service.CheckForUpdatesAsync();
 
+        Assert.Equal(1, handler.RequestCount);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Get, captured.Method);
         Assert.Equal(
