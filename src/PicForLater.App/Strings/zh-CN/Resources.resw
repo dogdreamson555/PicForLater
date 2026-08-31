@@ -168,7 +168,7 @@
   <data name="DetailContentSourceInfoBar.Title" xml:space="preserve"><value>内容来源</value></data>
   <data name="DetailContentSourcePending" xml:space="preserve"><value>本地分析完成后会在这里填入可编辑的标题和简介。</value></data>
   <data name="DetailContentSourceOcr" xml:space="preserve"><value>已根据本地 OCR 事实生成可编辑草稿；视觉增强失败也不会丢失此结果。</value></data>
-  <data name="DetailContentSourceModel" xml:space="preserve"><value>标题和简介由本地视觉模型生成，属于可编辑候选。</value></data>
+  <data name="DetailContentSourceModel" xml:space="preserve"><value>标题和简介由 AI 模型生成，属于可编辑候选。</value></data>
   <data name="DetailContentSourceUser" xml:space="preserve"><value>标题或简介已由你保存，重新分析不会静默覆盖。</value></data>
   <data name="DetailContentSourceUnsaved" xml:space="preserve"><value>存在尚未保存的人工修改；后台分析刷新不会覆盖当前输入。</value></data>
   <data name="DetailContentSourceNeedsAttention" xml:space="preserve"><value>本地分析未完成。原图和已有内容已保留，可选择重新分析。</value></data>
