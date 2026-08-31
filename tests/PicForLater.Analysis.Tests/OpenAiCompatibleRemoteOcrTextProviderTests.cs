@@ -45,7 +45,9 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
             credentials,
             AllowAllRequestAuthorizer.Instance);
         var imageOpenCount = 0;
-        var request = CreateRequest(() => imageOpenCount++);
+        var request = CreateRequest(
+            () => imageOpenCount++,
+            outputLanguage: AnalysisOutputLanguage.English);
 
         var result = await provider.AnalyzeAsync(request);
 
@@ -56,6 +58,27 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
         Assert.Equal(32, idempotencyKey.Length);
         Assert.NotNull(requestBody);
         using var payload = JsonDocument.Parse(requestBody);
+        var systemPrompt = payload.RootElement
+            .GetProperty("messages")[0]
+            .GetProperty("content")
+            .GetString();
+        Assert.NotNull(systemPrompt);
+        Assert.Contains(
+            "Write the generated title, summary, and visualFacts in English (en).",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.Contains("detectedLanguages", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].rawText", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].evidence", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains(
+            "picforlater.remote-analysis.v3",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Preserve the content language", requestBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Expected output language: same as content.",
+            requestBody,
+            StringComparison.Ordinal);
         var userPrompt = payload.RootElement
             .GetProperty("messages")[1]
             .GetProperty("content")
@@ -255,7 +278,8 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
     private static VisionAnalysisRequest CreateRequest(
         Action? onImageOpen = null,
         string? ocrText = null,
-        int maximumTextCharacters = 10_000)
+        int maximumTextCharacters = 10_000,
+        AnalysisOutputLanguage outputLanguage = AnalysisOutputLanguage.ModelDefault)
     {
         var box = new OcrBoundingBox(1, 2, 30, 10);
         var document = new OcrDocument(
@@ -292,7 +316,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
                 EndpointId = "openai-compatible.chat-completions.v1",
                 BaseUri = new Uri("https://api.example.test/v1/chat/completions"),
                 ModelId = "remote-model",
-                PromptVersion = "remote-ocr-text.prompt.v1",
+                PromptVersion = "picforlater.remote-analysis.v3",
                 OutputSchemaVersion = QwenStructuredOutputParser.SchemaVersion,
                 MaxTextChars = maximumTextCharacters,
                 MaxImageBytes = 8 * 1024 * 1024,
@@ -300,6 +324,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
                 TimeoutSeconds = 30,
                 CredentialReference = "credential-ref",
                 ConsentVersion = "disclosure.v1",
+                OutputLanguage = outputLanguage,
             },
         };
         return new VisionAnalysisRequest(

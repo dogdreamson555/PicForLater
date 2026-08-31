@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using PicForLater.App.Services;
 using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
 using PicForLater.Core.Library;
@@ -188,6 +189,102 @@ public sealed class RemoteAnalysisProfileTests
             localSnapshot,
             new JsonSerializerOptions(JsonSerializerDefaults.Web));
         Assert.DoesNotContain("outputLanguage", localJson, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CatalogV3Upgrade_DoesNotRewriteQueuedV2SnapshotAndOldTaskStaysStale()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var localProfiles = new SqliteModelPackageService(root.Paths, new NeverUsedModelValidator());
+        using var remoteProfiles = new SqliteRemoteApiProfileService(root.Paths);
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(remoteProfiles);
+        var profile = await remoteProfiles.GetProfileAsync("openai-official");
+        Assert.NotNull(profile);
+        var verifiedAt = new DateTimeOffset(2026, 8, 31, 3, 0, 0, TimeSpan.Zero);
+        await ExecuteAsync(
+            root.Paths.DatabasePath,
+            """
+            UPDATE RemoteApiProfiles
+            SET PromptVersion = @promptVersion,
+                ValidationState = @valid,
+                LastVerifiedAtUtc = @verifiedAt,
+                ConsentedInputMode = @inputMode,
+                ConsentedDisclosureVersion = DisclosureVersion,
+                ConsentGrantedAtUtc = @verifiedAt
+            WHERE ProfileId = @profileId;
+
+            UPDATE AnalysisSettings
+            SET ExecutionBackend = @remote,
+                RemoteInputMode = @inputMode,
+                RemoteApiProfileId = @profileId
+            WHERE Id = 1;
+            """,
+            ("@promptVersion", "picforlater.remote-analysis.v2"),
+            ("@valid", (int)RemoteApiProfileValidationState.Valid),
+            ("@verifiedAt", verifiedAt.ToString("O")),
+            ("@inputMode", (int)RemoteInputMode.LocalOcrText),
+            ("@profileId", profile.ProfileId),
+            ("@remote", (int)AnalysisExecutionBackend.RemoteApi));
+        var combined = new CombinedAnalysisProfileSnapshotProvider(localProfiles, remoteProfiles);
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(
+            root.Paths,
+            storage,
+            new FakeImageProcessor(),
+            analysisProfileSnapshotProvider: combined);
+        var imported = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "queued-v2-profile.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var queuedBeforeUpgrade = await ReadJobSnapshotAsync(
+            root.Paths.DatabasePath,
+            imported.ImageItemId);
+        var queuedRemote = Assert.IsType<RemoteApiProfileSnapshot>(
+            queuedBeforeUpgrade.RemoteApiProfile);
+        Assert.Equal("picforlater.remote-analysis.v2", queuedRemote.PromptVersion);
+        Assert.Equal(1, await ReadAnalysisJobCountAsync(root.Paths.DatabasePath));
+
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(remoteProfiles);
+
+        var queuedAfterUpgrade = await ReadJobSnapshotAsync(
+            root.Paths.DatabasePath,
+            imported.ImageItemId);
+        Assert.Equal(
+            "picforlater.remote-analysis.v2",
+            Assert.IsType<RemoteApiProfileSnapshot>(queuedAfterUpgrade.RemoteApiProfile)
+                .PromptVersion);
+        Assert.Equal(1, await ReadAnalysisJobCountAsync(root.Paths.DatabasePath));
+        var execution = await remoteProfiles.GetExecutionStateAsync();
+        Assert.Equal(AnalysisExecutionBackend.Local, execution.Settings.Backend);
+        Assert.Equal(profile.ProfileId, execution.Settings.RemoteApiProfileId);
+        var authorizer = new RemoteApiRequestAuthorizer(remoteProfiles);
+        var notVerified = await Assert.ThrowsAsync<RemoteAnalysisProviderException>(() =>
+            authorizer.EnsureAuthorizedAsync(queuedRemote, RemoteInputMode.LocalOcrText));
+        Assert.Equal("remote.profile-not-verified", notVerified.ErrorCode);
+
+        var upgraded = await remoteProfiles.GetProfileAsync(profile.ProfileId);
+        Assert.NotNull(upgraded);
+        Assert.Equal("picforlater.remote-analysis.v3", upgraded.PromptVersion);
+        var reverifiedAt = verifiedAt.AddMinutes(1);
+        await remoteProfiles.SaveProfileAsync(upgraded with
+        {
+            ValidationState = RemoteApiProfileValidationState.Valid,
+            LastVerifiedAtUtc = reverifiedAt,
+            ConsentedInputMode = RemoteInputMode.LocalOcrText,
+            ConsentedDisclosureVersion = upgraded.DisclosureVersion,
+            ConsentGrantedAtUtc = reverifiedAt,
+        });
+        await remoteProfiles.SelectRemoteAsync(profile.ProfileId, RemoteInputMode.LocalOcrText);
+
+        var stale = await Assert.ThrowsAsync<RemoteAnalysisProviderException>(() =>
+            authorizer.EnsureAuthorizedAsync(queuedRemote, RemoteInputMode.LocalOcrText));
+        Assert.Equal("remote.profile-snapshot-stale", stale.ErrorCode);
+        var newSnapshot = await combined.GetCurrentSnapshotAsync();
+        Assert.Equal(
+            "picforlater.remote-analysis.v3",
+            Assert.IsType<RemoteApiProfileSnapshot>(newSnapshot.RemoteApiProfile).PromptVersion);
     }
 
     [Fact]
@@ -587,6 +684,14 @@ public sealed class RemoteAnalysisProfileTests
                 json,
                 new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new InvalidDataException("The saved job snapshot is empty.");
+    }
+
+    private static async Task<long> ReadAnalysisJobCountAsync(string databasePath)
+    {
+        await using var connection = await OpenAsync(databasePath);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM AnalysisJobs;";
+        return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 
     private static async Task ExecuteAsync(
