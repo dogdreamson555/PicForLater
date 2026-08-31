@@ -53,13 +53,14 @@ public sealed class RemoteAnalysisProfileTests
         var upgraded = await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
 
         Assert.Equal(7, upgraded.PreviousVersion);
-        Assert.Equal(14, upgraded.CurrentVersion);
+        Assert.Equal(15, upgraded.CurrentVersion);
         Assert.NotNull(upgraded.BackupFilePath);
         using var remoteProfiles = new SqliteRemoteApiProfileService(root.Paths);
         var execution = await remoteProfiles.GetExecutionStateAsync();
         Assert.Equal(AnalysisExecutionBackend.Local, execution.Settings.Backend);
         Assert.Null(execution.Settings.RemoteInputMode);
         Assert.Null(execution.Settings.RemoteApiProfileId);
+        Assert.Equal(AnalysisOutputLanguage.ModelDefault, execution.Settings.OutputLanguage);
         Assert.Null(execution.Profile);
 
         var lease = (await new SqliteAnalysisJobStore(root.Paths).TryLeaseNextAsync(
@@ -71,6 +72,122 @@ public sealed class RemoteAnalysisProfileTests
         Assert.Equal(AnalysisExecutionBackend.Local, lease.ProfileSnapshot.ExecutionBackend);
         Assert.Null(lease.ProfileSnapshot.RemoteInputMode);
         Assert.Null(lease.ProfileSnapshot.RemoteApiProfile);
+    }
+
+    [Fact]
+    public async Task OutputLanguage_PersistsAllValuesAndRevisesOnlyOnChange()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+
+        var state = await profiles.GetExecutionStateAsync();
+        Assert.Equal(AnalysisOutputLanguage.ModelDefault, state.Settings.OutputLanguage);
+        var expectedRevision = state.Settings.Revision;
+
+        await profiles.SetOutputLanguageAsync(AnalysisOutputLanguage.ModelDefault);
+        Assert.Equal(
+            expectedRevision,
+            (await profiles.GetExecutionStateAsync()).Settings.Revision);
+
+        AnalysisOutputLanguage[] values =
+        [
+            AnalysisOutputLanguage.SimplifiedChinese,
+            AnalysisOutputLanguage.TraditionalChineseTaiwan,
+            AnalysisOutputLanguage.English,
+            AnalysisOutputLanguage.ModelDefault,
+        ];
+        foreach (var value in values)
+        {
+            await profiles.SetOutputLanguageAsync(value);
+            expectedRevision++;
+            state = await profiles.GetExecutionStateAsync();
+            Assert.Equal(value, state.Settings.OutputLanguage);
+            Assert.Equal(expectedRevision, state.Settings.Revision);
+            Assert.Equal(AnalysisExecutionBackend.Local, state.Settings.Backend);
+        }
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            profiles.SetOutputLanguageAsync((AnalysisOutputLanguage)4));
+        state = await profiles.GetExecutionStateAsync();
+        Assert.Equal(AnalysisOutputLanguage.ModelDefault, state.Settings.OutputLanguage);
+        Assert.Equal(expectedRevision, state.Settings.Revision);
+    }
+
+    [Theory]
+    [InlineData(RemoteInputMode.LocalOcrText)]
+    [InlineData(RemoteInputMode.DirectImage)]
+    public async Task RemoteJobs_PinOutputLanguageWhileLocalSnapshotsKeepTheirShape(
+        RemoteInputMode inputMode)
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var localProfiles = new SqliteModelPackageService(root.Paths, new NeverUsedModelValidator());
+        using var remoteProfiles = new SqliteRemoteApiProfileService(root.Paths);
+        var saved = await remoteProfiles.SaveProfileAsync(CreateValidProfile() with
+        {
+            ConsentedInputMode = inputMode,
+        });
+        await remoteProfiles.SetOutputLanguageAsync(
+            AnalysisOutputLanguage.TraditionalChineseTaiwan);
+        await remoteProfiles.SelectRemoteAsync(saved.ProfileId, inputMode);
+        var combined = new CombinedAnalysisProfileSnapshotProvider(localProfiles, remoteProfiles);
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(
+            root.Paths,
+            storage,
+            new FakeImageProcessor(),
+            analysisProfileSnapshotProvider: combined);
+
+        var imported = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            $"remote-{inputMode}.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var queuedSnapshot = await ReadJobSnapshotAsync(
+            root.Paths.DatabasePath,
+            imported.ImageItemId);
+        var queuedRemote = Assert.IsType<RemoteApiProfileSnapshot>(
+            queuedSnapshot.RemoteApiProfile);
+        Assert.Equal(AnalysisOutputLanguage.TraditionalChineseTaiwan, queuedRemote.OutputLanguage);
+
+        await remoteProfiles.SetOutputLanguageAsync(AnalysisOutputLanguage.English);
+        var currentSnapshot = await combined.GetCurrentSnapshotAsync();
+        Assert.Equal(
+            AnalysisOutputLanguage.English,
+            Assert.IsType<RemoteApiProfileSnapshot>(currentSnapshot.RemoteApiProfile).OutputLanguage);
+        Assert.Equal(
+            AnalysisOutputLanguage.TraditionalChineseTaiwan,
+            Assert.IsType<RemoteApiProfileSnapshot>(
+                (await ReadJobSnapshotAsync(root.Paths.DatabasePath, imported.ImageItemId))
+                    .RemoteApiProfile)
+                .OutputLanguage);
+
+        var authorizer = new RemoteApiRequestAuthorizer(remoteProfiles);
+        await authorizer.EnsureAuthorizedAsync(queuedRemote, inputMode);
+
+        var oldSnapshotJson = JsonSerializer.Serialize(
+            queuedSnapshot,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using var oldSnapshotDocument = JsonDocument.Parse(oldSnapshotJson);
+        var oldRemoteJson = oldSnapshotDocument.RootElement
+            .GetProperty("remoteApiProfile")
+            .EnumerateObject()
+            .Where(property => property.Name != "outputLanguage")
+            .Select(property => $"\"{property.Name}\":{property.Value.GetRawText()}");
+        var deserializedOldRemote = JsonSerializer.Deserialize<RemoteApiProfileSnapshot>(
+            "{" + string.Join(',', oldRemoteJson) + "}",
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(deserializedOldRemote);
+        Assert.Equal(AnalysisOutputLanguage.ModelDefault, deserializedOldRemote.OutputLanguage);
+
+        await remoteProfiles.SelectLocalAsync();
+        var localSnapshot = await combined.GetCurrentSnapshotAsync();
+        Assert.Null(localSnapshot.RemoteApiProfile);
+        var localJson = JsonSerializer.Serialize(
+            localSnapshot,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.DoesNotContain("outputLanguage", localJson, StringComparison.Ordinal);
     }
 
     [Fact]
