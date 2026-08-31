@@ -160,6 +160,11 @@ public sealed class RemoteApiProviderCatalogTests
             CancellationToken cancellationToken = default) =>
             inner.DeleteProfileAsync(profileId, cancellationToken);
 
+        public Task SetOutputLanguageAsync(
+            AnalysisOutputLanguage outputLanguage,
+            CancellationToken cancellationToken = default) =>
+            inner.SetOutputLanguageAsync(outputLanguage, cancellationToken);
+
         public Task SelectLocalAsync(CancellationToken cancellationToken = default) =>
             inner.SelectLocalAsync(cancellationToken);
 
