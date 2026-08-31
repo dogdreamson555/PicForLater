@@ -601,5 +601,13 @@ internal static class SqliteSchema
                 ON ImportJobs(State, LeaseExpiresAtUtc, CreatedAtUtc);
             """,
             requiresForeignKeysDisabled: true),
+        new SqliteMigration(
+            15,
+            "remote-analysis-output-language",
+            """
+            ALTER TABLE AnalysisSettings
+                ADD COLUMN OutputLanguage INTEGER NOT NULL DEFAULT 0
+                CHECK (OutputLanguage IN (0, 1, 2, 3));
+            """),
     ];
 }
