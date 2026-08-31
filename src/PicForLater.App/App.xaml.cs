@@ -1,8 +1,10 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 using CommunityToolkit.WinUI.Notifications;
 using Microsoft.UI.Xaml;
 using PicForLater.Analysis;
 using PicForLater.Analysis.PpOcr;
+using PicForLater.App.Models;
 using PicForLater.App.Services;
 using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
@@ -33,6 +35,7 @@ public partial class App : Application
     private static HttpClient? _modelDownloadHttpClient;
     private static HttpClient? _componentDownloadHttpClient;
     private static HttpClient? _remoteAnalysisHttpClient;
+    private static HttpClient? _updateCheckHttpClient;
     private static Task? _localSendStartupTask;
 #if PICFORLATER_UI_TESTING
     private static UiTestLocalInferenceRuntime? _uiTestInferenceRuntime;
@@ -103,6 +106,10 @@ public partial class App : Application
 
     public static IAnalysisReanalysisService? Reanalysis { get; private set; }
 
+    public static AppReleaseVersion CurrentVersion { get; private set; }
+
+    public static IUpdateCheckService UpdateCheck { get; private set; } = null!;
+
     public static LocalInferenceComponentLocator? LocalInferenceComponents { get; private set; }
 
     public static LocalInferenceComponentInstaller? LocalInferenceComponentInstaller { get; private set; }
@@ -160,6 +167,36 @@ public partial class App : Application
         RegisterToastNotifications();
 #endif
         InitializeComponent();
+        CurrentVersion = ReadCurrentVersion();
+        _updateCheckHttpClient = new HttpClient(new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false,
+        })
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+#if PICFORLATER_UI_TESTING
+        UpdateCheck = new UiTestUpdateCheckService(CurrentVersion);
+#else
+        UpdateCheck = new GitHubUpdateCheckService(
+            _updateCheckHttpClient,
+            CurrentVersion);
+#endif
+    }
+
+    private static AppReleaseVersion ReadCurrentVersion()
+    {
+        var informationalVersion = typeof(App).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        if (!AppReleaseVersion.TryParseLocal(informationalVersion, out var version))
+        {
+            throw new InvalidOperationException(
+                "The PicForLater App informational version must use M.m.p with optional build metadata.");
+        }
+
+        return version;
     }
 
     private static IInferenceAccelerationPreferenceService CreateInferenceAccelerationPreference()
@@ -548,6 +585,7 @@ public partial class App : Application
         _remoteAnalysisHttpClient?.Dispose();
         _modelDownloadHttpClient?.Dispose();
         _componentDownloadHttpClient?.Dispose();
+        _updateCheckHttpClient?.Dispose();
 #if PICFORLATER_UI_TESTING
         _uiTestInferenceRuntime?.Dispose();
 #else
