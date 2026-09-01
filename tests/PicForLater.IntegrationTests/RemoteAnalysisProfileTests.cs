@@ -285,6 +285,20 @@ public sealed class RemoteAnalysisProfileTests
         Assert.Equal(
             "picforlater.remote-analysis.v3",
             Assert.IsType<RemoteApiProfileSnapshot>(newSnapshot.RemoteApiProfile).PromptVersion);
+
+        var importedAfterUpgrade = await importer.ImportAsync(
+            new MemoryStream([.. TinyPng, 0], writable: false),
+            "queued-v3-profile.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var queuedV3Snapshot = await ReadJobSnapshotAsync(
+            root.Paths.DatabasePath,
+            importedAfterUpgrade.ImageItemId);
+        Assert.Equal(
+            "picforlater.remote-analysis.v3",
+            Assert.IsType<RemoteApiProfileSnapshot>(queuedV3Snapshot.RemoteApiProfile)
+                .PromptVersion);
+        Assert.Equal(2, await ReadAnalysisJobCountAsync(root.Paths.DatabasePath));
     }
 
     [Fact]
