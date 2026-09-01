@@ -20,6 +20,10 @@ public interface IRemoteApiProfileService
         string profileId,
         CancellationToken cancellationToken = default);
 
+    Task SetOutputLanguageAsync(
+        AnalysisOutputLanguage outputLanguage,
+        CancellationToken cancellationToken = default);
+
     Task SelectLocalAsync(CancellationToken cancellationToken = default);
 
     Task SelectRemoteAsync(

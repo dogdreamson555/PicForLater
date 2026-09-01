@@ -105,7 +105,7 @@ public sealed partial class SettingsHomePage : Page
             var outcome = await ViewModel.SelectAnalysisSourceAsync(selectedIndex);
             if (outcome == AnalysisSourceSelectionOutcome.RequiresApiConfiguration)
             {
-                SettingsPage.RequestNavigation(typeof(ApiAnalysisSettingsPage));
+                await ViewModel.InitializeAsync();
             }
         }
         catch

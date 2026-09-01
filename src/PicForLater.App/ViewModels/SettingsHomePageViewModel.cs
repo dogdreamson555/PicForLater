@@ -118,13 +118,21 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
+    [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
     public partial bool IsWorking { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
+    [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
     public partial bool IsInitialized { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
+    public partial bool HasSelectableApiAnalysis { get; set; }
+
     public bool CanChangeAnalysisSource => IsInitialized && !IsWorking;
+
+    public bool CanSelectApiAnalysis => CanChangeAnalysisSource && HasSelectableApiAnalysis;
 
     public string CurrentAppVersion { get; }
 
@@ -309,6 +317,9 @@ public partial class SettingsHomePageViewModel : ObservableObject
                 eligibleProfiles.Count > 0
                     ? "ApiConfigurationReadyStatus"
                     : "ApiConfigurationMissingStatus");
+            HasSelectableApiAnalysis =
+                state.Settings.Backend == AnalysisExecutionBackend.RemoteApi
+                || ResolveEligibleSelection(state, eligibleProfiles) is not null;
             ApplyExecutionState(state);
             IsInitialized = true;
         }
@@ -626,31 +637,17 @@ public partial class SettingsHomePageViewModel : ObservableObject
                     ? "ApiConfigurationReadyStatus"
                     : "ApiConfigurationMissingStatus");
 
-            if (state.Settings.RemoteApiProfileId is { Length: > 0 } rememberedProfileId
-                && state.Settings.RemoteInputMode is { } rememberedMode)
+            var selection = ResolveEligibleSelection(state, eligibleProfiles);
+            if (selection is null)
             {
-                var rememberedSelection = eligibleProfiles.FirstOrDefault(selection =>
-                    selection.Profile.ProfileId == rememberedProfileId
-                    && selection.Mode == rememberedMode);
-                if (rememberedSelection.Profile is { } rememberedProfile)
-                {
-                    await profiles.SelectRemoteAsync(
-                            rememberedProfile.ProfileId,
-                            rememberedSelection.Mode)
-                        .ConfigureAwait(true);
-                    ApplyExecutionState(await profiles.GetExecutionStateAsync().ConfigureAwait(true));
-                    return AnalysisSourceSelectionOutcome.Applied;
-                }
-            }
-
-            if (eligibleProfiles.Count != 1)
-            {
+                HasSelectableApiAnalysis = false;
                 ApplyExecutionState(state);
                 return AnalysisSourceSelectionOutcome.RequiresApiConfiguration;
             }
 
-            var selection = eligibleProfiles[0];
-            await profiles.SelectRemoteAsync(selection.Profile.ProfileId, selection.Mode)
+            await profiles.SelectRemoteAsync(
+                    selection.Value.Profile.ProfileId,
+                    selection.Value.Mode)
                 .ConfigureAwait(true);
             ApplyExecutionState(await profiles.GetExecutionStateAsync().ConfigureAwait(true));
             return AnalysisSourceSelectionOutcome.Applied;
@@ -686,6 +683,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     private void ApplyUnavailableState()
     {
+        HasSelectableApiAnalysis = false;
         ApiConfigurationStatus = Resources.GetString("ApiConfigurationUnavailableStatus");
         CurrentExecutionTarget = Resources.GetString("ExecutionTargetUnavailable");
         CurrentExecutionDetail = Resources.GetString("ExecutionTargetUnavailableDetail");
@@ -714,6 +712,26 @@ public partial class SettingsHomePageViewModel : ObservableObject
         }
 
         return eligibleProfiles;
+    }
+
+    private static (RemoteApiProfile Profile, RemoteInputMode Mode)? ResolveEligibleSelection(
+        RemoteAnalysisExecutionState state,
+        IReadOnlyList<(RemoteApiProfile Profile, RemoteInputMode Mode)> eligibleProfiles)
+    {
+        if (state.Settings.RemoteApiProfileId is { Length: > 0 } rememberedProfileId
+            && state.Settings.RemoteInputMode is { } rememberedMode)
+        {
+            foreach (var selection in eligibleProfiles)
+            {
+                if (selection.Profile.ProfileId == rememberedProfileId
+                    && selection.Mode == rememberedMode)
+                {
+                    return selection;
+                }
+            }
+        }
+
+        return eligibleProfiles.Count == 1 ? eligibleProfiles[0] : null;
     }
 
     private static bool TryGetEligibleMode(RemoteApiProfile profile, out RemoteInputMode mode)

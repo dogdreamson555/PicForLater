@@ -40,7 +40,7 @@ public sealed record RemoteApiProviderPreset(
 public static class RemoteApiProviderCatalog
 {
     private const string UserEndpointSuffix = ".user-endpoint";
-    private const string PromptVersion = "picforlater.remote-analysis.v2";
+    private const string PromptVersion = "picforlater.remote-analysis.v3";
     private const string GenericRetentionResource = "GenericApiRetentionStatement";
     private const string GenericRetention =
         "Retention and training treatment depends on the provider, plan, region, and current account controls. Review the linked provider policies before consenting.";
@@ -200,7 +200,11 @@ public static class RemoteApiProviderCatalog
     {
         if (preset.IsCustom && existing is not null)
         {
-            return existing;
+            return existing with
+            {
+                PromptVersion = PromptVersion,
+                OutputSchemaVersion = QwenStructuredOutputParser.SchemaVersion,
+            };
         }
 
         var hasUserEndpointOverride = existing is not null

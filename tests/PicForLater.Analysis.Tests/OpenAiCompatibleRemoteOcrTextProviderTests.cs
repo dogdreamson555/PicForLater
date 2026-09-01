@@ -45,7 +45,9 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
             credentials,
             AllowAllRequestAuthorizer.Instance);
         var imageOpenCount = 0;
-        var request = CreateRequest(() => imageOpenCount++);
+        var request = CreateRequest(
+            () => imageOpenCount++,
+            outputLanguage: AnalysisOutputLanguage.English);
 
         var result = await provider.AnalyzeAsync(request);
 
@@ -56,6 +58,27 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
         Assert.Equal(32, idempotencyKey.Length);
         Assert.NotNull(requestBody);
         using var payload = JsonDocument.Parse(requestBody);
+        var systemPrompt = payload.RootElement
+            .GetProperty("messages")[0]
+            .GetProperty("content")
+            .GetString();
+        Assert.NotNull(systemPrompt);
+        Assert.Contains(
+            "Write the generated title, summary, and visualFacts in English (en).",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.Contains("detectedLanguages", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].rawText", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].evidence", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains(
+            "picforlater.remote-analysis.v3",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Preserve the content language", requestBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Expected output language: same as content.",
+            requestBody,
+            StringComparison.Ordinal);
         var userPrompt = payload.RootElement
             .GetProperty("messages")[1]
             .GetProperty("content")
@@ -82,6 +105,53 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
         Assert.Equal(AnalysisExecutionLocation.RemoteApi, result.Provenance.ExecutionLocation);
         Assert.Equal(RemoteInputMode.LocalOcrText, result.Provenance.RemoteInputMode);
         Assert.Equal(AnalysisOutputKind.ModelGeneratedDraft, result.Provenance.OutputKind);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_EnglishOcrRequestsSimplifiedChineseAndPreservesSourceEvidence()
+    {
+        string? requestBody = null;
+        using var httpClient = new HttpClient(new DelegateHandler(async request =>
+        {
+            requestBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(CreateStructuredOutput(
+                "项目评审",
+                "项目评审将于8月18日14:30在A会议室举行。",
+                [
+                    new
+                    {
+                        kind = "datetime",
+                        rawText = "2026-08-18 14:30",
+                        normalizedValue = (string?)null,
+                        evidence = "Project review: 2026-08-18 14:30, Room A.",
+                    },
+                ],
+                ["en"]));
+        }));
+        var provider = new OpenAiCompatibleRemoteOcrTextProvider(
+            httpClient,
+            new FakeCredentialService(Credential),
+            AllowAllRequestAuthorizer.Instance);
+        var request = CreateRequest(
+            ocrText: "Project review: 2026-08-18 14:30, Room A.",
+            outputLanguage: AnalysisOutputLanguage.SimplifiedChinese,
+            languageTags: ["en"]);
+
+        var result = await provider.AnalyzeAsync(request);
+
+        Assert.NotNull(requestBody);
+        Assert.Contains(
+            "Write the generated title, summary, and visualFacts in Simplified Chinese (zh-Hans).",
+            requestBody,
+            StringComparison.Ordinal);
+        Assert.Contains(request.OcrDocument.Text, requestBody, StringComparison.Ordinal);
+        Assert.Contains("OCR language tags: en", requestBody, StringComparison.Ordinal);
+        Assert.Equal("项目评审", result.Draft.Title);
+        var entity = Assert.Single(result.Draft.EntityCandidates);
+        Assert.Equal("2026-08-18 14:30", entity.RawText);
+        Assert.Equal("Project review: 2026-08-18 14:30, Room A.", entity.Evidence);
+        Assert.Equal(["en"], result.LanguageTags);
+        Assert.Empty(result.VisualFacts);
     }
 
     [Fact]
@@ -255,7 +325,9 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
     private static VisionAnalysisRequest CreateRequest(
         Action? onImageOpen = null,
         string? ocrText = null,
-        int maximumTextCharacters = 10_000)
+        int maximumTextCharacters = 10_000,
+        AnalysisOutputLanguage outputLanguage = AnalysisOutputLanguage.ModelDefault,
+        IReadOnlyList<string>? languageTags = null)
     {
         var box = new OcrBoundingBox(1, 2, 30, 10);
         var document = new OcrDocument(
@@ -267,7 +339,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
                     [new OcrWord("7月20日", box, 0.99)],
                     0.99),
             ],
-            ["zh-Hans"],
+            languageTags ?? ["zh-Hans"],
             [],
             new AnalysisProvenance(
                 "test.local-ocr",
@@ -292,7 +364,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
                 EndpointId = "openai-compatible.chat-completions.v1",
                 BaseUri = new Uri("https://api.example.test/v1/chat/completions"),
                 ModelId = "remote-model",
-                PromptVersion = "remote-ocr-text.prompt.v1",
+                PromptVersion = "picforlater.remote-analysis.v3",
                 OutputSchemaVersion = QwenStructuredOutputParser.SchemaVersion,
                 MaxTextChars = maximumTextCharacters,
                 MaxImageBytes = 8 * 1024 * 1024,
@@ -300,6 +372,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
                 TimeoutSeconds = 30,
                 CredentialReference = "credential-ref",
                 ConsentVersion = "disclosure.v1",
+                OutputLanguage = outputLanguage,
             },
         };
         return new VisionAnalysisRequest(
@@ -351,7 +424,8 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
     private static string CreateStructuredOutput(
         string title,
         string summary,
-        IReadOnlyList<object> entities) =>
+        IReadOnlyList<object> entities,
+        IReadOnlyList<string>? detectedLanguages = null) =>
         JsonSerializer.Serialize(new
         {
             schemaVersion = QwenStructuredOutputParser.SchemaVersion,
@@ -360,7 +434,7 @@ public sealed class OpenAiCompatibleRemoteOcrTextProviderTests
             visualFacts = Array.Empty<string>(),
             categoryIds = Array.Empty<string>(),
             entities,
-            detectedLanguages = new[] { "zh-Hans" },
+            detectedLanguages = detectedLanguages ?? ["zh-Hans"],
             warnings = Array.Empty<string>(),
         });
 

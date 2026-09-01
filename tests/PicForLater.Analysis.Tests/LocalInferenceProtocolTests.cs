@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text.Json;
+using PicForLater.Core.Analysis;
 using PicForLater.LocalInference.Protocol;
 
 namespace PicForLater.Analysis.Tests;
@@ -81,6 +82,42 @@ public sealed class LocalInferenceProtocolTests
         Assert.Equal("local-worker.protocol-invalid-payload", exception.ErrorCode);
     }
 
+    [Fact]
+    public void Local_vision_requests_do_not_serialize_remote_output_language()
+    {
+        var profile = ModelProfileSnapshot.Default with
+        {
+            ExecutionBackend = AnalysisExecutionBackend.Local,
+            RemoteInputMode = null,
+            RemoteApiProfile = null,
+        };
+        var availabilityPayload = LocalInferenceProtocol.ToPayload(
+            new LocalInferenceVisionAvailabilityRequest(
+                profile,
+                InferenceAccelerationMode.Cpu));
+        var provenance = new AnalysisProvenance(
+            "test.local-ocr",
+            ModelId: null,
+            ModelVersion: null,
+            new Dictionary<string, string>(),
+            "test.local-ocr.v1",
+            AnalysisExecutionLocation.Local,
+            AnalysisOutputKind.OcrFacts);
+        var analysisPayload = LocalInferenceProtocol.ToPayload(
+            new LocalInferenceAnalyzeVisionRequest(
+                new LocalInferenceImageReference("images/test.png", "test-hash"),
+                "test.png",
+                new OcrDocument("", [], [], [], provenance, 1, 1),
+                new AnalysisCompositionContext([]),
+                profile,
+                DateTimeOffset.UnixEpoch,
+                TimeZoneInfo.Utc.Id,
+                InferenceAccelerationMode.Cpu));
+
+        AssertLocalProfileShape(availabilityPayload);
+        AssertLocalProfileShape(analysisPayload);
+    }
+
     [Theory]
     [InlineData(1, 1, 1)]
     [InlineData(1, 2, 1)]
@@ -107,5 +144,17 @@ public sealed class LocalInferenceProtocolTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             LocalInferenceProtocol.NegotiateVersion(2, 1));
+    }
+
+    private static void AssertLocalProfileShape(JsonElement payload)
+    {
+        var profile = payload.GetProperty("profileSnapshot");
+        Assert.Equal("local", profile.GetProperty("executionBackend").GetString());
+        Assert.Equal(JsonValueKind.Null, profile.GetProperty("remoteInputMode").ValueKind);
+        Assert.Equal(JsonValueKind.Null, profile.GetProperty("remoteApiProfile").ValueKind);
+        Assert.DoesNotContain(
+            "outputLanguage",
+            payload.GetRawText(),
+            StringComparison.Ordinal);
     }
 }

@@ -313,7 +313,7 @@
                                     Checked="AnalysisSourceRadioButton_Checked"
                                     GroupName="AnalysisSource"
                                     IsChecked="{x:Bind local:SettingsHomePage.IsSelected(ViewModel.SelectedAnalysisSourceIndex, 1), Mode=OneWay}"
-                                    IsEnabled="{x:Bind ViewModel.CanChangeAnalysisSource, Mode=OneWay}"
+                                    IsEnabled="{x:Bind ViewModel.CanSelectApiAnalysis, Mode=OneWay}"
                                     Tag="1">
                                     <StackPanel
                                         VerticalAlignment="Center"

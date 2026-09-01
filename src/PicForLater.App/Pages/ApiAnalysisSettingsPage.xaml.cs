@@ -106,6 +106,11 @@ public sealed partial class ApiAnalysisSettingsPage : Page
         ApplySettingsRowLayout(ApiCategoryRow, ApiCategoryControlColumn, ApiCategoryComboBox, useMultipleColumns);
         ApplySettingsRowLayout(ApiProviderRow, ApiProviderControlColumn, ApiProviderComboBox, useMultipleColumns);
         ApplySettingsRowLayout(ApiModelRow, ApiModelControlColumn, ApiModelIdTextBox, useMultipleColumns);
+        ApplySettingsRowLayout(
+            ApiOutputLanguageRow,
+            ApiOutputLanguageControlColumn,
+            ApiOutputLanguageComboBox,
+            useMultipleColumns);
         ApplySettingsRowLayout(ApiEndpointRow, ApiEndpointControlColumn, ApiEndpointTextBox, useMultipleColumns);
         ApplySettingsRowLayout(ApiReasoningRow, ApiReasoningControlColumn, ApiReasoningModeComboBox, useMultipleColumns);
         ApplySettingsRowLayout(ApiMaxOutputTokensRow, ApiMaxOutputTokensControlColumn, ApiMaxOutputTokensNumberBox, useMultipleColumns);
@@ -203,6 +208,34 @@ public sealed partial class ApiAnalysisSettingsPage : Page
             {
                 _synchronizing = false;
             }
+        }
+    }
+
+    private async void ApiOutputLanguageComboBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs e)
+    {
+        var selectedIndex = ApiOutputLanguageComboBox.SelectedIndex;
+        if (selectedIndex is < 0 or > 3
+            || selectedIndex == ViewModel.SelectedOutputLanguageIndex)
+        {
+            return;
+        }
+
+        if (_synchronizing || !ViewModel.IsInitialized)
+        {
+            ApiOutputLanguageComboBox.SelectedIndex =
+                ViewModel.SelectedOutputLanguageIndex;
+            return;
+        }
+
+        try
+        {
+            await ViewModel.SetOutputLanguageIndexAsync(selectedIndex);
+        }
+        catch
+        {
+            ViewModel.ShowOperationFailure();
         }
     }
 
