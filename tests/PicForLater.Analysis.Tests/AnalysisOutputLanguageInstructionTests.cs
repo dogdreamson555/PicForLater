@@ -38,6 +38,8 @@ public sealed class AnalysisOutputLanguageInstructionTests
         Assert.Contains("times", instruction, StringComparison.Ordinal);
         Assert.Contains("model", instruction, StringComparison.Ordinal);
         Assert.Contains("numbers", instruction, StringComparison.Ordinal);
+        Assert.DoesNotContain("same as content", instruction, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Preserve the content language", instruction, StringComparison.Ordinal);
     }
 
     [Fact]
