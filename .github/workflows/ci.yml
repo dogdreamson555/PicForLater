@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build-and-test:
-    name: Release build and tests
+    name: CI / Build and tests
     runs-on: windows-2025
     timeout-minutes: 45
     env:
