@@ -316,6 +316,7 @@ public sealed class AnalysisWorkflowTests
                 TimeoutSeconds = 30,
                 CredentialReference = "credential-ref",
                 ConsentVersion = "consent.v1",
+                OutputLanguage = AnalysisOutputLanguage.SimplifiedChinese,
             },
         };
         using var importer = new ImageImportService(
@@ -885,6 +886,7 @@ public sealed class AnalysisWorkflowTests
                 TimeoutSeconds = 30,
                 CredentialReference = "credential-ref",
                 ConsentVersion = "consent.v1",
+                OutputLanguage = AnalysisOutputLanguage.TraditionalChineseTaiwan,
             },
         };
 
@@ -1169,6 +1171,9 @@ public sealed class AnalysisWorkflowTests
             CallCount++;
             Assert.Equal(AnalysisMode.OcrOnly, request.ProfileSnapshot.AnalysisMode);
             Assert.Equal(
+                AnalysisOutputLanguage.SimplifiedChinese,
+                request.ProfileSnapshot.RemoteApiProfile?.OutputLanguage);
+            Assert.Equal(
                 "项目评审会议\n7月20日 14:30 会议室A",
                 request.OcrDocument.Text);
             var draft = new ExtractiveContentDraft(
@@ -1237,6 +1242,9 @@ public sealed class AnalysisWorkflowTests
             CancellationToken cancellationToken = default)
         {
             CallCount++;
+            Assert.Equal(
+                AnalysisOutputLanguage.TraditionalChineseTaiwan,
+                request.ProfileSnapshot.RemoteApiProfile?.OutputLanguage);
             Assert.Equal(
                 AnalysisStageOutcome.SkippedByRemoteDirectImage,
                 request.OcrDocument.Provenance.StageOutcome);
