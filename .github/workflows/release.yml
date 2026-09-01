@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Release build and tests
+    name: Release / Build and tests
     runs-on: windows-2025
     timeout-minutes: 45
     outputs:
