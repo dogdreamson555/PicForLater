@@ -16,6 +16,8 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     private readonly Func<IRemoteApiCredentialService?> _credentialServiceAccessor;
     private readonly Func<IRemoteApiConnectionTester?> _connectionTesterAccessor;
     private RemoteApiProfile? _profile;
+    private string? _activeRemoteProfileId;
+    private RemoteInputMode? _activeRemoteInputMode;
     private readonly List<RemoteApiProviderOption> _allProviderOptions = [];
     private readonly SemaphoreSlim _outputLanguageSaveGate = new(1, 1);
     private (string ProfileId, string ModelId, RemoteInputMode InputMode)? _lastSuccessfulTest;
@@ -230,6 +232,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(SelectedInputMode));
         OnPropertyChanged(nameof(CanEnableRemote));
+        ApplyCurrentExecutionSelectionState();
         ApplyConsentState();
     }
 
@@ -983,8 +986,13 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     {
         var state = await GetProfileService().GetExecutionStateAsync().ConfigureAwait(true);
         IsRemoteSelected = state.Settings.Backend == AnalysisExecutionBackend.RemoteApi;
-        IsCurrentProfileSelected = IsRemoteSelected
-            && state.Profile?.ProfileId == _profile?.ProfileId;
+        _activeRemoteProfileId = IsRemoteSelected
+            ? state.Settings.RemoteApiProfileId
+            : null;
+        _activeRemoteInputMode = IsRemoteSelected
+            ? state.Settings.RemoteInputMode
+            : null;
+        ApplyCurrentExecutionSelectionState();
         if (!IsRemoteSelected)
         {
             CurrentExecutionTarget = Resources.GetString("ExecutionTargetLocal");
@@ -1006,6 +1014,16 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         }
 
         ApplyValidationState();
+    }
+
+    private void ApplyCurrentExecutionSelectionState()
+    {
+        IsCurrentProfileSelected = IsRemoteSelected
+            && string.Equals(
+                _activeRemoteProfileId,
+                _profile?.ProfileId,
+                StringComparison.Ordinal)
+            && _activeRemoteInputMode == SelectedInputMode;
     }
 
     private void ApplyValidationState()
