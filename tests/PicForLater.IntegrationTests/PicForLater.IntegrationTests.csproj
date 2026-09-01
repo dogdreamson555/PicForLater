@@ -43,6 +43,18 @@
              Link="AppSource\RemoteApiProviderCatalog.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\StorageReadinessService.cs"
              Link="AppSource\StorageReadinessService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Models\ScreenshotCaptureModels.cs"
+             Link="AppSource\ScreenshotCaptureModels.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IScreenshotCaptureService.cs"
+             Link="AppSource\IScreenshotCaptureService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IScreenshotCapturePlatform.cs"
+             Link="AppSource\IScreenshotCapturePlatform.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IScreenshotCapturePreferenceService.cs"
+             Link="AppSource\IScreenshotCapturePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\ScreenshotCapturePreferenceService.cs"
+             Link="AppSource\ScreenshotCapturePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\ScreenshotCaptureService.cs"
+             Link="AppSource\ScreenshotCaptureService.cs" />
   </ItemGroup>
 
 </Project>
