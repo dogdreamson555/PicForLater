@@ -47,6 +47,7 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
                 settings.ExecutionBackend,
                 settings.RemoteInputMode,
                 settings.RemoteApiProfileId,
+                settings.OutputLanguage,
                 settings.ProfileRevision,
                 settings.UpdatedAtUtc,
                 {ProfileColumns("profile")}
@@ -65,9 +66,10 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
             (AnalysisExecutionBackend)reader.GetInt32(0),
             reader.IsDBNull(1) ? null : (RemoteInputMode)reader.GetInt32(1),
             reader.IsDBNull(2) ? null : reader.GetString(2),
-            reader.GetInt64(3),
-            ParseDate(reader.GetString(4)));
-        var profile = reader.IsDBNull(5) ? null : ReadProfile(reader, 5);
+            (AnalysisOutputLanguage)reader.GetInt32(3),
+            reader.GetInt64(4),
+            ParseDate(reader.GetString(5)));
+        var profile = reader.IsDBNull(6) ? null : ReadProfile(reader, 6);
         return new RemoteAnalysisExecutionState(settings, profile);
     }
 
@@ -266,6 +268,63 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
                 "DELETE FROM RemoteApiProfiles WHERE ProfileId = @profileId;",
                 cancellationToken,
                 ("@profileId", profileId)).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _mutationGate.Release();
+        }
+    }
+
+    public async Task SetOutputLanguageAsync(
+        AnalysisOutputLanguage outputLanguage,
+        CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!Enum.IsDefined(outputLanguage))
+        {
+            throw new ArgumentOutOfRangeException(nameof(outputLanguage));
+        }
+
+        await _mutationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var transaction = connection.BeginTransaction(deferred: false);
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText =
+                """
+                SELECT OutputLanguage
+                FROM AnalysisSettings WHERE Id = 1;
+                """;
+            var current = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            if (current is null)
+            {
+                throw new InvalidDataException("The analysis settings row is missing.");
+            }
+
+            if ((AnalysisOutputLanguage)Convert.ToInt32(current, CultureInfo.InvariantCulture)
+                == outputLanguage)
+            {
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            var now = _timeProvider.GetUtcNow();
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                UPDATE AnalysisSettings
+                SET OutputLanguage = @outputLanguage,
+                    ProfileRevision = ProfileRevision + 1,
+                    UpdatedAtUtc = @updated
+                WHERE Id = 1;
+                """,
+                cancellationToken,
+                ("@outputLanguage", (int)outputLanguage),
+                ("@updated", ToDb(now))).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
         finally

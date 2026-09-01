@@ -118,6 +118,7 @@ public sealed class CombinedAnalysisProfileSnapshotProvider : IAnalysisProfileSn
                 DisableExternalSearch = profile.DisableExternalSearch,
                 ReasoningMode = profile.ReasoningMode,
                 ReasoningWireFormat = profile.ReasoningWireFormat,
+                OutputLanguage = remoteState.Settings.OutputLanguage,
             },
         };
     }

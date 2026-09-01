@@ -16,8 +16,14 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     private readonly Func<IRemoteApiCredentialService?> _credentialServiceAccessor;
     private readonly Func<IRemoteApiConnectionTester?> _connectionTesterAccessor;
     private RemoteApiProfile? _profile;
+    private string? _activeRemoteProfileId;
+    private RemoteInputMode? _activeRemoteInputMode;
     private readonly List<RemoteApiProviderOption> _allProviderOptions = [];
+    private readonly SemaphoreSlim _outputLanguageSaveGate = new(1, 1);
     private (string ProfileId, string ModelId, RemoteInputMode InputMode)? _lastSuccessfulTest;
+    private AnalysisOutputLanguage _persistedOutputLanguage =
+        AnalysisOutputLanguage.ModelDefault;
+    private int _outputLanguageSaveVersion;
     private bool _credentialExists;
     private bool _loadingAdvancedSettings;
 
@@ -130,6 +136,13 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     public partial int SelectedInputModeIndex { get; set; }
 
     [ObservableProperty]
+    public partial int SelectedOutputLanguageIndex { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanChangeOutputLanguage))]
+    public partial bool IsSavingOutputLanguage { get; set; }
+
+    [ObservableProperty]
     public partial string CurrentExecutionTarget { get; set; } = string.Empty;
 
     [ObservableProperty]
@@ -197,6 +210,8 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
 
     public bool CanRevokeConsent => !IsWorking && HasConsent;
 
+    public bool CanChangeOutputLanguage => IsInitialized && !IsSavingOutputLanguage;
+
     public bool CanEnableRemote =>
         CanTestConnection
         && !AdvancedSettingsDirty
@@ -217,6 +232,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(SelectedInputMode));
         OnPropertyChanged(nameof(CanEnableRemote));
+        ApplyCurrentExecutionSelectionState();
         ApplyConsentState();
     }
 
@@ -332,6 +348,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             PopulateCategories();
 
             var execution = await profileService.GetExecutionStateAsync().ConfigureAwait(true);
+            ApplyPersistedOutputLanguage(execution.Settings.OutputLanguage);
             var selectedProfileId = await ResolveInitialProfileIdAsync(
                     profileService,
                     execution)
@@ -347,10 +364,57 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             }
 
             IsInitialized = true;
+            OnPropertyChanged(nameof(CanChangeOutputLanguage));
         }
         finally
         {
             IsWorking = false;
+        }
+    }
+
+    public async Task SetOutputLanguageIndexAsync(int selectedIndex)
+    {
+        var requestedLanguage = OutputLanguageFromIndex(selectedIndex);
+        var saveVersion = Interlocked.Increment(ref _outputLanguageSaveVersion);
+        SelectedOutputLanguageIndex = selectedIndex;
+        if (!IsSavingOutputLanguage && requestedLanguage == _persistedOutputLanguage)
+        {
+            return;
+        }
+
+        IsSavingOutputLanguage = true;
+        await _outputLanguageSaveGate.WaitAsync().ConfigureAwait(true);
+        try
+        {
+            if (saveVersion != Volatile.Read(ref _outputLanguageSaveVersion))
+            {
+                return;
+            }
+
+            await GetProfileService().SetOutputLanguageAsync(requestedLanguage)
+                .ConfigureAwait(true);
+            _persistedOutputLanguage = requestedLanguage;
+            if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+            {
+                ClearOutputLanguageSaveFailure();
+            }
+        }
+        catch
+        {
+            if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+            {
+                SelectedOutputLanguageIndex = OutputLanguageToIndex(
+                    _persistedOutputLanguage);
+                ShowStatus("ApiOutputLanguageSaveFailedStatus", SettingsStatusKind.Error);
+            }
+        }
+        finally
+        {
+            _outputLanguageSaveGate.Release();
+            if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+            {
+                IsSavingOutputLanguage = false;
+            }
         }
     }
 
@@ -922,8 +986,13 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     {
         var state = await GetProfileService().GetExecutionStateAsync().ConfigureAwait(true);
         IsRemoteSelected = state.Settings.Backend == AnalysisExecutionBackend.RemoteApi;
-        IsCurrentProfileSelected = IsRemoteSelected
-            && state.Profile?.ProfileId == _profile?.ProfileId;
+        _activeRemoteProfileId = IsRemoteSelected
+            ? state.Settings.RemoteApiProfileId
+            : null;
+        _activeRemoteInputMode = IsRemoteSelected
+            ? state.Settings.RemoteInputMode
+            : null;
+        ApplyCurrentExecutionSelectionState();
         if (!IsRemoteSelected)
         {
             CurrentExecutionTarget = Resources.GetString("ExecutionTargetLocal");
@@ -945,6 +1014,16 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         }
 
         ApplyValidationState();
+    }
+
+    private void ApplyCurrentExecutionSelectionState()
+    {
+        IsCurrentProfileSelected = IsRemoteSelected
+            && string.Equals(
+                _activeRemoteProfileId,
+                _profile?.ProfileId,
+                StringComparison.Ordinal)
+            && _activeRemoteInputMode == SelectedInputMode;
     }
 
     private void ApplyValidationState()
@@ -1017,6 +1096,44 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         StatusMessage = Resources.GetString(resourceName);
         StatusKind = kind;
     }
+
+    private void ApplyPersistedOutputLanguage(AnalysisOutputLanguage outputLanguage)
+    {
+        _persistedOutputLanguage = outputLanguage;
+        SelectedOutputLanguageIndex = OutputLanguageToIndex(outputLanguage);
+    }
+
+    private void ClearOutputLanguageSaveFailure()
+    {
+        if (StatusKind == SettingsStatusKind.Error
+            && string.Equals(
+                StatusMessage,
+                Resources.GetString("ApiOutputLanguageSaveFailedStatus"),
+                StringComparison.Ordinal))
+        {
+            StatusMessage = string.Empty;
+            StatusKind = default;
+        }
+    }
+
+    private static AnalysisOutputLanguage OutputLanguageFromIndex(int index) => index switch
+    {
+        0 => AnalysisOutputLanguage.ModelDefault,
+        1 => AnalysisOutputLanguage.SimplifiedChinese,
+        2 => AnalysisOutputLanguage.TraditionalChineseTaiwan,
+        3 => AnalysisOutputLanguage.English,
+        _ => throw new ArgumentOutOfRangeException(nameof(index)),
+    };
+
+    private static int OutputLanguageToIndex(AnalysisOutputLanguage outputLanguage) =>
+        outputLanguage switch
+        {
+            AnalysisOutputLanguage.ModelDefault => 0,
+            AnalysisOutputLanguage.SimplifiedChinese => 1,
+            AnalysisOutputLanguage.TraditionalChineseTaiwan => 2,
+            AnalysisOutputLanguage.English => 3,
+            _ => throw new ArgumentOutOfRangeException(nameof(outputLanguage)),
+        };
 
     public void ShowOperationFailure() =>
         ShowStatus("ApiOperationFailedStatus", SettingsStatusKind.Error);

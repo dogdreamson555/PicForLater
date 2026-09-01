@@ -27,7 +27,9 @@ public sealed class OpenAiCompatibleRemoteVisionProviderTests
         var imageOpenCount = 0;
 
         var result = await provider.AnalyzeAsync(
-            CreateRequest(() => imageOpenCount++));
+            CreateRequest(
+                () => imageOpenCount++,
+                AnalysisOutputLanguage.TraditionalChineseTaiwan));
 
         Assert.Equal(1, imageOpenCount);
         Assert.Equal(1, preprocessor.CallCount);
@@ -35,6 +37,27 @@ public sealed class OpenAiCompatibleRemoteVisionProviderTests
         Assert.True(preprocessor.CopyStreamDisposed);
         Assert.NotNull(requestBody);
         using var payload = JsonDocument.Parse(requestBody);
+        var systemPrompt = payload.RootElement
+            .GetProperty("messages")[0]
+            .GetProperty("content")
+            .GetString();
+        Assert.NotNull(systemPrompt);
+        Assert.Contains(
+            "Write the generated title, summary, and visualFacts in Traditional Chinese as used in Taiwan (zh-Hant-TW).",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.Contains("detectedLanguages", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].rawText", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains("entities[].evidence", systemPrompt, StringComparison.Ordinal);
+        Assert.Contains(
+            "picforlater.remote-analysis.v3",
+            systemPrompt,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Preserve the content language", requestBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "Expected output language: same as content.",
+            requestBody,
+            StringComparison.Ordinal);
         var content = payload.RootElement
             .GetProperty("messages")[1]
             .GetProperty("content");
@@ -264,7 +287,9 @@ public sealed class OpenAiCompatibleRemoteVisionProviderTests
         Assert.Equal(7_864_302, preprocessor.MaximumBytes);
     }
 
-    private static VisionAnalysisRequest CreateRequest(Action? onImageOpen = null)
+    private static VisionAnalysisRequest CreateRequest(
+        Action? onImageOpen = null,
+        AnalysisOutputLanguage outputLanguage = AnalysisOutputLanguage.ModelDefault)
     {
         var skippedProvenance = new AnalysisProvenance(
             "analysis.execution-router",
@@ -296,7 +321,7 @@ public sealed class OpenAiCompatibleRemoteVisionProviderTests
                 EndpointId = "openai-compatible.chat-completions.v1",
                 BaseUri = new Uri("https://api.example.test/v1/chat/completions"),
                 ModelId = "remote-model",
-                PromptVersion = "remote-vision.prompt.v1",
+                PromptVersion = "picforlater.remote-analysis.v3",
                 OutputSchemaVersion = QwenStructuredOutputParser.SchemaVersion,
                 MaxTextChars = 10_000,
                 MaxImageBytes = 4_096,
@@ -304,6 +329,7 @@ public sealed class OpenAiCompatibleRemoteVisionProviderTests
                 TimeoutSeconds = 30,
                 CredentialReference = "credential-ref",
                 ConsentVersion = "disclosure.v1",
+                OutputLanguage = outputLanguage,
             },
         };
         return new VisionAnalysisRequest(

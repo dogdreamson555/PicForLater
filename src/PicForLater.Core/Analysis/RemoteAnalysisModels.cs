@@ -52,6 +52,14 @@ public enum RemoteReasoningWireFormat
     ReasoningEnabledObject = 4,
 }
 
+public enum AnalysisOutputLanguage
+{
+    ModelDefault = 0,
+    SimplifiedChinese = 1,
+    TraditionalChineseTaiwan = 2,
+    English = 3,
+}
+
 public sealed record RemoteApiProfile
 {
     public required string ProfileId { get; init; }
@@ -182,12 +190,16 @@ public sealed record RemoteApiProfileSnapshot
 
     public RemoteReasoningWireFormat ReasoningWireFormat { get; init; } =
         RemoteReasoningWireFormat.None;
+
+    public AnalysisOutputLanguage OutputLanguage { get; init; } =
+        AnalysisOutputLanguage.ModelDefault;
 }
 
 public sealed record AnalysisExecutionSettings(
     AnalysisExecutionBackend Backend,
     RemoteInputMode? RemoteInputMode,
     string? RemoteApiProfileId,
+    AnalysisOutputLanguage OutputLanguage,
     long Revision,
     DateTimeOffset UpdatedAtUtc);
 
