@@ -31,12 +31,19 @@ public partial class App : Application
     private static readonly CancellationTokenSource AnalysisCancellation = new();
     private static readonly object ForegroundActivationLock = new();
     private static readonly object NotificationActivationLock = new();
+    private static readonly object ScreenshotCaptureLifecycleLock = new();
     private static AnalysisQueueWakeSignal? _analysisWakeSignal;
     private static HttpClient? _modelDownloadHttpClient;
     private static HttpClient? _componentDownloadHttpClient;
     private static HttpClient? _remoteAnalysisHttpClient;
     private static HttpClient? _updateCheckHttpClient;
     private static Task? _localSendStartupTask;
+    private static MainWindow? _screenshotCaptureWindow;
+    private static IScreenshotCaptureService? _screenshotCapture;
+    private static Task _screenshotCaptureStartupTask = Task.CompletedTask;
+    private static Task _screenshotCaptureStopTask = Task.CompletedTask;
+    private static long _screenshotCaptureWindowGeneration;
+    private static bool _screenshotCaptureShuttingDown;
 #if PICFORLATER_UI_TESTING
     private static UiTestLocalInferenceRuntime? _uiTestInferenceRuntime;
 #else
@@ -120,6 +127,19 @@ public partial class App : Application
         CreateInferenceAccelerationPreference();
 
     public static AnalysisQueueWakeSignal? AnalysisUpdates => _analysisWakeSignal;
+
+    public static IScreenshotCaptureService? ScreenshotCapture
+    {
+        get
+        {
+            lock (ScreenshotCaptureLifecycleLock)
+            {
+                return _screenshotCapture;
+            }
+        }
+    }
+
+    public static event Action<IScreenshotCaptureService?>? ScreenshotCaptureServiceChanged;
 
     public static event Action<Guid>? NotificationImageRequested;
 
@@ -216,8 +236,22 @@ public partial class App : Application
     {
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         StorageReadiness = new StorageReadinessService(StartStorageInitialization);
-        Window = new MainWindow();
+        StorageReadiness.ReadinessChanged += StorageReadiness_ReadinessChanged;
+        var mainWindow = new MainWindow();
+        Window = mainWindow;
+        long windowGeneration;
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            _screenshotCaptureWindow = mainWindow;
+            _screenshotCaptureShuttingDown = false;
+            windowGeneration = ++_screenshotCaptureWindowGeneration;
+        }
+
+        mainWindow.NativeClosing += MainWindow_NativeClosing;
         Window.Closed += OnWindowClosed;
+        TrackScreenshotCaptureStartup(InitializeScreenshotCaptureAsync(
+            mainWindow,
+            windowGeneration));
         Window.Activate();
 
         bool activateAgain;
@@ -231,6 +265,187 @@ public partial class App : Application
         if (activateAgain)
         {
             BringMainWindowToForeground();
+        }
+    }
+
+    private static async Task InitializeScreenshotCaptureAsync(
+        MainWindow mainWindow,
+        long windowGeneration)
+    {
+        StorageReadinessResult readiness = await StorageReadiness
+            .EnsureReadyAsync(forceRetry: false)
+            .ConfigureAwait(true);
+        if (readiness.Status == StorageReadinessStatus.Ready)
+        {
+            await TryStartScreenshotCaptureAsync(mainWindow, windowGeneration)
+                .ConfigureAwait(true);
+        }
+    }
+
+    private static void StorageReadiness_ReadinessChanged(
+        object? sender,
+        StorageReadinessChangedEventArgs e)
+    {
+        if (e.Result.Status != StorageReadinessStatus.Ready)
+        {
+            return;
+        }
+
+        MainWindow? mainWindow;
+        long windowGeneration;
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            if (_screenshotCaptureShuttingDown || _screenshotCaptureWindow is null)
+            {
+                return;
+            }
+
+            mainWindow = _screenshotCaptureWindow;
+            windowGeneration = _screenshotCaptureWindowGeneration;
+        }
+
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            Task startupTask = TryStartScreenshotCaptureAsync(mainWindow, windowGeneration);
+            TrackScreenshotCaptureStartup(startupTask);
+        });
+    }
+
+    private static async Task TryStartScreenshotCaptureAsync(
+        MainWindow mainWindow,
+        long windowGeneration)
+    {
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            if (_screenshotCaptureShuttingDown ||
+                _screenshotCaptureWindowGeneration != windowGeneration ||
+                !ReferenceEquals(_screenshotCaptureWindow, mainWindow) ||
+                _screenshotCapture is not null)
+            {
+                return;
+            }
+        }
+
+        if (ImageImporter is null)
+        {
+            return;
+        }
+
+        var fileNameFormat = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader()
+            .GetString("ClipboardFileNameFormat");
+        var importer = new ScreenshotCaptureImporter(
+            () => ImageImporter,
+            ImageProcessor.NormalizeToPngAsync,
+            fileNameFormat);
+        var service = new ScreenshotCaptureService(
+            mainWindow.ScreenshotCapturePlatform,
+            new ScreenshotCapturePreferenceService(LocalPreferenceStore.Instance),
+            importer);
+
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            if (_screenshotCaptureShuttingDown ||
+                _screenshotCaptureWindowGeneration != windowGeneration ||
+                !ReferenceEquals(_screenshotCaptureWindow, mainWindow) ||
+                _screenshotCapture is not null ||
+                ImageImporter is null)
+            {
+                return;
+            }
+
+            _screenshotCapture = service;
+        }
+
+        NotifyScreenshotCaptureServiceChanged(service);
+        try
+        {
+            await service.StartAsync(AnalysisCancellation.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (AnalysisCancellation.IsCancellationRequested)
+        {
+        }
+        catch
+        {
+            // Quick Screenshot is optional. Its stable Snapshot reports normal
+            // registration failures; an unexpected startup exception must not
+            // block access to the local library.
+        }
+    }
+
+    private static void TrackScreenshotCaptureStartup(Task startupTask)
+    {
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            _screenshotCaptureStartupTask = Task.WhenAll(
+                _screenshotCaptureStartupTask,
+                startupTask);
+        }
+    }
+
+    private static void MainWindow_NativeClosing(object? sender, EventArgs e)
+    {
+        if (sender is MainWindow mainWindow)
+        {
+            mainWindow.NativeClosing -= MainWindow_NativeClosing;
+        }
+
+        BeginScreenshotCaptureShutdown();
+    }
+
+    private static void BeginScreenshotCaptureShutdown()
+    {
+        IScreenshotCaptureService? service;
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            if (_screenshotCaptureShuttingDown)
+            {
+                return;
+            }
+
+            _screenshotCaptureShuttingDown = true;
+            _screenshotCaptureWindowGeneration++;
+            service = _screenshotCapture;
+        }
+
+        StorageReadiness.ReadinessChanged -= StorageReadiness_ReadinessChanged;
+        AnalysisCancellation.Cancel();
+        Task stopTask = service is null
+            ? Task.CompletedTask
+            : StopScreenshotCaptureAsync(service);
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            _screenshotCaptureStopTask = stopTask;
+        }
+    }
+
+    private static async Task StopScreenshotCaptureAsync(IScreenshotCaptureService service)
+    {
+        try
+        {
+            await service.StopAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // WM_NCDESTROY/platform disposal is the final native containment
+            // boundary. Business shutdown still proceeds to importer disposal.
+        }
+    }
+
+    private static void NotifyScreenshotCaptureServiceChanged(
+        IScreenshotCaptureService? service)
+    {
+        Delegate[] handlers = ScreenshotCaptureServiceChanged?.GetInvocationList() ?? [];
+        foreach (Action<IScreenshotCaptureService?> handler in handlers.Cast<
+                     Action<IScreenshotCaptureService?>>())
+        {
+            try
+            {
+                handler(service);
+            }
+            catch
+            {
+                // A page that is navigating away cannot make capture startup fail.
+            }
         }
     }
 
@@ -497,6 +712,7 @@ public partial class App : Application
 
     private static async void OnWindowClosed(object sender, WindowEventArgs args)
     {
+        BeginScreenshotCaptureShutdown();
         lock (ForegroundActivationLock)
         {
             _isMainWindowReady = false;
@@ -505,6 +721,32 @@ public partial class App : Application
 
         Program.UnregisterInstanceKey();
         AnalysisCancellation.Cancel();
+        Task screenshotStartupTask;
+        Task screenshotStopTask;
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            screenshotStartupTask = _screenshotCaptureStartupTask;
+            screenshotStopTask = _screenshotCaptureStopTask;
+        }
+
+        try
+        {
+            await screenshotStartupTask.ConfigureAwait(false);
+        }
+        catch
+        {
+            // The shutdown generation gate rejects a startup that completed late.
+        }
+
+        try
+        {
+            await screenshotStopTask.ConfigureAwait(false);
+        }
+        catch
+        {
+            // StopScreenshotCaptureAsync is best effort and normally absorbs this.
+        }
+
         try
         {
             await StorageReadiness.EnsureReadyAsync(forceRetry: false).ConfigureAwait(false);
@@ -579,6 +821,12 @@ public partial class App : Application
             _toastNotificationsRegistered = false;
         }
 #endif
+        lock (ScreenshotCaptureLifecycleLock)
+        {
+            _screenshotCapture = null;
+            _screenshotCaptureWindow = null;
+        }
+
         (ImageImporter as IDisposable)?.Dispose();
         (Reminders as IDisposable)?.Dispose();
         (RemoteApiProfiles as IDisposable)?.Dispose();

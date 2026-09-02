@@ -235,6 +235,8 @@
   <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>Permanently deleted {0} of {1} images. Incomplete deletions kept a plan for safe retry.</value></data>
   <data name="ImportPickerCommitText" xml:space="preserve"><value>Import</value></data>
   <data name="ClipboardFileNameFormat" xml:space="preserve"><value>Clipboard image {0:yyyyMMdd-HHmmss}.png</value></data>
+  <data name="QuickScreenshotImportedStatus" xml:space="preserve"><value>Screenshot saved and the library was refreshed.</value></data>
+  <data name="QuickScreenshotDuplicateStatus" xml:space="preserve"><value>This screenshot already exists; the current library view was unchanged.</value></data>
   <data name="ClipboardImportFailedStatus" xml:space="preserve"><value>The clipboard image could not be read or saved.</value></data>
   <data name="ClipboardNoImageStatus" xml:space="preserve"><value>The clipboard does not contain an importable image.</value></data>
   <data name="DropCaption" xml:space="preserve"><value>Copy to PicForLater</value></data>
