@@ -27,9 +27,13 @@ internal sealed class UiTestScreenshotCapturePlatform : IScreenshotCapturePlatfo
 
     public uint GetClipboardSequenceNumber() => 1;
 
+    public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(ScreenshotClipboardAccessResult.Available(1));
+
     public ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
         CancellationToken cancellationToken = default) =>
-        ValueTask.FromResult(ScreenshotClipboardReadResult.NoImage);
+        ValueTask.FromResult(ScreenshotClipboardReadResult.NoImage(1));
 
     internal void RaiseHotKeyForTest(int hotKeyId)
     {

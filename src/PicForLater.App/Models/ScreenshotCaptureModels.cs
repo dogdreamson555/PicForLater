@@ -203,6 +203,7 @@ public enum ScreenshotClipboardReadStatus
     Image,
     NoImage,
     UnsupportedImage,
+    InvalidImage,
     ClipboardUnavailable,
 }
 
@@ -278,19 +279,38 @@ public sealed record ScreenshotClipboardImage
 
 public sealed record ScreenshotClipboardReadResult(
     ScreenshotClipboardReadStatus Status,
+    uint SequenceNumber,
     ScreenshotClipboardImage? Image = null)
 {
-    public static ScreenshotClipboardReadResult FromImage(ScreenshotClipboardImage image) =>
-        new(ScreenshotClipboardReadStatus.Image, image ?? throw new ArgumentNullException(nameof(image)));
+    public static ScreenshotClipboardReadResult FromImage(
+        uint sequenceNumber,
+        ScreenshotClipboardImage image) =>
+        new(
+            ScreenshotClipboardReadStatus.Image,
+            sequenceNumber,
+            image ?? throw new ArgumentNullException(nameof(image)));
 
-    public static ScreenshotClipboardReadResult NoImage { get; } =
-        new(ScreenshotClipboardReadStatus.NoImage);
+    public static ScreenshotClipboardReadResult NoImage(uint sequenceNumber) =>
+        new(ScreenshotClipboardReadStatus.NoImage, sequenceNumber);
 
-    public static ScreenshotClipboardReadResult UnsupportedImage { get; } =
-        new(ScreenshotClipboardReadStatus.UnsupportedImage);
+    public static ScreenshotClipboardReadResult UnsupportedImage(uint sequenceNumber) =>
+        new(ScreenshotClipboardReadStatus.UnsupportedImage, sequenceNumber);
+
+    public static ScreenshotClipboardReadResult InvalidImage(uint sequenceNumber) =>
+        new(ScreenshotClipboardReadStatus.InvalidImage, sequenceNumber);
 
     public static ScreenshotClipboardReadResult ClipboardUnavailable { get; } =
-        new(ScreenshotClipboardReadStatus.ClipboardUnavailable);
+        new(ScreenshotClipboardReadStatus.ClipboardUnavailable, 0);
+}
+
+public readonly record struct ScreenshotClipboardAccessResult(
+    bool IsAvailable,
+    uint SequenceNumber)
+{
+    public static ScreenshotClipboardAccessResult Available(uint sequenceNumber) =>
+        new(true, sequenceNumber);
+
+    public static ScreenshotClipboardAccessResult Unavailable { get; } = new(false, 0);
 }
 
 public sealed record ScreenshotImportResult(

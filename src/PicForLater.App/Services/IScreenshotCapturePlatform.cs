@@ -16,6 +16,9 @@ public interface IScreenshotCapturePlatform
 
     uint GetClipboardSequenceNumber();
 
+    ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
+        CancellationToken cancellationToken = default);
+
     ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
         CancellationToken cancellationToken = default);
 }
