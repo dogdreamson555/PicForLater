@@ -238,11 +238,13 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
         await _settingsGate.WaitAsync(cancellationToken).ConfigureAwait(true);
         Task captureTask;
         int[] registrations;
+        bool wasStarted;
         try
         {
             lock (_stateGate)
             {
-                if (!_started)
+                wasStarted = _started;
+                if (!wasStarted && _unregisterRetryIds.Count == 0)
                 {
                     return;
                 }
@@ -250,7 +252,7 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 _started = false;
                 _acceptHotKeyMessages = false;
                 _captureCancellation?.Cancel();
-                captureTask = _captureTask;
+                captureTask = wasStarted ? _captureTask : Task.CompletedTask;
                 var registrationIds = new HashSet<int>(_unregisterRetryIds);
                 if (_activeHotKeyId is int activeHotKeyId)
                 {
@@ -262,16 +264,25 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 _unregisterRetryIds.Clear();
             }
 
-            _platform.HotKeyPressed -= Platform_HotKeyPressed;
-            UpdateSnapshot(Snapshot with
+            if (wasStarted)
             {
-                RegistrationState = RegistrationState.Disabled,
-                CaptureState = CaptureState.Idle,
-            });
+                _platform.HotKeyPressed -= Platform_HotKeyPressed;
+                UpdateSnapshot(Snapshot with
+                {
+                    RegistrationState = RegistrationState.Disabled,
+                    CaptureState = CaptureState.Idle,
+                });
+            }
 
             foreach (int hotKeyId in registrations)
             {
-                _platform.UnregisterHotKey(hotKeyId);
+                if (!_platform.UnregisterHotKey(hotKeyId))
+                {
+                    lock (_stateGate)
+                    {
+                        _unregisterRetryIds.Add(hotKeyId);
+                    }
+                }
             }
         }
         finally

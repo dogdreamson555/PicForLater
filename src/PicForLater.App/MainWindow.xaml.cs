@@ -28,6 +28,7 @@ public sealed partial class MainWindow : Window
     private uint _minimumSizeDpi;
     private nint _windowHandle;
     private bool _minimumSizeConfiguredAfterActivation;
+    private readonly IScreenshotCapturePlatform _screenshotCapturePlatform;
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint windowHandle);
@@ -53,12 +54,45 @@ public sealed partial class MainWindow : Window
             AppWindow.SetIcon(iconPath);
         }
         ConfigureSizeForCurrentDisplay();
+#if PICFORLATER_UI_TESTING
+        _screenshotCapturePlatform = new UiTestScreenshotCapturePlatform();
+#else
+        _screenshotCapturePlatform = WindowsScreenshotCapturePlatform.Create(_windowHandle);
+#endif
         AppWindow.Changed += AppWindow_Changed;
+        AppWindow.Closing += AppWindow_Closing;
         Activated += MainWindow_Activated;
         ThemePreferenceService.Instance.Initialize(WindowRoot);
 
         // Navigate the root frame to the main page on startup.
         RootFrame.Navigate(typeof(MainPage));
+    }
+
+    internal IScreenshotCapturePlatform ScreenshotCapturePlatform =>
+        _screenshotCapturePlatform;
+
+    internal event EventHandler? NativeClosing;
+
+    private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        _ = sender;
+        if (args.Cancel)
+        {
+            return;
+        }
+
+        AppWindow.Changed -= AppWindow_Changed;
+        AppWindow.Closing -= AppWindow_Closing;
+        Activated -= MainWindow_Activated;
+        try
+        {
+            NativeClosing?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            NativeClosing = null;
+            (_screenshotCapturePlatform as IDisposable)?.Dispose();
+        }
     }
 
     private void AppWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
