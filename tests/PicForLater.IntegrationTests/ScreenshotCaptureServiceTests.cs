@@ -632,6 +632,21 @@ public sealed class ScreenshotCaptureServiceTests
     }
 
     [Fact]
+    public async Task Stop_AfterNativePlatformDisposalStillCompletesBusinessShutdown()
+    {
+        var platform = new FakePlatform { ThrowDisposedOnUnregister = true };
+        var service = CreateService(
+            platform,
+            new FakePreferences(isEnabledRequested: true));
+        await service.StartAsync();
+
+        await service.StopAsync();
+
+        Assert.Equal(RegistrationState.Disabled, service.Snapshot.RegistrationState);
+        Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
+    }
+
+    [Fact]
     public async Task DisableThenReenable_DoesNotAdmitSecondSessionUntilOldImporterActuallyEnds()
     {
         var platform = new FakePlatform { AdvanceSequence = true };
@@ -741,6 +756,7 @@ public sealed class ScreenshotCaptureServiceTests
         internal bool SequenceChangesDuringSend { get; init; }
         internal bool KeysReleased { get; init; } = true;
         internal bool SendInputSucceeds { get; init; } = true;
+        internal bool ThrowDisposedOnUnregister { get; init; }
         internal int SendInputCalls { get; private set; }
         internal int ProbeClipboardCalls { get; private set; }
         internal int ReadClipboardCalls { get; private set; }
@@ -765,6 +781,11 @@ public sealed class ScreenshotCaptureServiceTests
         public bool UnregisterHotKey(int hotKeyId)
         {
             UnregisterCalls.Add(hotKeyId);
+            if (ThrowDisposedOnUnregister)
+            {
+                throw new ObjectDisposedException(nameof(FakePlatform));
+            }
+
             if (UnregisterFailures.Contains(hotKeyId))
             {
                 return false;

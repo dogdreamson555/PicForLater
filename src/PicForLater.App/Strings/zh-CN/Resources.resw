@@ -235,6 +235,8 @@
   <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>已永久删除 {0}/{1} 张图片；未完成的删除保留了可安全重试的计划。</value></data>
   <data name="ImportPickerCommitText" xml:space="preserve"><value>导入</value></data>
   <data name="ClipboardFileNameFormat" xml:space="preserve"><value>剪贴板图片 {0:yyyyMMdd-HHmmss}.png</value></data>
+  <data name="QuickScreenshotImportedStatus" xml:space="preserve"><value>截图已保存，资料库已刷新。</value></data>
+  <data name="QuickScreenshotDuplicateStatus" xml:space="preserve"><value>这张截图已存在，当前资料库视图未改变。</value></data>
   <data name="ClipboardImportFailedStatus" xml:space="preserve"><value>无法读取或保存剪贴板图片。</value></data>
   <data name="ClipboardNoImageStatus" xml:space="preserve"><value>剪贴板中没有可导入的图片。</value></data>
   <data name="DropCaption" xml:space="preserve"><value>复制到 PicForLater</value></data>

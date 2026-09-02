@@ -276,7 +276,20 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
 
             foreach (int hotKeyId in registrations)
             {
-                if (!_platform.UnregisterHotKey(hotKeyId))
+                bool unregistered;
+                try
+                {
+                    unregistered = _platform.UnregisterHotKey(hotKeyId);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // WM_NCDESTROY is the final native cleanup boundary. A Stop
+                    // that arrived through Window.Closed must still cancel and
+                    // await the business session without retrying a dead HWND.
+                    unregistered = true;
+                }
+
+                if (!unregistered)
                 {
                     lock (_stateGate)
                     {

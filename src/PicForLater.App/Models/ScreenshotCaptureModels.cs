@@ -259,22 +259,27 @@ public sealed record ScreenshotSettingsOperationResult(
 
 public sealed record ScreenshotClipboardImage
 {
+    private readonly byte[] _bytes;
+
     public ScreenshotClipboardImage(
         ScreenshotClipboardImageFormat format,
-        ReadOnlyMemory<byte> bytes)
+        byte[] bytes)
     {
-        if (bytes.IsEmpty)
+        ArgumentNullException.ThrowIfNull(bytes);
+        if (bytes.Length == 0)
         {
             throw new ArgumentException("The Clipboard image cannot be empty.", nameof(bytes));
         }
 
         Format = format;
-        Bytes = bytes;
+        _bytes = bytes;
     }
 
     public ScreenshotClipboardImageFormat Format { get; }
 
-    public ReadOnlyMemory<byte> Bytes { get; }
+    public ReadOnlyMemory<byte> Bytes => _bytes;
+
+    public Stream OpenReadStream() => new MemoryStream(_bytes, writable: false);
 }
 
 public sealed record ScreenshotClipboardReadResult(

@@ -44,4 +44,38 @@ public sealed class StorageReadinessServiceTests
         Assert.Equal(StorageReadinessStatus.Ready, retry.Status);
         Assert.Equal(2, attempts);
     }
+
+    [Fact]
+    public async Task ReadinessChanged_PublishesFailureThenSuccessfulRetry()
+    {
+        var attempts = 0;
+        var service = new StorageReadinessService(() =>
+        {
+            attempts++;
+            return attempts == 1
+                ? Task.FromException<DatabaseInitializationResult>(new IOException("fixture"))
+                : Task.FromResult(new DatabaseInitializationResult(14, 14, null));
+        });
+        var observed = new List<StorageReadinessResult>();
+        service.ReadinessChanged += (_, args) => observed.Add(args.Result);
+
+        await service.EnsureReadyAsync();
+        await service.EnsureReadyAsync(forceRetry: true);
+
+        Assert.Equal(
+            [StorageReadinessStatus.Error, StorageReadinessStatus.Ready],
+            observed.Select(static result => result.Status));
+    }
+
+    [Fact]
+    public async Task ReadinessChanged_ObserverFailureDoesNotChangeStorageResult()
+    {
+        var service = new StorageReadinessService(() =>
+            Task.FromResult(new DatabaseInitializationResult(14, 14, null)));
+        service.ReadinessChanged += (_, _) => throw new InvalidOperationException("fixture");
+
+        StorageReadinessResult result = await service.EnsureReadyAsync();
+
+        Assert.Equal(StorageReadinessStatus.Ready, result.Status);
+    }
 }
