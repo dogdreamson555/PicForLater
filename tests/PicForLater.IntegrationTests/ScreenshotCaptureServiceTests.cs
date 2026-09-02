@@ -233,8 +233,9 @@ public sealed class ScreenshotCaptureServiceTests
         platform.RaiseHotKey(newId);
         await EventuallyAsync(() => platform.SendInputCalls == 1);
         await service.StopAsync();
+        await service.StopAsync();
 
-        Assert.True(platform.UnregisterCalls.Count(id => id == oldId) >= 2);
+        Assert.True(platform.UnregisterCalls.Count(id => id == oldId) >= 3);
     }
 
     [Fact]
@@ -321,6 +322,45 @@ public sealed class ScreenshotCaptureServiceTests
         await EventuallyAsync(() => completion is not null);
 
         Assert.Equal(CaptureOutcome.TimedOut, completion!.Outcome);
+        Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_KeyReleaseTimeoutDoesNotCallSendInputAndReturnsIdle()
+    {
+        var platform = new FakePlatform { KeysReleased = false };
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Failed, completion!.Outcome);
+        Assert.Equal(ScreenshotCaptureFailureKind.InputInjection, completion.FailureKind);
+        Assert.Equal(0, platform.SendInputCalls);
+        Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_PartialSendInputFailsImmediatelyWithoutWaitingForClipboard()
+    {
+        var platform = new FakePlatform { SendInputSucceeds = false };
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Failed, completion!.Outcome);
+        Assert.Equal(ScreenshotCaptureFailureKind.InputInjection, completion.FailureKind);
+        Assert.Equal(1, platform.SendInputCalls);
+        Assert.Equal(0, platform.ReadClipboardCalls);
         Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
         await service.StopAsync();
     }
@@ -452,7 +492,10 @@ public sealed class ScreenshotCaptureServiceTests
         internal List<string> Calls { get; } = [];
         internal bool AdvanceSequence { get; init; }
         internal bool SequenceChangesDuringSend { get; init; }
+        internal bool KeysReleased { get; init; } = true;
+        internal bool SendInputSucceeds { get; init; } = true;
         internal int SendInputCalls { get; private set; }
+        internal int ReadClipboardCalls { get; private set; }
 
         public event EventHandler<ScreenshotHotKeyPressedEventArgs>? HotKeyPressed;
 
@@ -482,7 +525,7 @@ public sealed class ScreenshotCaptureServiceTests
             return true;
         }
 
-        public bool AreCaptureKeysReleased(ScreenshotHotKey hotKey) => true;
+        public bool AreCaptureKeysReleased(ScreenshotHotKey hotKey) => KeysReleased;
 
         public bool SendScreenshotShortcut()
         {
@@ -493,7 +536,7 @@ public sealed class ScreenshotCaptureServiceTests
                 _sequence++;
             }
 
-            return true;
+            return SendInputSucceeds;
         }
 
         public uint GetClipboardSequenceNumber()
@@ -508,9 +551,12 @@ public sealed class ScreenshotCaptureServiceTests
         }
 
         public ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
-            CancellationToken cancellationToken = default) =>
-            ValueTask.FromResult(ScreenshotClipboardReadResult.FromImage(
+            CancellationToken cancellationToken = default)
+        {
+            ReadClipboardCalls++;
+            return ValueTask.FromResult(ScreenshotClipboardReadResult.FromImage(
                 new ScreenshotClipboardImage(ScreenshotClipboardImageFormat.Png, new byte[] { 1, 2, 3 })));
+        }
 
         internal void RaiseHotKey(int hotKeyId) =>
             HotKeyPressed?.Invoke(this, new ScreenshotHotKeyPressedEventArgs(hotKeyId));
