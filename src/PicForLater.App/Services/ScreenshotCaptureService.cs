@@ -444,7 +444,24 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 return;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             uint observedSequence = _platform.GetClipboardSequenceNumber();
+            if (observedSequence == 0)
+            {
+                ScreenshotClipboardAccessResult baselineProbe =
+                    await _platform.ProbeClipboardAccessAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                if (!baselineProbe.IsAvailable)
+                {
+                    completion = ScreenshotCaptureResult.Failed(
+                        ScreenshotCaptureFailureKind.ClipboardUnavailable);
+                    return;
+                }
+
+                observedSequence = baselineProbe.SequenceNumber;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
             if (!_platform.SendScreenshotShortcut())
             {
                 completion = ScreenshotCaptureResult.Failed(
@@ -452,6 +469,7 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 return;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             while (true)
             {
                 await Task.Delay(_options.ClipboardPollingInterval, cancellationToken)
@@ -459,7 +477,29 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 uint currentSequence = _platform.GetClipboardSequenceNumber();
                 if (currentSequence == observedSequence)
                 {
-                    continue;
+                    if (currentSequence != 0)
+                    {
+                        continue;
+                    }
+
+                    ScreenshotClipboardAccessResult zeroProbe =
+                        await _platform.ProbeClipboardAccessAsync(cancellationToken)
+                            .ConfigureAwait(false);
+                    if (!zeroProbe.IsAvailable)
+                    {
+                        completion = ScreenshotCaptureResult.Failed(
+                            ScreenshotCaptureFailureKind.ClipboardUnavailable);
+                        return;
+                    }
+
+                    currentSequence = zeroProbe.SequenceNumber;
+                    if (currentSequence == observedSequence)
+                    {
+                        continue;
+                    }
+
+                    // The clipboard changed while the access probe held it.
+                    // Reopen it through the normal detached read path below.
                 }
 
                 ScreenshotClipboardReadResult read;
@@ -478,10 +518,20 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                         ScreenshotCaptureFailureKind.ClipboardUnavailable);
                     return;
                 }
+
+                if (read.Status != ScreenshotClipboardReadStatus.ClipboardUnavailable &&
+                    read.SequenceNumber == observedSequence)
+                {
+                    // A zero polling value can mean temporary window-station
+                    // inaccessibility rather than a wrapped sequence. Never
+                    // claim content that the opened Clipboard identifies as old.
+                    continue;
+                }
+
                 switch (read.Status)
                 {
                     case ScreenshotClipboardReadStatus.NoImage:
-                        observedSequence = currentSequence;
+                        observedSequence = read.SequenceNumber;
                         continue;
                     case ScreenshotClipboardReadStatus.ClipboardUnavailable:
                         completion = ScreenshotCaptureResult.Failed(
@@ -490,6 +540,10 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                     case ScreenshotClipboardReadStatus.UnsupportedImage:
                         completion = ScreenshotCaptureResult.Failed(
                             ScreenshotCaptureFailureKind.UnsupportedClipboardImage);
+                        return;
+                    case ScreenshotClipboardReadStatus.InvalidImage:
+                        completion = ScreenshotCaptureResult.Failed(
+                            ScreenshotCaptureFailureKind.InvalidImage);
                         return;
                     case ScreenshotClipboardReadStatus.Image when read.Image is not null:
                         break;

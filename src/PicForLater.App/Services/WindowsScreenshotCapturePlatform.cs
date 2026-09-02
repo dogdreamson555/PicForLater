@@ -23,6 +23,7 @@ internal sealed class WindowsScreenshotCapturePlatform : IScreenshotCapturePlatf
     private readonly NativeMethods.SubclassProc _subclassProc;
     private readonly uint _ownerThreadId;
     private readonly HashSet<int> _registeredHotKeyIds = [];
+    private readonly WindowsClipboardImageReader _clipboardReader;
     private nint _windowHandle;
     private bool _subclassInstalled;
     private bool _disposed;
@@ -35,6 +36,7 @@ internal sealed class WindowsScreenshotCapturePlatform : IScreenshotCapturePlatf
         }
 
         _windowHandle = windowHandle;
+        _clipboardReader = new WindowsClipboardImageReader(windowHandle);
         _ownerThreadId = NativeMethods.GetWindowThreadProcessId(windowHandle, out _);
         if (_ownerThreadId == 0 || _ownerThreadId != NativeMethods.GetCurrentThreadId())
         {
@@ -159,13 +161,18 @@ internal sealed class WindowsScreenshotCapturePlatform : IScreenshotCapturePlatf
         return NativeMethods.GetClipboardSequenceNumber();
     }
 
+    public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _clipboardReader.ProbeAccessAsync(cancellationToken);
+    }
+
     public ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
         CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        cancellationToken.ThrowIfCancellationRequested();
-        // Phase 3 owns bounded OpenClipboard retries and detached PNG/DIBV5 data.
-        return ValueTask.FromResult(ScreenshotClipboardReadResult.NoImage);
+        return _clipboardReader.ReadImageAsync(cancellationToken);
     }
 
     public void Dispose()
@@ -429,6 +436,10 @@ internal sealed class UnavailableScreenshotCapturePlatform : IScreenshotCaptureP
     public bool SendScreenshotShortcut() => false;
 
     public uint GetClipboardSequenceNumber() => 0;
+
+    public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
+        CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(ScreenshotClipboardAccessResult.Unavailable);
 
     public ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
         CancellationToken cancellationToken = default) =>

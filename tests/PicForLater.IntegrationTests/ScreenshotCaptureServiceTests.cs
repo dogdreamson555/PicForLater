@@ -301,6 +301,250 @@ public sealed class ScreenshotCaptureServiceTests
     }
 
     [Fact]
+    public async Task Capture_ZeroBaselineWithAccessibleClipboardContinuesWithoutImportingOldContent()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(0);
+        platform.SequenceResults.Enqueue(1);
+        platform.ProbeResults.Enqueue(ScreenshotClipboardAccessResult.Available(0));
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Imported, completion!.Outcome);
+        Assert.Equal(1, platform.ProbeClipboardCalls);
+        Assert.Equal(1, platform.SendInputCalls);
+        Assert.Equal(1, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_ZeroBaselineWithUnavailableClipboardFailsBeforeInputInjection()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(0);
+        platform.ProbeResults.Enqueue(ScreenshotClipboardAccessResult.Unavailable);
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Failed, completion!.Outcome);
+        Assert.Equal(ScreenshotCaptureFailureKind.ClipboardUnavailable, completion.FailureKind);
+        Assert.Equal(0, platform.SendInputCalls);
+        Assert.Equal(0, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_SequenceWrapFromMaximumToZeroIsTreatedAsAChange()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(uint.MaxValue);
+        platform.SequenceResults.Enqueue(0);
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Imported, completion!.Outcome);
+        Assert.Equal(1, platform.ReadClipboardCalls);
+        Assert.Equal(0, platform.ProbeClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_AmbiguousZeroPollCannotImportTheBaselineImage()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(5);
+        platform.SequenceResults.Enqueue(0);
+        platform.SequenceResults.Enqueue(6);
+        platform.ReadResults.Enqueue(ScreenshotClipboardReadResult.FromImage(
+            5,
+            new ScreenshotClipboardImage(
+                ScreenshotClipboardImageFormat.Png,
+                new byte[] { 1 })));
+        platform.ReadResults.Enqueue(ScreenshotClipboardReadResult.FromImage(
+            6,
+            new ScreenshotClipboardImage(
+                ScreenshotClipboardImageFormat.Png,
+                new byte[] { 2 })));
+        var importer = new RecordingImporter();
+        var service = CreateService(
+            platform,
+            new FakePreferences(isEnabledRequested: true),
+            importer);
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Imported, completion!.Outcome);
+        Assert.Equal(2, platform.ReadClipboardCalls);
+        Assert.Equal([2], importer.Images.Select(image => (int)image.Bytes.Span[0]));
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_RepeatedSequenceValuesDoNotReadUntilAChangeOccurs()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(5);
+        platform.SequenceResults.Enqueue(5);
+        platform.SequenceResults.Enqueue(5);
+        platform.SequenceResults.Enqueue(6);
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Imported, completion!.Outcome);
+        Assert.Equal(1, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_NonImageChangeAdvancesObservedThenLaterImageIsImported()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(1);
+        platform.SequenceResults.Enqueue(2);
+        platform.SequenceResults.Enqueue(3);
+        platform.ReadResults.Enqueue(ScreenshotClipboardReadResult.NoImage(2));
+        platform.ReadResults.Enqueue(ScreenshotClipboardReadResult.FromImage(
+            3,
+            new ScreenshotClipboardImage(
+                ScreenshotClipboardImageFormat.Png,
+                new byte[] { 1, 2, 3 })));
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Imported, completion!.Outcome);
+        Assert.Equal(2, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_ZeroPollingValueIsProbedAndUnavailableEndsTheSession()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(0);
+        platform.SequenceResults.Enqueue(0);
+        platform.ProbeResults.Enqueue(ScreenshotClipboardAccessResult.Available(0));
+        platform.ProbeResults.Enqueue(ScreenshotClipboardAccessResult.Unavailable);
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Failed, completion!.Outcome);
+        Assert.Equal(ScreenshotCaptureFailureKind.ClipboardUnavailable, completion.FailureKind);
+        Assert.Equal(2, platform.ProbeClipboardCalls);
+        Assert.Equal(0, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_AccessibleZeroSequenceThatNeverChangesTimesOutWithoutReadingOldContent()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(0);
+        platform.ProbeResults.Enqueue(ScreenshotClipboardAccessResult.Available(0));
+        var service = CreateService(
+            platform,
+            new FakePreferences(isEnabledRequested: true),
+            options: new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(20),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureTimeout = TimeSpan.FromMilliseconds(20),
+            });
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.TimedOut, completion!.Outcome);
+        Assert.True(platform.ProbeClipboardCalls > 1);
+        Assert.Equal(0, platform.ReadClipboardCalls);
+        Assert.Equal(1, platform.SendInputCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_InvalidSelectedClipboardImagePublishesInvalidImageFailure()
+    {
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(10);
+        platform.SequenceResults.Enqueue(11);
+        platform.ReadResults.Enqueue(ScreenshotClipboardReadResult.InvalidImage(11));
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        ScreenshotCaptureResult? completion = null;
+        service.CaptureCompleted += (_, args) => completion = args.Result;
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => completion is not null);
+
+        Assert.Equal(CaptureOutcome.Failed, completion!.Outcome);
+        Assert.Equal(ScreenshotCaptureFailureKind.InvalidImage, completion.FailureKind);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Stop_CancelsLateClipboardReadWithoutImportOrCompletion()
+    {
+        var readStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var platform = new FakePlatform();
+        platform.SequenceResults.Enqueue(20);
+        platform.SequenceResults.Enqueue(21);
+        platform.ReadOverride = async cancellationToken =>
+        {
+            readStarted.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return ScreenshotClipboardReadResult.NoImage(21);
+        };
+        var service = CreateService(platform, new FakePreferences(isEnabledRequested: true));
+        var completions = new List<ScreenshotCaptureResult>();
+        service.CaptureCompleted += (_, args) => completions.Add(args.Result);
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await readStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await service.StopAsync();
+
+        Assert.Empty(completions);
+        Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
+    }
+
+    [Fact]
     public async Task Capture_NoSequenceChangePublishesTimedOutAndReturnsIdle()
     {
         var platform = new FakePlatform { AdvanceSequence = false };
@@ -486,6 +730,9 @@ public sealed class ScreenshotCaptureServiceTests
         private uint _sequence = 1;
 
         internal Queue<ScreenshotHotKeyRegistrationStatus> RegistrationResults { get; } = new();
+        internal Queue<uint> SequenceResults { get; } = new();
+        internal Queue<ScreenshotClipboardAccessResult> ProbeResults { get; } = new();
+        internal Queue<ScreenshotClipboardReadResult> ReadResults { get; } = new();
         internal Dictionary<int, ScreenshotHotKey> Registered { get; } = [];
         internal List<int> UnregisterCalls { get; } = [];
         internal HashSet<int> UnregisterFailures { get; } = [];
@@ -495,7 +742,9 @@ public sealed class ScreenshotCaptureServiceTests
         internal bool KeysReleased { get; init; } = true;
         internal bool SendInputSucceeds { get; init; } = true;
         internal int SendInputCalls { get; private set; }
+        internal int ProbeClipboardCalls { get; private set; }
         internal int ReadClipboardCalls { get; private set; }
+        internal Func<CancellationToken, ValueTask<ScreenshotClipboardReadResult>>? ReadOverride { get; set; }
 
         public event EventHandler<ScreenshotHotKeyPressedEventArgs>? HotKeyPressed;
 
@@ -542,6 +791,12 @@ public sealed class ScreenshotCaptureServiceTests
         public uint GetClipboardSequenceNumber()
         {
             Calls.Add("GetSequence");
+            if (SequenceResults.Count > 0)
+            {
+                _sequence = SequenceResults.Dequeue();
+                return _sequence;
+            }
+
             if (AdvanceSequence && SendInputCalls > 0)
             {
                 return _sequence++;
@@ -550,11 +805,33 @@ public sealed class ScreenshotCaptureServiceTests
             return _sequence;
         }
 
+        public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
+            CancellationToken cancellationToken = default)
+        {
+            ProbeClipboardCalls++;
+            ScreenshotClipboardAccessResult result = ProbeResults.Count > 0
+                ? ProbeResults.Dequeue()
+                : ScreenshotClipboardAccessResult.Available(_sequence);
+            _sequence = result.SequenceNumber;
+            return ValueTask.FromResult(result);
+        }
+
         public ValueTask<ScreenshotClipboardReadResult> ReadClipboardImageAsync(
             CancellationToken cancellationToken = default)
         {
             ReadClipboardCalls++;
+            if (ReadOverride is not null)
+            {
+                return ReadOverride(cancellationToken);
+            }
+
+            if (ReadResults.Count > 0)
+            {
+                return ValueTask.FromResult(ReadResults.Dequeue());
+            }
+
             return ValueTask.FromResult(ScreenshotClipboardReadResult.FromImage(
+                _sequence,
                 new ScreenshotClipboardImage(ScreenshotClipboardImageFormat.Png, new byte[] { 1, 2, 3 })));
         }
 
@@ -569,6 +846,21 @@ public sealed class ScreenshotCaptureServiceTests
             ScreenshotClipboardImage image,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new ScreenshotImportResult(ScreenshotImportStatus.Imported, Guid.NewGuid()));
+    }
+
+    private sealed class RecordingImporter : IScreenshotCaptureImporter
+    {
+        internal List<ScreenshotClipboardImage> Images { get; } = [];
+
+        public Task<ScreenshotImportResult> ImportAsync(
+            ScreenshotClipboardImage image,
+            CancellationToken cancellationToken = default)
+        {
+            Images.Add(image);
+            return Task.FromResult(new ScreenshotImportResult(
+                ScreenshotImportStatus.Imported,
+                Guid.NewGuid()));
+        }
     }
 
     private sealed class BlockingImporter : IScreenshotCaptureImporter
