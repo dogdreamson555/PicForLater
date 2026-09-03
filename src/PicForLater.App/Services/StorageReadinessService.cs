@@ -20,6 +20,8 @@ public sealed class StorageReadinessService : IStorageReadinessService
         _initializationTask = _initializationFactory();
     }
 
+    public event EventHandler<StorageReadinessChangedEventArgs>? ReadinessChanged;
+
     public async Task<StorageReadinessResult> EnsureReadyAsync(bool forceRetry = false)
     {
         Task<DatabaseInitializationResult> task;
@@ -35,47 +37,66 @@ public sealed class StorageReadinessService : IStorageReadinessService
             task = _initializationTask;
         }
 
+        StorageReadinessResult result;
         try
         {
             await task.ConfigureAwait(false);
-            return new StorageReadinessResult(StorageReadinessStatus.Ready);
+            result = new StorageReadinessResult(StorageReadinessStatus.Ready);
         }
         catch (DatabaseSchemaException)
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.Unsupported,
                 "DatabaseSchemaIncompatible");
         }
         catch (Exception exception) when (ContainsUnauthorizedAccess(exception))
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.PermissionDenied,
                 "StorageAccessDenied");
         }
         catch (DatabaseMigrationException)
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.Error,
                 "DatabaseMigrationFailed");
         }
         catch (DatabaseInitializationException)
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.Error,
                 "DatabaseInitializationFailed");
         }
         catch (IOException)
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.Error,
                 "StorageIoFailed");
         }
         catch (Exception)
         {
-            return new StorageReadinessResult(
+            result = new StorageReadinessResult(
                 StorageReadinessStatus.Error,
                 "StorageInitializationFailed");
         }
+
+        var eventArgs = new StorageReadinessChangedEventArgs(result);
+        Delegate[] handlers = ReadinessChanged?.GetInvocationList() ?? [];
+        foreach (EventHandler<StorageReadinessChangedEventArgs> handler in handlers.Cast<
+                     EventHandler<StorageReadinessChangedEventArgs>>())
+        {
+            try
+            {
+                handler(this, eventArgs);
+            }
+            catch
+            {
+                // Readiness is a storage fact. A page or optional feature that is
+                // navigating away cannot change the result observed by callers.
+            }
+        }
+
+        return result;
     }
 
     private static bool ContainsUnauthorizedAccess(Exception exception)

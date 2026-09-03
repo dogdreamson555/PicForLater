@@ -12,6 +12,7 @@ using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.Windows.Storage.Pickers;
 using PicForLater.Analysis;
 using PicForLater.App.Models;
+using PicForLater.App.Services;
 using PicForLater.App.ViewModels;
 using PicForLater.Core.Images;
 using PicForLater.Core.Library;
@@ -37,6 +38,8 @@ public sealed partial class LibraryPage : Page
     private bool _synchronizingSelection;
     private AnalysisQueueWakeSignal? _analysisUpdatesSource;
     private ILocalSendReceiverService? _localSendReceiverSource;
+    private IScreenshotCaptureService? _screenshotCaptureSource;
+    private readonly SemaphoreSlim _screenshotRefreshGate = new(1, 1);
     private bool _viewModelSubscribed = true;
     private int _loadGeneration;
     private LibraryDisplayMode _displayMode = LibraryDisplayMode.Grid;
@@ -97,6 +100,8 @@ public sealed partial class LibraryPage : Page
     private async void LibraryPage_Loaded(object sender, RoutedEventArgs e)
     {
         var loadGeneration = ++_loadGeneration;
+        App.ScreenshotCaptureServiceChanged += App_ScreenshotCaptureServiceChanged;
+        TrySubscribeScreenshotCapture();
         if (!_viewModelSubscribed)
         {
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -122,6 +127,7 @@ public sealed partial class LibraryPage : Page
 
         TrySubscribeAnalysisUpdates();
         TrySubscribeLocalSendReceiver();
+        TrySubscribeScreenshotCapture();
         UpdateSortMenuChecks();
         UpdateResponsiveLayout();
     }
@@ -146,6 +152,113 @@ public sealed partial class LibraryPage : Page
 
         UnsubscribeAnalysisUpdates();
         UnsubscribeLocalSendReceiver();
+        App.ScreenshotCaptureServiceChanged -= App_ScreenshotCaptureServiceChanged;
+        UnsubscribeScreenshotCapture();
+    }
+
+    private void App_ScreenshotCaptureServiceChanged(IScreenshotCaptureService? service)
+    {
+        _ = service;
+        TrySubscribeScreenshotCapture();
+    }
+
+    private void TrySubscribeScreenshotCapture()
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        var source = App.ScreenshotCapture;
+        if (ReferenceEquals(source, _screenshotCaptureSource))
+        {
+            return;
+        }
+
+        UnsubscribeScreenshotCapture();
+        _screenshotCaptureSource = source;
+        if (source is not null)
+        {
+            source.CaptureCompleted += ScreenshotCapture_CaptureCompleted;
+        }
+    }
+
+    private void UnsubscribeScreenshotCapture()
+    {
+        var source = _screenshotCaptureSource;
+        _screenshotCaptureSource = null;
+        if (source is not null)
+        {
+            source.CaptureCompleted -= ScreenshotCapture_CaptureCompleted;
+        }
+    }
+
+    private void ScreenshotCapture_CaptureCompleted(
+        object? sender,
+        ScreenshotCaptureCompletedEventArgs e)
+    {
+        if (sender is not IScreenshotCaptureService source ||
+            !ReferenceEquals(source, _screenshotCaptureSource) ||
+            e.Result.Outcome is not (CaptureOutcome.Imported or CaptureOutcome.Duplicate))
+        {
+            return;
+        }
+
+        int loadGeneration = _loadGeneration;
+        _ = DispatcherQueue.TryEnqueue(async () =>
+        {
+            if (!IsCurrentLoad(loadGeneration) ||
+                !ReferenceEquals(source, _screenshotCaptureSource))
+            {
+                return;
+            }
+
+            if (e.Result.Outcome == CaptureOutcome.Duplicate)
+            {
+                ViewModel.ShowStatus(_resources.GetString("QuickScreenshotDuplicateStatus"));
+                return;
+            }
+
+            await _screenshotRefreshGate.WaitAsync();
+            try
+            {
+                if (!IsCurrentLoad(loadGeneration) ||
+                    !ReferenceEquals(source, _screenshotCaptureSource))
+                {
+                    return;
+                }
+
+                CaptureActiveSelection();
+                _synchronizingSelection = true;
+                try
+                {
+                    await ViewModel.RefreshItemsAsync();
+                }
+                finally
+                {
+                    _synchronizingSelection = false;
+                }
+
+                if (!IsCurrentLoad(loadGeneration) ||
+                    !ReferenceEquals(source, _screenshotCaptureSource))
+                {
+                    return;
+                }
+
+                RestoreCollectionSelection();
+                UpdateResponsiveLayout();
+                ViewModel.ShowStatus(_resources.GetString("QuickScreenshotImportedStatus"));
+            }
+            catch
+            {
+                // SQLite remains authoritative. A later navigation or explicit
+                // refresh recovers a view update that raced page teardown.
+            }
+            finally
+            {
+                _screenshotRefreshGate.Release();
+            }
+        });
     }
 
     private void AnalysisUpdates_ItemChanged(object? sender, AnalysisItemChangedEventArgs e)
