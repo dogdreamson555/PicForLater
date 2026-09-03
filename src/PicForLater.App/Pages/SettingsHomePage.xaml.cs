@@ -14,8 +14,10 @@ public sealed partial class SettingsHomePage : Page
     private static readonly ResourceLoader ResourceStrings = new();
     private DispatcherQueueTimer? _localSendPairingTimer;
     private ILocalSendReceiverService? _localSendReceiverSource;
+    private IScreenshotCaptureService? _screenshotCaptureSource;
     private bool _synchronizingAnalysisSource;
     private bool _synchronizingLocalSendToggle;
+    private bool _synchronizingScreenshotCaptureToggle;
     private int _loadGeneration;
     private CancellationTokenSource? _updateCheckCancellation;
 
@@ -28,6 +30,8 @@ public sealed partial class SettingsHomePage : Page
         () => App.LocalSendReceiver,
         App.UpdateCheck,
         App.CurrentVersion);
+
+    public ScreenshotCaptureSettingsViewModel ScreenshotViewModel { get; } = new();
 
     public SettingsHomePage()
     {
@@ -43,6 +47,9 @@ public sealed partial class SettingsHomePage : Page
         {
             _synchronizingAnalysisSource = true;
             _synchronizingLocalSendToggle = true;
+            _synchronizingScreenshotCaptureToggle = true;
+            App.ScreenshotCaptureServiceChanged += App_ScreenshotCaptureServiceChanged;
+            SubscribeScreenshotCaptureService(App.ScreenshotCapture);
             await ViewModel.InitializeAsync();
             if (!IsCurrentLoad(loadGeneration))
             {
@@ -50,6 +57,7 @@ public sealed partial class SettingsHomePage : Page
             }
 
             SynchronizeLocalSendToggle();
+            SynchronizeScreenshotCaptureToggle();
             SubscribeLocalSendReceiver();
             UpdateLocalSendPairingTimer();
         }
@@ -59,6 +67,7 @@ public sealed partial class SettingsHomePage : Page
             {
                 _synchronizingAnalysisSource = false;
                 _synchronizingLocalSendToggle = false;
+                _synchronizingScreenshotCaptureToggle = false;
             }
         }
     }
@@ -68,6 +77,9 @@ public sealed partial class SettingsHomePage : Page
         _loadGeneration++;
         _synchronizingAnalysisSource = false;
         _synchronizingLocalSendToggle = false;
+        _synchronizingScreenshotCaptureToggle = false;
+        App.ScreenshotCaptureServiceChanged -= App_ScreenshotCaptureServiceChanged;
+        UnsubscribeScreenshotCaptureService();
         UnsubscribeLocalSendReceiver();
         StopLocalSendPairingTimer();
         _updateCheckCancellation?.Cancel();
@@ -190,6 +202,125 @@ public sealed partial class SettingsHomePage : Page
         }
     }
 
+    private async void ScreenshotCaptureToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        var source = _screenshotCaptureSource;
+        if (_synchronizingScreenshotCaptureToggle
+            || source is null
+            || sender is not ToggleSwitch toggle
+            || !ScreenshotViewModel.CanToggle)
+        {
+            return;
+        }
+
+        var loadGeneration = _loadGeneration;
+        try
+        {
+            _synchronizingScreenshotCaptureToggle = true;
+            ScreenshotViewModel.ApplySnapshot(source.Snapshot, isWorking: true);
+            ScreenshotSettingsOperationResult result =
+                await source.SetEnabledAsync(toggle.IsOn);
+            if (!IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                return;
+            }
+
+            ScreenshotViewModel.ApplySnapshot(source.Snapshot);
+            if (result.Succeeded)
+            {
+                ScreenshotViewModel.ApplySettingsSuccess();
+            }
+            else
+            {
+                ScreenshotViewModel.ApplySettingsFailure(result.FailureKind);
+            }
+        }
+        catch
+        {
+            if (IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                ScreenshotViewModel.ApplySnapshot(source.Snapshot);
+                ScreenshotViewModel.ApplySettingsFailure(
+                    ScreenshotSettingsFailureKind.Registration);
+            }
+        }
+        finally
+        {
+            if (IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                SynchronizeScreenshotCaptureToggle();
+                RefreshScreenshotCaptureBindings();
+                _synchronizingScreenshotCaptureToggle = false;
+            }
+        }
+    }
+
+    private async void ChangeScreenshotHotKeyButton_Click(object sender, RoutedEventArgs e)
+    {
+        var source = _screenshotCaptureSource;
+        if (source is null || !ScreenshotViewModel.CanChangeHotKey)
+        {
+            return;
+        }
+
+        var loadGeneration = _loadGeneration;
+        var dialog = new ScreenshotHotKeyDialog(
+            source.Snapshot.HotKey,
+            hotKey => SaveScreenshotHotKeyAsync(source, loadGeneration, hotKey))
+        {
+            XamlRoot = XamlRoot,
+            RequestedTheme = ActualTheme,
+        };
+        await dialog.ShowAsync();
+    }
+
+    private async Task<ScreenshotSettingsOperationResult> SaveScreenshotHotKeyAsync(
+        IScreenshotCaptureService source,
+        int loadGeneration,
+        ScreenshotHotKey hotKey)
+    {
+        if (!IsCurrentScreenshotSource(source, loadGeneration))
+        {
+            return ScreenshotSettingsOperationResult.Failed(
+                ScreenshotSettingsFailureKind.NotStarted);
+        }
+
+        ScreenshotViewModel.ApplySnapshot(source.Snapshot, isWorking: true);
+        try
+        {
+            ScreenshotSettingsOperationResult result = await source.UpdateHotKeyAsync(hotKey);
+            if (IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                ScreenshotViewModel.ApplySnapshot(source.Snapshot);
+                if (result.Succeeded)
+                {
+                    ScreenshotViewModel.ApplySettingsSuccess();
+                }
+                else
+                {
+                    ScreenshotViewModel.ApplySettingsFailure(result.FailureKind);
+                }
+
+                RefreshScreenshotCaptureBindings();
+            }
+
+            return result;
+        }
+        catch
+        {
+            if (IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                ScreenshotViewModel.ApplySnapshot(source.Snapshot);
+                ScreenshotViewModel.ApplySettingsFailure(
+                    ScreenshotSettingsFailureKind.Registration);
+                RefreshScreenshotCaptureBindings();
+            }
+
+            return ScreenshotSettingsOperationResult.Failed(
+                ScreenshotSettingsFailureKind.Registration);
+        }
+    }
+
     private async void BeginLocalSendPairingButton_Click(object sender, RoutedEventArgs e)
     {
         await ViewModel.BeginLocalSendPairingAsync();
@@ -250,6 +381,97 @@ public sealed partial class SettingsHomePage : Page
         }
     }
 
+    private void App_ScreenshotCaptureServiceChanged(IScreenshotCaptureService? source)
+    {
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (!IsCurrentLoad(loadGeneration))
+            {
+                return;
+            }
+
+            _synchronizingScreenshotCaptureToggle = true;
+            SubscribeScreenshotCaptureService(source);
+            SynchronizeScreenshotCaptureToggle();
+            RefreshScreenshotCaptureBindings();
+            _synchronizingScreenshotCaptureToggle = false;
+        });
+    }
+
+    private void SubscribeScreenshotCaptureService(IScreenshotCaptureService? source)
+    {
+        if (!ReferenceEquals(source, _screenshotCaptureSource))
+        {
+            UnsubscribeScreenshotCaptureService();
+            _screenshotCaptureSource = source;
+            if (source is not null)
+            {
+                source.SnapshotChanged += ScreenshotCapture_SnapshotChanged;
+                source.CaptureCompleted += ScreenshotCapture_CaptureCompleted;
+            }
+        }
+
+        if (source is null)
+        {
+            ScreenshotViewModel.ApplyPreparing();
+        }
+        else
+        {
+            ScreenshotViewModel.ApplySnapshot(source.Snapshot);
+        }
+    }
+
+    private void UnsubscribeScreenshotCaptureService()
+    {
+        var source = _screenshotCaptureSource;
+        _screenshotCaptureSource = null;
+        if (source is not null)
+        {
+            source.SnapshotChanged -= ScreenshotCapture_SnapshotChanged;
+            source.CaptureCompleted -= ScreenshotCapture_CaptureCompleted;
+        }
+    }
+
+    private void ScreenshotCapture_SnapshotChanged(
+        object? sender,
+        ScreenshotCaptureSnapshotChangedEventArgs e)
+    {
+        var source = sender as IScreenshotCaptureService;
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (source is null || !IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                return;
+            }
+
+            _synchronizingScreenshotCaptureToggle = true;
+            ScreenshotViewModel.ApplySnapshot(e.Snapshot);
+            SynchronizeScreenshotCaptureToggle();
+            RefreshScreenshotCaptureBindings();
+            _synchronizingScreenshotCaptureToggle = false;
+        });
+    }
+
+    private void ScreenshotCapture_CaptureCompleted(
+        object? sender,
+        ScreenshotCaptureCompletedEventArgs e)
+    {
+        var source = sender as IScreenshotCaptureService;
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (source is null || !IsCurrentScreenshotSource(source, loadGeneration))
+            {
+                return;
+            }
+
+            ScreenshotViewModel.ApplyCaptureResult(e.Result);
+            RefreshScreenshotCaptureBindings();
+        });
+    }
+
     private void UnsubscribeLocalSendReceiver()
     {
         var source = _localSendReceiverSource;
@@ -308,6 +530,14 @@ public sealed partial class SettingsHomePage : Page
         LocalSendReceiveToggle.IsOn = ViewModel.IsLocalSendEnabled;
     }
 
+    private void SynchronizeScreenshotCaptureToggle()
+    {
+        Bindings.Update();
+        ScreenshotCaptureToggle.IsOn = ScreenshotViewModel.IsEnabledRequested;
+    }
+
+    private void RefreshScreenshotCaptureBindings() => Bindings.Update();
+
     private void UpdateLocalSendPairingTimer()
     {
         if (!ViewModel.IsLocalSendPairing)
@@ -353,4 +583,11 @@ public sealed partial class SettingsHomePage : Page
 
     private bool IsCurrentLoad(int loadGeneration) =>
         IsLoaded && loadGeneration == _loadGeneration;
+
+    private bool IsCurrentScreenshotSource(
+        IScreenshotCaptureService source,
+        int loadGeneration) =>
+        IsCurrentLoad(loadGeneration)
+        && ReferenceEquals(source, _screenshotCaptureSource)
+        && ReferenceEquals(source, App.ScreenshotCapture);
 }

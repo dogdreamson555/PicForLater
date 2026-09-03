@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace PicForLater.App.Services;
 
-internal sealed class LocalPreferenceStore
+internal sealed class LocalPreferenceStore : IInt32PreferenceStore
 {
     private const long MaximumSettingsFileLength = 64 * 1024;
     private static readonly JsonSerializerOptions SerializerOptions = new()

@@ -31,6 +31,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="WidthStates">
@@ -57,6 +58,101 @@
                 <StackPanel Grid.Row="0" Spacing="{StaticResource AppSpacingXs}">
                     <TextBlock x:Uid="SettingsPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" />
                     <TextBlock x:Uid="SettingsPageSubtitle" Style="{StaticResource AppPageSubtitleTextBlockStyle}" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Row="3"
+                    AutomationProperties.AutomationId="ScreenshotCaptureSection"
+                    Spacing="{StaticResource AppSpacingSm}">
+                    <TextBlock
+                        x:Uid="ScreenshotCaptureSectionTitle"
+                        Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                    <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                        <StackPanel>
+                            <Grid
+                                x:Name="ScreenshotCaptureToggleRow"
+                                MinHeight="72"
+                                Padding="12,8"
+                                ColumnSpacing="{StaticResource AppSpacingMd}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                    <TextBlock
+                                        x:Uid="ScreenshotCaptureToggleTitle"
+                                        FontWeight="SemiBold"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Uid="ScreenshotCaptureToggleDescription"
+                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Uid="ScreenshotCaptureAnalysisDisclosure"
+                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch
+                                    x:Name="ScreenshotCaptureToggle"
+                                    x:Uid="ScreenshotCaptureToggle"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="ScreenshotCaptureToggle"
+                                    IsEnabled="{x:Bind ScreenshotViewModel.CanToggle, Mode=OneWay}"
+                                    IsOn="{x:Bind ScreenshotViewModel.IsEnabledRequested, Mode=OneWay}"
+                                    MinWidth="0"
+                                    OffContent="{x:Null}"
+                                    OnContent="{x:Null}"
+                                    Toggled="ScreenshotCaptureToggle_Toggled" />
+                            </Grid>
+
+                            <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
+
+                            <StackPanel
+                                Padding="12"
+                                Spacing="{StaticResource AppSpacingMd}">
+                                <Grid
+                                    x:Name="ScreenshotHotKeyRow"
+                                    ColumnSpacing="{StaticResource AppSpacingMd}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                        <TextBlock
+                                            x:Uid="ScreenshotHotKeyLabel"
+                                            Foreground="{ThemeResource AppSecondaryTextBrush}" />
+                                        <TextBlock
+                                            AutomationProperties.AutomationId="ScreenshotCaptureHotKeyText"
+                                            FontWeight="SemiBold"
+                                            Text="{x:Bind ScreenshotViewModel.HotKeyText, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button
+                                        x:Name="ChangeScreenshotHotKeyButton"
+                                        x:Uid="ChangeScreenshotHotKeyButton"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.AutomationId="ChangeScreenshotHotKeyButton"
+                                        Click="ChangeScreenshotHotKeyButton_Click"
+                                        IsEnabled="{x:Bind ScreenshotViewModel.CanChangeHotKey, Mode=OneWay}" />
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <InfoBar
+                        x:Name="ScreenshotCaptureStatusInfoBar"
+                        x:Uid="ScreenshotCaptureStatusInfoBar"
+                        AutomationProperties.AutomationId="ScreenshotCaptureStatusInfoBar"
+                        AutomationProperties.LiveSetting="Polite"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ScreenshotViewModel.IsInfoOpen, Mode=OneWay}"
+                        Message="{x:Bind ScreenshotViewModel.InfoMessage, Mode=OneWay}"
+                        Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ScreenshotViewModel.InfoKind), Mode=OneWay}"
+                        Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ScreenshotViewModel.IsInfoOpen), Mode=OneWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="{StaticResource AppSpacingSm}">
@@ -347,7 +443,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Grid.Row="3" Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="4" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="AppearanceSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border
                         Padding="12,0,12,8"
@@ -371,7 +467,7 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Grid.Row="4" Spacing="{StaticResource AppSpacingSm}">
+                <StackPanel Grid.Row="5" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock
                         x:Uid="AboutUpdatesSectionTitle"
                         Style="{StaticResource AppSectionTitleTextBlockStyle}" />
