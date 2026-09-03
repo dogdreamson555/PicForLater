@@ -147,6 +147,7 @@
                         x:Name="ScreenshotCaptureStatusInfoBar"
                         x:Uid="ScreenshotCaptureStatusInfoBar"
                         AutomationProperties.AutomationId="ScreenshotCaptureStatusInfoBar"
+                        AutomationProperties.LiveSetting="Polite"
                         IsClosable="False"
                         IsOpen="{x:Bind ScreenshotViewModel.IsInfoOpen, Mode=OneWay}"
                         Message="{x:Bind ScreenshotViewModel.InfoMessage, Mode=OneWay}"
