@@ -906,6 +906,60 @@
   <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>The signed manifest, source, size, SHA-256, archive layout, or installed files failed validation. The current component was kept.</value></data>
   <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>The local analysis component could not be installed or activated. The current component and user data were kept.</value></data>
   <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} Error code: {1}</value></data>
+  <data name="ScreenshotCaptureSectionTitle.Text" xml:space="preserve"><value>Quick screenshot</value></data>
+  <data name="ScreenshotCaptureToggleTitle.Text" xml:space="preserve"><value>Import after a system screenshot</value></data>
+  <data name="ScreenshotCaptureToggleDescription.Text" xml:space="preserve"><value>Press the shortcut, then freely choose a capture mode in the Windows Snipping Tool.</value></data>
+  <data name="ScreenshotCaptureAnalysisDisclosure.Text" xml:space="preserve"><value>Only a new image from this short capture session is read and processed with the current analysis settings.</value></data>
+  <data name="ScreenshotCaptureToggle.AutomationProperties.Name" xml:space="preserve"><value>Import after a system screenshot</value></data>
+  <data name="ScreenshotHotKeyLabel.Text" xml:space="preserve"><value>Screenshot shortcut</value></data>
+  <data name="ChangeScreenshotHotKeyButton.Content" xml:space="preserve"><value>Change</value></data>
+  <data name="ChangeScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>Change the screenshot shortcut</value></data>
+  <data name="ScreenshotCaptureStatusLabel.Text" xml:space="preserve"><value>Status</value></data>
+  <data name="ScreenshotCaptureStatusInfoBar.Title" xml:space="preserve"><value>Quick screenshot</value></data>
+  <data name="ScreenshotCaptureStatusDisabled" xml:space="preserve"><value>Off</value></data>
+  <data name="ScreenshotCaptureStatusPreparing" xml:space="preserve"><value>Preparing</value></data>
+  <data name="ScreenshotCaptureStatusReady" xml:space="preserve"><value>Ready</value></data>
+  <data name="ScreenshotCaptureStatusCapturing" xml:space="preserve"><value>Waiting for screenshot</value></data>
+  <data name="ScreenshotCaptureStatusImporting" xml:space="preserve"><value>Importing</value></data>
+  <data name="ScreenshotCaptureStatusUnavailable" xml:space="preserve"><value>Shortcut unavailable</value></data>
+  <data name="ScreenshotCaptureHotKeyConflictMessage" xml:space="preserve"><value>Another app is using this shortcut. Choose a different combination and try again.</value></data>
+  <data name="ScreenshotCaptureRegistrationFailedMessage" xml:space="preserve"><value>Quick screenshot is unavailable. Turn it off and retry, or choose another shortcut.</value></data>
+  <data name="ScreenshotCapturePreferenceFailedMessage" xml:space="preserve"><value>The quick screenshot setting could not be saved. The existing setting was kept.</value></data>
+  <data name="ScreenshotCaptureNotReadyMessage" xml:space="preserve"><value>Quick screenshot is still preparing. Try again shortly.</value></data>
+  <data name="ScreenshotCaptureLaunchFailedMessage" xml:space="preserve"><value>The Windows Snipping Tool could not be started. Try again shortly.</value></data>
+  <data name="ScreenshotCaptureClipboardUnavailableMessage" xml:space="preserve"><value>The Clipboard is temporarily unavailable. This screenshot was not imported.</value></data>
+  <data name="ScreenshotCaptureUnsupportedImageMessage" xml:space="preserve"><value>The screenshot image is unsupported and was not imported.</value></data>
+  <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>The screenshot could not be imported. Existing images and settings were not affected.</value></data>
+  <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>This screenshot already exists and was not imported again.</value></data>
+  <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>No new screenshot was detected, so this capture session ended.</value></data>
+  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>Change screenshot shortcut</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>Save shortcut</value></data>
+  <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>Change screenshot shortcut</value></data>
+  <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>Modifier keys</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.Content" xml:space="preserve"><value>Win</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Windows key</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.Content" xml:space="preserve"><value>Ctrl</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Control key</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.Content" xml:space="preserve"><value>Alt</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Alt key</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.Content" xml:space="preserve"><value>Shift</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Shift key</value></data>
+  <data name="ScreenshotHotKeyKeyLabel.Text" xml:space="preserve"><value>Key</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.Name" xml:space="preserve"><value>Screenshot shortcut key</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.HelpText" xml:space="preserve"><value>Focus the field, then press one supported key.</value></data>
+  <data name="ScreenshotHotKeyKeyInputHint.Text" xml:space="preserve"><value>Focus the field, then press one key.</value></data>
+  <data name="ScreenshotHotKeySpecialKeysLabel.Text" xml:space="preserve"><value>Special primary keys</value></data>
+  <data name="ScreenshotHotKeyTabOption.Content" xml:space="preserve"><value>Tab</value></data>
+  <data name="ScreenshotHotKeyTabOption.AutomationProperties.Name" xml:space="preserve"><value>Set the primary key to Tab</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.Content" xml:space="preserve"><value>Caps Lock</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.AutomationProperties.Name" xml:space="preserve"><value>Set the primary key to Caps Lock</value></data>
+  <data name="ScreenshotHotKeyPreviewLabel.Text" xml:space="preserve"><value>Preview</value></data>
+  <data name="ScreenshotHotKeyDialogErrorInfoBar.Title" xml:space="preserve"><value>Shortcut could not be saved</value></data>
+  <data name="ResetScreenshotHotKeyButton.Content" xml:space="preserve"><value>Restore default</value></data>
+  <data name="ResetScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>Restore the default shortcut in this form</value></data>
+  <data name="ScreenshotHotKeyInvalidMessage" xml:space="preserve"><value>Set a supported primary key.</value></data>
+  <data name="ScreenshotHotKeyUnsupportedKeyMessage" xml:space="preserve"><value>This key is not supported. Press another single key.</value></data>
   <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>Phone receive</value></data>
   <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
   <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>Enable this only on a trusted home or personal local network.</value></data>

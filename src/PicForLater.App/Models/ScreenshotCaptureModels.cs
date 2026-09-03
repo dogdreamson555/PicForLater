@@ -14,6 +14,8 @@ public enum ScreenshotHotKeyModifiers
 
 public enum ScreenshotHotKeyKey
 {
+    Tab = 0x09,
+    CapitalLock = 0x14,
     D0 = 0x30,
     D1 = 0x31,
     D2 = 0x32,
@@ -50,6 +52,37 @@ public enum ScreenshotHotKeyKey
     X = 0x58,
     Y = 0x59,
     Z = 0x5A,
+    NumberPad0 = 0x60,
+    NumberPad1 = 0x61,
+    NumberPad2 = 0x62,
+    NumberPad3 = 0x63,
+    NumberPad4 = 0x64,
+    NumberPad5 = 0x65,
+    NumberPad6 = 0x66,
+    NumberPad7 = 0x67,
+    NumberPad8 = 0x68,
+    NumberPad9 = 0x69,
+    Decimal = 0x6E,
+    F1 = 0x70,
+    F2 = 0x71,
+    F3 = 0x72,
+    F4 = 0x73,
+    F5 = 0x74,
+    F6 = 0x75,
+    F7 = 0x76,
+    F8 = 0x77,
+    F9 = 0x78,
+    F10 = 0x79,
+    F11 = 0x7A,
+    F12 = 0x7B,
+    OemSemicolon = 0xBA,
+    OemComma = 0xBC,
+    OemPeriod = 0xBE,
+    OemQuestion = 0xBF,
+    OemOpenBrackets = 0xDB,
+    OemPipe = 0xDC,
+    OemCloseBrackets = 0xDD,
+    OemQuotes = 0xDE,
 }
 
 public readonly record struct ScreenshotHotKey
@@ -58,11 +91,6 @@ public readonly record struct ScreenshotHotKey
         ScreenshotHotKeyModifiers.Alt |
         ScreenshotHotKeyModifiers.Control |
         ScreenshotHotKeyModifiers.Shift |
-        ScreenshotHotKeyModifiers.Win;
-
-    private const ScreenshotHotKeyModifiers RequiredSystemModifiers =
-        ScreenshotHotKeyModifiers.Alt |
-        ScreenshotHotKeyModifiers.Control |
         ScreenshotHotKeyModifiers.Win;
 
     public ScreenshotHotKey(ScreenshotHotKeyModifiers modifiers, ScreenshotHotKeyKey key)
@@ -102,15 +130,32 @@ public readonly record struct ScreenshotHotKey
 
     public static bool IsValid(ScreenshotHotKeyModifiers modifiers, ScreenshotHotKeyKey key)
     {
-        if ((modifiers & ~AllowedModifiers) != 0 ||
-            (modifiers & RequiredSystemModifiers) == 0)
+        if ((modifiers & ~AllowedModifiers) != 0)
         {
             return false;
         }
 
+        return IsSupportedKey(key);
+    }
+
+    public static bool IsSupportedKey(ScreenshotHotKeyKey key)
+    {
         int virtualKey = (int)key;
-        return virtualKey is >= (int)ScreenshotHotKeyKey.D0 and <= (int)ScreenshotHotKeyKey.D9 or
-            >= (int)ScreenshotHotKeyKey.A and <= (int)ScreenshotHotKeyKey.Z;
+        return key is ScreenshotHotKeyKey.Tab or
+                ScreenshotHotKeyKey.CapitalLock or
+                ScreenshotHotKeyKey.Decimal or
+                ScreenshotHotKeyKey.OemSemicolon or
+                ScreenshotHotKeyKey.OemComma or
+                ScreenshotHotKeyKey.OemPeriod or
+                ScreenshotHotKeyKey.OemQuestion or
+                ScreenshotHotKeyKey.OemOpenBrackets or
+                ScreenshotHotKeyKey.OemPipe or
+                ScreenshotHotKeyKey.OemCloseBrackets or
+                ScreenshotHotKeyKey.OemQuotes ||
+            virtualKey is >= (int)ScreenshotHotKeyKey.D0 and <= (int)ScreenshotHotKeyKey.D9 or
+                >= (int)ScreenshotHotKeyKey.A and <= (int)ScreenshotHotKeyKey.Z or
+                >= (int)ScreenshotHotKeyKey.NumberPad0 and <= (int)ScreenshotHotKeyKey.NumberPad9 or
+                >= (int)ScreenshotHotKeyKey.F1 and <= (int)ScreenshotHotKeyKey.F12;
     }
 
     public override string ToString()
@@ -120,7 +165,7 @@ public readonly record struct ScreenshotHotKey
         AddModifier(parts, ScreenshotHotKeyModifiers.Control, "Ctrl");
         AddModifier(parts, ScreenshotHotKeyModifiers.Alt, "Alt");
         AddModifier(parts, ScreenshotHotKeyModifiers.Shift, "Shift");
-        parts.Add(FormatKey(Key));
+        parts.Add(FormatKey(Key, Modifiers));
         return string.Join(" + ", parts);
     }
 
@@ -135,12 +180,52 @@ public readonly record struct ScreenshotHotKey
         }
     }
 
-    private static string FormatKey(ScreenshotHotKeyKey key)
+    public static string FormatKey(ScreenshotHotKeyKey key) =>
+        FormatKey(key, ScreenshotHotKeyModifiers.None);
+
+    public static string FormatKey(
+        ScreenshotHotKeyKey key,
+        ScreenshotHotKeyModifiers modifiers)
     {
         int virtualKey = (int)key;
-        return virtualKey is >= (int)ScreenshotHotKeyKey.D0 and <= (int)ScreenshotHotKeyKey.D9
-            ? (virtualKey - (int)ScreenshotHotKeyKey.D0).ToString(CultureInfo.InvariantCulture)
-            : ((char)virtualKey).ToString(CultureInfo.InvariantCulture);
+        if (virtualKey is >= (int)ScreenshotHotKeyKey.D0 and <= (int)ScreenshotHotKeyKey.D9)
+        {
+            return (virtualKey - (int)ScreenshotHotKeyKey.D0).ToString(
+                CultureInfo.InvariantCulture);
+        }
+
+        if (virtualKey is >= (int)ScreenshotHotKeyKey.A and <= (int)ScreenshotHotKeyKey.Z)
+        {
+            return ((char)virtualKey).ToString(CultureInfo.InvariantCulture);
+        }
+
+        if (virtualKey is >= (int)ScreenshotHotKeyKey.NumberPad0 and
+            <= (int)ScreenshotHotKeyKey.NumberPad9)
+        {
+            return $"Num {virtualKey - (int)ScreenshotHotKeyKey.NumberPad0}";
+        }
+
+        if (virtualKey is >= (int)ScreenshotHotKeyKey.F1 and <= (int)ScreenshotHotKeyKey.F12)
+        {
+            return $"F{virtualKey - (int)ScreenshotHotKeyKey.F1 + 1}";
+        }
+
+        bool shifted = modifiers.HasFlag(ScreenshotHotKeyModifiers.Shift);
+        return key switch
+        {
+            ScreenshotHotKeyKey.Tab => "Tab",
+            ScreenshotHotKeyKey.CapitalLock => "Caps Lock",
+            ScreenshotHotKeyKey.Decimal => "Num .",
+            ScreenshotHotKeyKey.OemSemicolon => shifted ? ":" : ";",
+            ScreenshotHotKeyKey.OemComma => shifted ? "<" : ",",
+            ScreenshotHotKeyKey.OemPeriod => shifted ? ">" : ".",
+            ScreenshotHotKeyKey.OemQuestion => shifted ? "?" : "/",
+            ScreenshotHotKeyKey.OemOpenBrackets => shifted ? "{" : "[",
+            ScreenshotHotKeyKey.OemPipe => shifted ? "|" : "\\",
+            ScreenshotHotKeyKey.OemCloseBrackets => shifted ? "}" : "]",
+            ScreenshotHotKeyKey.OemQuotes => shifted ? "\"" : "'",
+            _ => throw new ArgumentOutOfRangeException(nameof(key)),
+        };
     }
 }
 

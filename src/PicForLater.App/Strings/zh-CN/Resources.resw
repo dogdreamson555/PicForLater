@@ -906,6 +906,60 @@
   <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>签名清单、来源、体积、SHA-256、压缩包布局或安装文件未通过验证；当前组件保持不变。</value></data>
   <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>无法安装或激活本地分析组件；当前组件和用户数据保持不变。</value></data>
   <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} 错误代码：{1}</value></data>
+  <data name="ScreenshotCaptureSectionTitle.Text" xml:space="preserve"><value>快捷截图</value></data>
+  <data name="ScreenshotCaptureToggleTitle.Text" xml:space="preserve"><value>完成系统截图后自动导入</value></data>
+  <data name="ScreenshotCaptureToggleDescription.Text" xml:space="preserve"><value>按下快捷键后可在 Windows 截图工具中自由选择截图方式。</value></data>
+  <data name="ScreenshotCaptureAnalysisDisclosure.Text" xml:space="preserve"><value>只读取本次短时截图会话中的新图片，并按当前分析设置处理。</value></data>
+  <data name="ScreenshotCaptureToggle.AutomationProperties.Name" xml:space="preserve"><value>完成系统截图后自动导入</value></data>
+  <data name="ScreenshotHotKeyLabel.Text" xml:space="preserve"><value>截图快捷键</value></data>
+  <data name="ChangeScreenshotHotKeyButton.Content" xml:space="preserve"><value>更改</value></data>
+  <data name="ChangeScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>更改截图快捷键</value></data>
+  <data name="ScreenshotCaptureStatusLabel.Text" xml:space="preserve"><value>状态</value></data>
+  <data name="ScreenshotCaptureStatusInfoBar.Title" xml:space="preserve"><value>快捷截图</value></data>
+  <data name="ScreenshotCaptureStatusDisabled" xml:space="preserve"><value>已关闭</value></data>
+  <data name="ScreenshotCaptureStatusPreparing" xml:space="preserve"><value>正在准备</value></data>
+  <data name="ScreenshotCaptureStatusReady" xml:space="preserve"><value>已就绪</value></data>
+  <data name="ScreenshotCaptureStatusCapturing" xml:space="preserve"><value>等待截图</value></data>
+  <data name="ScreenshotCaptureStatusImporting" xml:space="preserve"><value>正在导入</value></data>
+  <data name="ScreenshotCaptureStatusUnavailable" xml:space="preserve"><value>快捷键不可用</value></data>
+  <data name="ScreenshotCaptureHotKeyConflictMessage" xml:space="preserve"><value>此快捷键已被其他应用占用。请更换组合后重试。</value></data>
+  <data name="ScreenshotCaptureRegistrationFailedMessage" xml:space="preserve"><value>快捷截图暂不可用。请关闭后重试，或更换快捷键。</value></data>
+  <data name="ScreenshotCapturePreferenceFailedMessage" xml:space="preserve"><value>无法保存快捷截图设置。现有设置保持不变。</value></data>
+  <data name="ScreenshotCaptureNotReadyMessage" xml:space="preserve"><value>快捷截图仍在准备中，请稍后重试。</value></data>
+  <data name="ScreenshotCaptureLaunchFailedMessage" xml:space="preserve"><value>无法启动 Windows 截图工具。请稍后重试。</value></data>
+  <data name="ScreenshotCaptureClipboardUnavailableMessage" xml:space="preserve"><value>剪贴板暂不可用，本次截图未导入。</value></data>
+  <data name="ScreenshotCaptureUnsupportedImageMessage" xml:space="preserve"><value>截图图片不受支持，本次内容未导入。</value></data>
+  <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>截图导入失败。原有图片和设置未受影响。</value></data>
+  <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>这张截图已存在，无需重复导入。</value></data>
+  <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>未检测到新的截图，本次会话已结束。</value></data>
+  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>更改截图快捷键</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>保存快捷键</value></data>
+  <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>取消</value></data>
+  <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>更改截图快捷键</value></data>
+  <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>修饰键</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.Content" xml:space="preserve"><value>Win</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Windows 键</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.Content" xml:space="preserve"><value>Ctrl</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Ctrl 键</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.Content" xml:space="preserve"><value>Alt</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Alt 键</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.Content" xml:space="preserve"><value>Shift</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Shift 键</value></data>
+  <data name="ScreenshotHotKeyKeyLabel.Text" xml:space="preserve"><value>按键</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.Name" xml:space="preserve"><value>截图快捷键主键</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.HelpText" xml:space="preserve"><value>聚焦输入框后按下一个支持的单键。</value></data>
+  <data name="ScreenshotHotKeyKeyInputHint.Text" xml:space="preserve"><value>聚焦输入框后按下单键</value></data>
+  <data name="ScreenshotHotKeySpecialKeysLabel.Text" xml:space="preserve"><value>特殊主键</value></data>
+  <data name="ScreenshotHotKeyTabOption.Content" xml:space="preserve"><value>Tab</value></data>
+  <data name="ScreenshotHotKeyTabOption.AutomationProperties.Name" xml:space="preserve"><value>将主键设为 Tab</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.Content" xml:space="preserve"><value>Caps Lock</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.AutomationProperties.Name" xml:space="preserve"><value>将主键设为 Caps Lock</value></data>
+  <data name="ScreenshotHotKeyPreviewLabel.Text" xml:space="preserve"><value>预览</value></data>
+  <data name="ScreenshotHotKeyDialogErrorInfoBar.Title" xml:space="preserve"><value>无法保存快捷键</value></data>
+  <data name="ResetScreenshotHotKeyButton.Content" xml:space="preserve"><value>恢复默认</value></data>
+  <data name="ResetScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>将表单恢复为默认快捷键</value></data>
+  <data name="ScreenshotHotKeyInvalidMessage" xml:space="preserve"><value>请设置一个支持的主键。</value></data>
+  <data name="ScreenshotHotKeyUnsupportedKeyMessage" xml:space="preserve"><value>此按键暂不支持，请按下其他单键。</value></data>
   <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>手机接收</value></data>
   <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>允许通过 LocalSend 自动接收图片</value></data>
   <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>仅建议在可信的家庭或个人局域网中开启。</value></data>

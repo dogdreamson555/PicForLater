@@ -331,16 +331,20 @@ public partial class App : Application
             return;
         }
 
+#if PICFORLATER_UI_TESTING
+        IScreenshotCaptureService service = new UiTestScreenshotCaptureService();
+#else
         var fileNameFormat = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader()
             .GetString("ClipboardFileNameFormat");
         var importer = new ScreenshotCaptureImporter(
             () => ImageImporter,
             ImageProcessor.NormalizeToPngAsync,
             fileNameFormat);
-        var service = new ScreenshotCaptureService(
+        IScreenshotCaptureService service = new ScreenshotCaptureService(
             mainWindow.ScreenshotCapturePlatform,
             new ScreenshotCapturePreferenceService(LocalPreferenceStore.Instance),
             importer);
+#endif
 
         lock (ScreenshotCaptureLifecycleLock)
         {
