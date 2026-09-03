@@ -5,16 +5,18 @@ namespace PicForLater.IntegrationTests;
 
 public sealed class WindowsScreenshotCapturePlatformTests
 {
-    [Fact]
-    public void NativeModifiers_AddNoRepeatWithoutPersistingItInTheModel()
+    [Theory]
+    [InlineData(ScreenshotHotKeyModifiers.None, 0x4000u)]
+    [InlineData(ScreenshotHotKeyModifiers.Win | ScreenshotHotKeyModifiers.Alt, 0x4009u)]
+    public void NativeModifiers_AddNoRepeatWithoutPersistingItInTheModel(
+        ScreenshotHotKeyModifiers source,
+        uint expected)
     {
         uint modifiers = WindowsScreenshotCapturePlatform.GetNativeModifiers(
-            ScreenshotHotKey.Default.Modifiers);
+            source);
 
-        Assert.Equal(0x4009u, modifiers);
-        Assert.Equal(
-            ScreenshotHotKeyModifiers.Win | ScreenshotHotKeyModifiers.Alt,
-            ScreenshotHotKey.Default.Modifiers);
+        Assert.Equal(expected, modifiers);
+        Assert.Equal(source, (ScreenshotHotKeyModifiers)(modifiers & ~0x4000u));
     }
 
     [Fact]

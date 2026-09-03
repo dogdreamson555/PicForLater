@@ -107,8 +107,8 @@ public sealed class ScreenshotCaptureServiceTests
         await service.StartAsync();
         int oldId = Assert.Single(platform.Registered).Key;
         var replacement = new ScreenshotHotKey(
-            ScreenshotHotKeyModifiers.Control | ScreenshotHotKeyModifiers.Alt,
-            ScreenshotHotKeyKey.D7);
+            ScreenshotHotKeyModifiers.None,
+            ScreenshotHotKeyKey.F1);
 
         ScreenshotSettingsOperationResult result = await service.UpdateHotKeyAsync(replacement);
 
@@ -254,7 +254,7 @@ public sealed class ScreenshotCaptureServiceTests
     }
 
     [Fact]
-    public async Task Capture_ClaimsOneSessionIgnoresRepeatedTriggerAndPublishesImportedResult()
+    public async Task Capture_ImportingIgnoresRepeatedTriggerAndPublishesImportedResult()
     {
         var platform = new FakePlatform { AdvanceSequence = true };
         var importer = new BlockingImporter();
@@ -281,6 +281,87 @@ public sealed class ScreenshotCaptureServiceTests
         Assert.Equal(1, platform.SendInputCalls);
         Assert.True(platform.Calls.IndexOf("GetSequence") < platform.Calls.IndexOf("SendInput"));
         await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_SecondTriggerWhileWaitingCancelsOldSessionAndStartsFreshOne()
+    {
+        var platform = new FakePlatform();
+        var importer = new RecordingImporter();
+        var service = CreateService(
+            platform,
+            new FakePreferences(isEnabledRequested: true),
+            importer,
+            new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
+            });
+        var completions = new List<ScreenshotCaptureResult>();
+        service.CaptureCompleted += (_, args) => completions.Add(args.Result);
+        await service.StartAsync();
+        int activeId = Assert.Single(platform.Registered).Key;
+
+        platform.RaiseHotKey(activeId);
+        await EventuallyAsync(() => platform.SendInputCalls == 1);
+        Assert.Equal(CaptureState.Capturing, service.Snapshot.CaptureState);
+
+        platform.RaiseHotKey(activeId);
+        await EventuallyAsync(() => platform.SendInputCalls == 2);
+        platform.AdvanceSequence = true;
+        await EventuallyAsync(() => completions.Count == 1);
+
+        Assert.Equal(CaptureOutcome.Imported, completions[0].Outcome);
+        Assert.Single(importer.Images);
+        Assert.Equal(CaptureState.Idle, service.Snapshot.CaptureState);
+        Assert.Equal(2, platform.SendInputCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public async Task Capture_OverlayExitWithoutClipboardChangeReturnsIdleWithinGracePeriod()
+    {
+        var invokingWindow = new ScreenshotForegroundWindowSnapshot((nint)0x101, 10);
+        var captureWindow = new ScreenshotForegroundWindowSnapshot((nint)0x202, 20);
+        var platform = new FakePlatform { ForegroundWindow = invokingWindow };
+        platform.ForegroundResults.Enqueue(invokingWindow);
+        platform.ForegroundResults.Enqueue(captureWindow);
+        var service = CreateService(
+            platform,
+            new FakePreferences(isEnabledRequested: true),
+            options: new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureUiExitGracePeriod = TimeSpan.FromMilliseconds(20),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
+            });
+        var completions = new List<ScreenshotCaptureResult>();
+        service.CaptureCompleted += (_, args) => completions.Add(args.Result);
+        await service.StartAsync();
+
+        platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
+        await EventuallyAsync(() => platform.SendInputCalls == 1);
+        await EventuallyAsync(() => service.Snapshot.CaptureState == CaptureState.Idle);
+
+        Assert.Empty(completions);
+        Assert.Equal(1, platform.SendInputCalls);
+        Assert.Equal(0, platform.ReadClipboardCalls);
+        await service.StopAsync();
+    }
+
+    [Fact]
+    public void Options_RejectCaptureUiExitGraceOverOneSecond()
+    {
+        var options = ScreenshotCaptureOptions.Default with
+        {
+            CaptureUiExitGracePeriod = TimeSpan.FromMilliseconds(1001),
+        };
+
+        Assert.Throws<ArgumentOutOfRangeException>(options.Validate);
     }
 
     [Fact]
@@ -748,15 +829,17 @@ public sealed class ScreenshotCaptureServiceTests
         internal Queue<uint> SequenceResults { get; } = new();
         internal Queue<ScreenshotClipboardAccessResult> ProbeResults { get; } = new();
         internal Queue<ScreenshotClipboardReadResult> ReadResults { get; } = new();
+        internal Queue<ScreenshotForegroundWindowSnapshot> ForegroundResults { get; } = new();
         internal Dictionary<int, ScreenshotHotKey> Registered { get; } = [];
         internal List<int> UnregisterCalls { get; } = [];
         internal HashSet<int> UnregisterFailures { get; } = [];
         internal List<string> Calls { get; } = [];
-        internal bool AdvanceSequence { get; init; }
+        internal bool AdvanceSequence { get; set; }
         internal bool SequenceChangesDuringSend { get; init; }
         internal bool KeysReleased { get; init; } = true;
         internal bool SendInputSucceeds { get; init; } = true;
         internal bool ThrowDisposedOnUnregister { get; init; }
+        internal ScreenshotForegroundWindowSnapshot ForegroundWindow { get; set; }
         internal int SendInputCalls { get; private set; }
         internal int ProbeClipboardCalls { get; private set; }
         internal int ReadClipboardCalls { get; private set; }
@@ -825,6 +908,11 @@ public sealed class ScreenshotCaptureServiceTests
 
             return _sequence;
         }
+
+        public ScreenshotForegroundWindowSnapshot GetForegroundWindowSnapshot() =>
+            ForegroundResults.Count > 0
+                ? ForegroundResults.Dequeue()
+                : ForegroundWindow;
 
         public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(
             CancellationToken cancellationToken = default)

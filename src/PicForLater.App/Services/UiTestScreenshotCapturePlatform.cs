@@ -25,6 +25,8 @@ internal sealed class UiTestScreenshotCapturePlatform : IScreenshotCapturePlatfo
 
     public bool SendScreenshotShortcut() => true;
 
+    public ScreenshotForegroundWindowSnapshot GetForegroundWindowSnapshot() => default;
+
     public uint GetClipboardSequenceNumber() => 1;
 
     public ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(

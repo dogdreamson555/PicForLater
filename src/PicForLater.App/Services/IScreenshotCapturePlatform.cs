@@ -14,6 +14,8 @@ public interface IScreenshotCapturePlatform
 
     bool SendScreenshotShortcut();
 
+    ScreenshotForegroundWindowSnapshot GetForegroundWindowSnapshot();
+
     uint GetClipboardSequenceNumber();
 
     ValueTask<ScreenshotClipboardAccessResult> ProbeClipboardAccessAsync(

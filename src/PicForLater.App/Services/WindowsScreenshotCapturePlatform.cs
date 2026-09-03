@@ -155,6 +155,19 @@ internal sealed class WindowsScreenshotCapturePlatform : IScreenshotCapturePlatf
         return inserted == inputs.Length;
     }
 
+    public ScreenshotForegroundWindowSnapshot GetForegroundWindowSnapshot()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        nint windowHandle = NativeMethods.GetForegroundWindow();
+        if (windowHandle == 0)
+        {
+            return default;
+        }
+
+        _ = NativeMethods.GetWindowThreadProcessId(windowHandle, out uint processId);
+        return new ScreenshotForegroundWindowSnapshot(windowHandle, processId);
+    }
+
     public uint GetClipboardSequenceNumber()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -366,6 +379,9 @@ internal sealed class WindowsScreenshotCapturePlatform : IScreenshotCapturePlatf
         [DllImport("user32.dll")]
         internal static extern short GetAsyncKeyState(int virtualKey);
 
+        [DllImport("user32.dll")]
+        internal static extern nint GetForegroundWindow();
+
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern uint SendInput(
             uint inputCount,
@@ -434,6 +450,8 @@ internal sealed class UnavailableScreenshotCapturePlatform : IScreenshotCaptureP
     public bool AreCaptureKeysReleased(ScreenshotHotKey hotKey) => false;
 
     public bool SendScreenshotShortcut() => false;
+
+    public ScreenshotForegroundWindowSnapshot GetForegroundWindowSnapshot() => default;
 
     public uint GetClipboardSequenceNumber() => 0;
 
