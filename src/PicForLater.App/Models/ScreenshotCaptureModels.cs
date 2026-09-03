@@ -367,6 +367,13 @@ public sealed record ScreenshotClipboardImage
     public Stream OpenReadStream() => new MemoryStream(_bytes, writable: false);
 }
 
+public readonly record struct ScreenshotForegroundWindowSnapshot(
+    nint WindowHandle,
+    uint ProcessId)
+{
+    public bool IsAvailable => WindowHandle != 0;
+}
+
 public sealed record ScreenshotClipboardReadResult(
     ScreenshotClipboardReadStatus Status,
     uint SequenceNumber,
@@ -417,6 +424,8 @@ public sealed record ScreenshotCaptureOptions
 
     public TimeSpan ClipboardPollingInterval { get; init; } = TimeSpan.FromMilliseconds(60);
 
+    public TimeSpan CaptureUiExitGracePeriod { get; init; } = TimeSpan.FromMilliseconds(750);
+
     public TimeSpan CaptureTimeout { get; init; } = TimeSpan.FromSeconds(60);
 
     public void Validate()
@@ -424,7 +433,13 @@ public sealed record ScreenshotCaptureOptions
         ValidatePositive(KeyReleaseTimeout, nameof(KeyReleaseTimeout));
         ValidatePositive(KeyReleasePollingInterval, nameof(KeyReleasePollingInterval));
         ValidatePositive(ClipboardPollingInterval, nameof(ClipboardPollingInterval));
+        ValidatePositive(CaptureUiExitGracePeriod, nameof(CaptureUiExitGracePeriod));
         ValidatePositive(CaptureTimeout, nameof(CaptureTimeout));
+        if (CaptureUiExitGracePeriod > TimeSpan.FromSeconds(1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(CaptureUiExitGracePeriod));
+        }
+
         if (CaptureTimeout > TimeSpan.FromSeconds(120))
         {
             throw new ArgumentOutOfRangeException(nameof(CaptureTimeout));

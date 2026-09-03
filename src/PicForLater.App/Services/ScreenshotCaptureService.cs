@@ -23,6 +23,7 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
     private int _nextHotKeyId = FirstHotKeyId;
     private CancellationTokenSource? _captureCancellation;
     private Task _captureTask = Task.CompletedTask;
+    private bool _restartCaptureRequested;
 
     public ScreenshotCaptureService(
         IScreenshotCapturePlatform platform,
@@ -251,6 +252,7 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
 
                 _started = false;
                 _acceptHotKeyMessages = false;
+                _restartCaptureRequested = false;
                 _captureCancellation?.Cancel();
                 captureTask = wasStarted ? _captureTask : Task.CompletedTask;
                 var registrationIds = new HashSet<int>(_unregisterRetryIds);
@@ -368,6 +370,7 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
         lock (_stateGate)
         {
             _acceptHotKeyMessages = false;
+            _restartCaptureRequested = false;
             _captureCancellation?.Cancel();
         }
 
@@ -418,11 +421,23 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 !_acceptHotKeyMessages ||
                 _activeHotKeyId != e.HotKeyId ||
                 _snapshot.RegistrationState != RegistrationState.Ready ||
-                _snapshot.CaptureState != CaptureState.Idle)
+                _snapshot.CaptureState == CaptureState.Importing)
             {
                 return;
             }
 
+            if (_snapshot.CaptureState == CaptureState.Capturing)
+            {
+                // An unpackaged caller cannot receive the Snipping Tool's cancel
+                // callback. A fresh hotkey press is therefore an explicit retry:
+                // cancel the stale wait and let its finally block start one new
+                // session after the old one has fully exited.
+                _restartCaptureRequested = true;
+                _captureCancellation?.Cancel();
+                return;
+            }
+
+            _restartCaptureRequested = false;
             captureCancellation = new CancellationTokenSource();
             _captureCancellation = captureCancellation;
             changedSnapshot = SetSnapshotLocked(_snapshot with { CaptureState = CaptureState.Capturing });
@@ -475,6 +490,8 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+            ScreenshotForegroundWindowSnapshot invokingForeground =
+                _platform.GetForegroundWindowSnapshot();
             if (!_platform.SendScreenshotShortcut())
             {
                 completion = ScreenshotCaptureResult.Failed(
@@ -483,15 +500,27 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+            ScreenshotForegroundWindowSnapshot captureUiForeground = default;
+            long? captureUiExitObservedAt = null;
             while (true)
             {
                 await Task.Delay(_options.ClipboardPollingInterval, cancellationToken)
                     .ConfigureAwait(false);
+                bool captureUiExitGraceElapsed = HasCaptureUiExitGraceElapsed(
+                    invokingForeground,
+                    _platform.GetForegroundWindowSnapshot(),
+                    ref captureUiForeground,
+                    ref captureUiExitObservedAt);
                 uint currentSequence = _platform.GetClipboardSequenceNumber();
                 if (currentSequence == observedSequence)
                 {
                     if (currentSequence != 0)
                     {
+                        if (captureUiExitGraceElapsed)
+                        {
+                            return;
+                        }
+
                         continue;
                     }
 
@@ -508,6 +537,11 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                     currentSequence = zeroProbe.SequenceNumber;
                     if (currentSequence == observedSequence)
                     {
+                        if (captureUiExitGraceElapsed)
+                        {
+                            return;
+                        }
+
                         continue;
                     }
 
@@ -538,6 +572,11 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                     // A zero polling value can mean temporary window-station
                     // inaccessibility rather than a wrapped sequence. Never
                     // claim content that the opened Clipboard identifies as old.
+                    if (captureUiExitGraceElapsed)
+                    {
+                        return;
+                    }
+
                     continue;
                 }
 
@@ -545,6 +584,11 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
                 {
                     case ScreenshotClipboardReadStatus.NoImage:
                         observedSequence = read.SequenceNumber;
+                        if (captureUiExitGraceElapsed)
+                        {
+                            return;
+                        }
+
                         continue;
                     case ScreenshotClipboardReadStatus.ClipboardUnavailable:
                         completion = ScreenshotCaptureResult.Failed(
@@ -606,8 +650,27 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
             {
                 if (ReferenceEquals(_captureCancellation, sessionCancellation))
                 {
-                    _captureCancellation = null;
-                    changedSnapshot = SetSnapshotLocked(_snapshot with { CaptureState = CaptureState.Idle });
+                    if (_restartCaptureRequested &&
+                        _started &&
+                        _acceptHotKeyMessages &&
+                        _activeHotKeyId.HasValue &&
+                        _snapshot.RegistrationState == RegistrationState.Ready &&
+                        _snapshot.CaptureState == CaptureState.Capturing)
+                    {
+                        _restartCaptureRequested = false;
+                        var restartCancellation = new CancellationTokenSource();
+                        _captureCancellation = restartCancellation;
+                        _captureTask = RunCaptureAsync(
+                            restartCancellation,
+                            _snapshot.HotKey);
+                    }
+                    else
+                    {
+                        _restartCaptureRequested = false;
+                        _captureCancellation = null;
+                        changedSnapshot = SetSnapshotLocked(
+                            _snapshot with { CaptureState = CaptureState.Idle });
+                    }
                 }
             }
 
@@ -639,6 +702,38 @@ public sealed class ScreenshotCaptureService : IScreenshotCaptureService
         }
 
         return false;
+    }
+
+    private bool HasCaptureUiExitGraceElapsed(
+        ScreenshotForegroundWindowSnapshot invokingForeground,
+        ScreenshotForegroundWindowSnapshot currentForeground,
+        ref ScreenshotForegroundWindowSnapshot captureUiForeground,
+        ref long? captureUiExitObservedAt)
+    {
+        if (!captureUiForeground.IsAvailable)
+        {
+            if (currentForeground.IsAvailable &&
+                currentForeground.WindowHandle != invokingForeground.WindowHandle)
+            {
+                captureUiForeground = currentForeground;
+            }
+
+            return false;
+        }
+
+        bool captureUiStillForeground =
+            currentForeground.WindowHandle == captureUiForeground.WindowHandle ||
+            (captureUiForeground.ProcessId != 0 &&
+                currentForeground.ProcessId == captureUiForeground.ProcessId);
+        if (captureUiStillForeground)
+        {
+            captureUiExitObservedAt = null;
+            return false;
+        }
+
+        captureUiExitObservedAt ??= Stopwatch.GetTimestamp();
+        return Stopwatch.GetElapsedTime(captureUiExitObservedAt.Value) >=
+            _options.CaptureUiExitGracePeriod;
     }
 
     private bool TryEnterImporting(CancellationTokenSource sessionCancellation)
