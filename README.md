@@ -40,6 +40,8 @@ PicForLater 是一款面向 Windows 的图片资料整理应用，用来保存�
 - 从图片内容提取日期、时间、地点和提醒候选；提醒仅在用户确认后创建。
 - 使用 Windows 内置 OCR，也可按需安装增强的本地 OCR / 视觉模型。
 - 支持本地模型、第三方 API，以及兼容接口的自定义服务。
+- 允许连接其他设备导入图片并分析。
+- 可选的全局快捷键可唤起 Windows 截图工具，并在截图完成后自动导入新图片。
 - 提供中文和英文界面，支持深色模式与高对比度。
 - 无账号、无广告、无产品遥测。
 
@@ -223,7 +225,22 @@ PicForLater 默认本地运行，但不能笼统称为“完全离线”。以�
 | API 连接测试                     | 固定合成文字，或用户明确运行图片测试时发送仓库内授权猫图；测试可能计费                                                                                                       | 用户图片、用户 OCR 和资料库内容                                             |
 | 手动检查更新                     | 只有用户点击“检查更新”后，才请求固定的 GitHub Releases API。GitHub 仍会收到常规网络信息，例如 IP 地址、请求时间和包含当前三段版本的 `PicForLater/M.m.p` User-Agent               | 图片、OCR 文字、资料库内容、设置、API Key 和其他凭据                        |
 | 手机接收（兼容 LocalSend）       | 用户开启后，在局域网监听 TCP/UDP`53317`，通过本地发现、TLS 和临时 PIN 接收已选择的图片；传输不经过 PicForLater 或 LocalSend 的云端中继                                     | 仅仅接收图片不会自动把图片发送给远程分析 API                                |
+| 快捷截图                         | 默认关闭；开启且 PicForLater 正在运行时注册用户选择的全局快捷键。触发后短暂检查相关按键是否释放、合成 `Win+Shift+S`，并在有时限的会话内观察前台 HWND/PID、Clipboard sequence 和随后出现的 PNG/DIBV5 图片；导入图片会保存到资料库并按当前分析配置处理 | 不使用低级键盘 hook，不记录一般击键；空闲或关闭时不读取 Clipboard；不读取前台窗口标题、进程名或路径；不会持久化或发送 HWND/PID、sequence，也不会把未导入的 Clipboard 内容或底层异常写入状态、错误或日志 |
 | 按需下载                         | 用户确认后访问清单固定的 GitHub Releases、Hugging Face 或 NVIDIA 来源以取得组件、模型或运行库                                                                                | 不会后台自动下载大型模型；核心 Setup 的 Windows App Runtime 已离线携带      |
+
+### 快捷截图的本地访问与系统边界
+
+快捷截图只在用户开启且 PicForLater 进程运行时注册所选快捷键；关闭功能或退出应用会停止响应。它使用 Windows `RegisterHotKey`，不安装能观察所有键盘输入的低级 hook。触发后最多约一秒查询 Win、Ctrl、Alt、Shift、配置主键和 S 是否已释放，以免合成按键留下卡键，随后通过 `SendInput` 发送固定的 `Win+Shift+S`。快捷截图功能只在本地 `settings.json` 中保存启用状态和当前快捷键，不保存按键历史或当时位于前台的应用；成功导入的图片仍像其他资料库项目一样记录必要的本地文件与数据库信息。
+
+截图会话平时不存在。触发后，应用保存一个只表示 Clipboard 是否变化的 sequence 数值；检测到变化时只检查并复制 PNG 或 CF_DIBV5 图片，其他 Clipboard 格式不会被读取。Clipboard 在解码和导入前已经关闭；来自 Clipboard 的 linked color profile 路径会被拒绝，不会访问其可能指向的本地或网络文件。会话最长 60 秒；截图覆盖层离开前台且没有新图片时，默认约 750 毫秒后结束。
+
+为识别截图覆盖层是否已经退出，Capturing 会话会临时采样当前前台窗口的 HWND 和 PID。这可能包括用户通过 Alt+Tab 切换到的其他应用，但 PicForLater 只比较数值是否仍属于同一窗口或进程，不读取窗口标题、进程名称、可执行文件路径或窗口内容。HWND/PID 和 Clipboard sequence 仅存在于当前会话内，不写入设置、数据库、状态、错误或日志，也不发送到网络。
+
+Clipboard 不提供可信的图片来源标识，因此 PicForLater 无法严格证明新图片来自本次 Windows 截图工具。如果用户在会话期间从其他应用复制图片，该图片也可能被导入。导入结果与手动导入一致，会保存到 `%LocalAppData%\PicForLater` 并进入当前分析流程；关闭快捷截图不会删除既有图片，本地/远程处理仍遵循上表边界。
+
+PicForLater 不会在导入后清空 Clipboard，也不控制 Windows 的 Clipboard 历史、跨设备同步或截图工具自身的保存行为。根据用户的 Windows 设置和截图工具版本，截图可能继续保留在 Clipboard 历史或由截图工具自动保存到 Screenshots 文件夹；Clipboard 历史的跨设备同步行为由 Windows 和登录账号的设置决定。关闭功能、删除 PicForLater 中的图片或卸载 PicForLater 都不会删除这些系统侧副本。相关行为可在 Windows 的 [Clipboard 设置](https://support.microsoft.com/en-us/windows/apps/using-the-clipboard)和[截图工具设置](https://support.microsoft.com/en-us/windows/apps/use-snipping-tool-to-capture-screenshots)中管理。
+
+### 其他信息
 
 启动应用、恢复应用、打开或停留在设置页都不会检查更新。发现新版本后，应用也不会自动打开浏览器；只有用户再次点击“查看发布页”才会打开由已验证版本号构造的具体 GitHub Release 页面。应用不会自动下载或运行安装程序，下载与安装仍由用户手动完成。
 
