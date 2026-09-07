@@ -942,8 +942,7 @@
   <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>The screenshot could not be imported. Existing images and settings were not affected.</value></data>
   <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>This screenshot already exists and was not imported again.</value></data>
   <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>No new screenshot was detected, so this capture session ended.</value></data>
-  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>Change screenshot shortcut</value></data>
-  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>Save shortcut</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>Save</value></data>
   <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>Change screenshot shortcut</value></data>
   <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>Modifier keys</value></data>

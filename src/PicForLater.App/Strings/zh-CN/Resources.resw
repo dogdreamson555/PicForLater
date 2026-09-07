@@ -942,8 +942,7 @@
   <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>截图导入失败。原有图片和设置未受影响。</value></data>
   <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>这张截图已存在，无需重复导入。</value></data>
   <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>未检测到新的截图，本次会话已结束。</value></data>
-  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>更改截图快捷键</value></data>
-  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>保存快捷键</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>保存</value></data>
   <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>更改截图快捷键</value></data>
   <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>修饰键</value></data>
