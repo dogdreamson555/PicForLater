@@ -106,7 +106,7 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 1. 一键下载本地分析组件。
 2. 选择分析方式；如果设备性能允许，推荐使用“始终增强”。
-3. 选择推理设备。
+3. 选择推理设备。若先前没有安装对应的 [CUDA](https://developer.nvidia.com/cuda-12-8-0-download-archive) / [CuDNN]((https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.25.0.15_cuda12-archive.zip)) 运行库，需要先点击“安装运行库”进行一键安装。
 4. 一键下载推荐模型。
 5. 如有需要，在“高级设置”中为不同场景指定不同模型。
 
