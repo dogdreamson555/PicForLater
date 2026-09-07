@@ -24,7 +24,7 @@
             MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
             Margin="{StaticResource AppPagePaddingNarrow}"
             HorizontalAlignment="Stretch"
-            Spacing="{StaticResource AppSpacingXl}">
+            Spacing="{StaticResource AppSpacingLg}">
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroup x:Name="WidthStates">
                     <VisualState x:Name="Narrow" />

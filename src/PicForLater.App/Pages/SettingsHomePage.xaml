@@ -24,7 +24,7 @@
                 MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
                 Margin="{StaticResource AppPagePaddingNarrow}"
                 HorizontalAlignment="Stretch"
-                RowSpacing="{StaticResource AppSpacingXl}">
+                RowSpacing="{StaticResource AppSpacingLg}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />

@@ -87,7 +87,7 @@
                     Severity="{x:Bind local:ApiAnalysisSettingsPage.StatusSeverity(ViewModel.StatusKind), Mode=OneWay}"
                     Visibility="{x:Bind local:ApiAnalysisSettingsPage.ElementVisibility(ViewModel.HasStatusMessage), Mode=OneWay}" />
 
-                <StackPanel Spacing="{StaticResource AppSpacingXl}">
+                <StackPanel Spacing="{StaticResource AppSpacingLg}">
                     <StackPanel Spacing="{StaticResource AppSpacingSm}">
                         <StackPanel Spacing="{StaticResource AppSpacingXs}">
                             <TextBlock x:Uid="ApiProviderSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
