@@ -517,6 +517,16 @@
   <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>Confirmed reminders</value></data>
   <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>Confirmed suggestions appear here.</value></data>
   <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>Confirmed reminders</value></data>
+  <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>{0} suggestions selected</value></data>
+  <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple pending suggestions</value></data>
+  <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>Select all</value></data>
+  <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>Select all loaded pending suggestions</value></data>
+  <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>Cancel selection</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Leave suggestion selection</value></data>
+  <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Dismiss selected suggestions</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>Dismissed {0} suggestions; {1} failed.</value></data>
   <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
   <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple confirmed reminders</value></data>
   <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>Enter multiple selection</value></data>

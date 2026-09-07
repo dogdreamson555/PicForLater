@@ -136,6 +136,7 @@ public partial class RemindersPageViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanInteract))]
+    [NotifyPropertyChangedFor(nameof(HasSelectedCandidates))]
     public partial bool IsWorking { get; set; }
 
     [ObservableProperty]
@@ -146,6 +147,21 @@ public partial class RemindersPageViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool IsSelectionModeActive { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsCandidateSelectionModeActive { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedCandidates))]
+    [NotifyPropertyChangedFor(nameof(CandidateSelectionSummary))]
+    public partial int SelectedCandidateCount { get; set; }
+
+    public bool HasSelectedCandidates => SelectedCandidateCount > 0 && !IsWorking;
+
+    public string CandidateSelectionSummary => string.Format(
+        CultureInfo.CurrentCulture,
+        _resources.GetString("CandidateSelectionCountFormat"),
+        SelectedCandidateCount);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedReminders))]
@@ -392,6 +408,51 @@ public partial class RemindersPageViewModel : ObservableObject
         catch
         {
             ErrorMessage = _resources.GetString("ReminderCandidateDismissFailedError");
+        }
+        finally
+        {
+            IsWorking = false;
+        }
+    }
+
+    public async Task DismissCandidatesAsync(IReadOnlyCollection<Guid> candidateIds)
+    {
+        ArgumentNullException.ThrowIfNull(candidateIds);
+        var ids = candidateIds.Distinct().ToArray();
+        if (IsWorking || ids.Length == 0)
+        {
+            return;
+        }
+
+        IsWorking = true;
+        ErrorMessage = string.Empty;
+        StatusMessage = string.Empty;
+        var dismissed = 0;
+        var failed = 0;
+        try
+        {
+            foreach (var candidateId in ids)
+            {
+                try
+                {
+                    await GetService().DismissCandidateAsync(candidateId).ConfigureAwait(true);
+                    dismissed++;
+                    if (EditingCandidateId == candidateId)
+                    {
+                        ResetEditor();
+                    }
+                }
+                catch
+                {
+                    failed++;
+                }
+            }
+
+            await RefreshAsync(reconcile: false).ConfigureAwait(true);
+            StatusMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                _resources.GetString("ReminderCandidatesDismissedStatusFormat"),
+                dismissed, failed);
         }
         finally
         {

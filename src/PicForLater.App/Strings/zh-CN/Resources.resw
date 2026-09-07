@@ -517,6 +517,16 @@
   <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>已确认提醒</value></data>
   <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>确认候选后，提醒会显示在这里。</value></data>
   <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>已确认提醒</value></data>
+  <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>已选择 {0} 条候选</value></data>
+  <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个待确认候选</value></data>
+  <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>忽略</value></data>
+  <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>全选</value></data>
+  <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>选择全部已加载的待确认候选</value></data>
+  <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>取消选择</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>退出候选多选</value></data>
+  <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>忽略所选候选</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>已忽略 {0} 个候选，{1} 个失败。</value></data>
   <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
   <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个已确认提醒</value></data>
   <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>进入多选</value></data>

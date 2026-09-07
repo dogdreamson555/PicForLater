@@ -278,6 +278,11 @@ public sealed partial class RemindersPage : Page
         {
             SetSelectionMode(false);
         }
+        else if (e.PropertyName == nameof(RemindersPageViewModel.CandidateCount)
+                 && ViewModel.CandidateCount == 0)
+        {
+            SetCandidateSelectionMode(false);
+        }
     }
 
     private void RemindersPage_SizeChanged(object sender, SizeChangedEventArgs e) =>
@@ -285,6 +290,11 @@ public sealed partial class RemindersPage : Page
 
     private void ReminderCandidatesList_ItemClick(object sender, ItemClickEventArgs e)
     {
+        if (ViewModel.IsCandidateSelectionModeActive)
+        {
+            return;
+        }
+
         if (e.ClickedItem is ReminderCandidateItem item)
         {
             ViewModel.EditCandidate(item);
@@ -308,6 +318,11 @@ public sealed partial class RemindersPage : Page
 
     private void ReviewReminderCandidateButton_Click(object sender, RoutedEventArgs e)
     {
+        if (ToggleCandidateSelection(sender))
+        {
+            return;
+        }
+
         if ((sender as FrameworkElement)?.DataContext is ReminderCandidateItem item)
         {
             ViewModel.EditCandidate(item);
@@ -331,6 +346,11 @@ public sealed partial class RemindersPage : Page
 
     private void ReminderCandidateThumbnailButton_Click(object sender, RoutedEventArgs e)
     {
+        if (ToggleCandidateSelection(sender))
+        {
+            return;
+        }
+
         if ((sender as FrameworkElement)?.DataContext is ReminderCandidateItem item)
         {
             ViewModel.EditCandidate(item);
@@ -356,6 +376,12 @@ public sealed partial class RemindersPage : Page
         object sender,
         DoubleTappedRoutedEventArgs e)
     {
+        if (ViewModel.IsCandidateSelectionModeActive || ViewModel.IsSelectionModeActive)
+        {
+            e.Handled = true;
+            return;
+        }
+
         OpenImageFromTag(sender);
         e.Handled = true;
     }
@@ -377,6 +403,7 @@ public sealed partial class RemindersPage : Page
             && ViewModel.Candidates.FirstOrDefault(item => item.Candidate.Id == candidateId)
                 is { } item)
         {
+            SetCandidateSelectionMode(false);
             ViewModel.EditCandidate(item);
             UpdateResponsiveLayout();
         }
@@ -388,6 +415,7 @@ public sealed partial class RemindersPage : Page
             && ViewModel.Candidates.FirstOrDefault(item => item.Candidate.Id == candidateId)
                 is { } item)
         {
+            SetCandidateSelectionMode(false);
             ViewModel.EditCandidate(item);
             await ViewModel.DismissCandidateCommand.ExecuteAsync(null);
             UpdateResponsiveLayout();
@@ -436,6 +464,69 @@ public sealed partial class RemindersPage : Page
         {
             await DeleteSingleReminderAsync(reminderId);
         }
+    }
+
+    private void CandidateSelectionModeButton_Click(object sender, RoutedEventArgs e) =>
+        SetCandidateSelectionMode(true);
+
+    private void CandidateCancelSelectionButton_Click(object sender, RoutedEventArgs e) =>
+        SetCandidateSelectionMode(false);
+
+    private void CandidateSelectAllButton_Click(object sender, RoutedEventArgs e) =>
+        ReminderCandidatesList.SelectAll();
+
+    private async void CandidateDismissSelectedButton_Click(object sender, RoutedEventArgs e)
+    {
+        var ids = ReminderCandidatesList.SelectedItems
+            .OfType<ReminderCandidateItem>()
+            .Select(item => item.Candidate.Id)
+            .ToArray();
+        await ViewModel.DismissCandidatesAsync(ids);
+        SetCandidateSelectionMode(false);
+        UpdateResponsiveLayout();
+    }
+
+    private void ReminderCandidatesList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        ViewModel.SelectedCandidateCount = ReminderCandidatesList.SelectedItems.Count;
+
+    private bool ToggleCandidateSelection(object sender)
+    {
+        if (!ViewModel.IsCandidateSelectionModeActive)
+        {
+            return false;
+        }
+
+        if ((sender as FrameworkElement)?.DataContext is ReminderCandidateItem item)
+        {
+            if (ReminderCandidatesList.SelectedItems.Contains(item))
+            {
+                ReminderCandidatesList.SelectedItems.Remove(item);
+            }
+            else
+            {
+                ReminderCandidatesList.SelectedItems.Add(item);
+            }
+        }
+
+        return true;
+    }
+
+    private void SetCandidateSelectionMode(bool isActive)
+    {
+        if (isActive)
+        {
+            SetSelectionMode(false);
+        }
+        else if (ReminderCandidatesList.SelectionMode != ListViewSelectionMode.None)
+        {
+            ReminderCandidatesList.SelectedItems.Clear();
+        }
+
+        ReminderCandidatesList.SelectionMode = isActive
+            ? ListViewSelectionMode.Multiple
+            : ListViewSelectionMode.None;
+        ViewModel.IsCandidateSelectionModeActive = isActive;
+        ViewModel.SelectedCandidateCount = ReminderCandidatesList.SelectedItems.Count;
     }
 
     private void ReminderSelectionModeButton_Click(object sender, RoutedEventArgs e) =>
@@ -527,6 +618,11 @@ public sealed partial class RemindersPage : Page
         if (ConfirmedRemindersList is null || ReminderSelectionModeButton is null)
         {
             return;
+        }
+
+        if (isActive)
+        {
+            SetCandidateSelectionMode(false);
         }
 
         _isSynchronizingSelection = true;
