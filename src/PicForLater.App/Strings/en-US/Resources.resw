@@ -517,6 +517,16 @@
   <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>Confirmed reminders</value></data>
   <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>Confirmed suggestions appear here.</value></data>
   <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>Confirmed reminders</value></data>
+  <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>{0} suggestions selected</value></data>
+  <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple pending suggestions</value></data>
+  <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>Select all</value></data>
+  <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>Select all loaded pending suggestions</value></data>
+  <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>Cancel selection</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Leave suggestion selection</value></data>
+  <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Dismiss selected suggestions</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>Dismissed {0} suggestions; {1} failed.</value></data>
   <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
   <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple confirmed reminders</value></data>
   <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>Enter multiple selection</value></data>
@@ -865,7 +875,6 @@
   <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>Complete API address</value></data>
   <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>Complete API address</value></data>
-  <data name="ApiEndpointEditDescription.Text" xml:space="preserve"><value>Public HTTPS and loopback addresses are supported. Changing the address invalidates the current test and consent and requires a risk confirmation before saving.</value></data>
   <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>Custom interface contract</value></data>
   <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>Only a custom interface must declare the request protocol, authentication, structured output, and network boundary.</value></data>
   <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>Change the API address?</value></data>
@@ -932,8 +941,7 @@
   <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>The screenshot could not be imported. Existing images and settings were not affected.</value></data>
   <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>This screenshot already exists and was not imported again.</value></data>
   <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>No new screenshot was detected, so this capture session ended.</value></data>
-  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>Change screenshot shortcut</value></data>
-  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>Save shortcut</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>Save</value></data>
   <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>Change screenshot shortcut</value></data>
   <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>Modifier keys</value></data>

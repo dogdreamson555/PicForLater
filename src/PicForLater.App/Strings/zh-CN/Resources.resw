@@ -517,6 +517,16 @@
   <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>已确认提醒</value></data>
   <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>确认候选后，提醒会显示在这里。</value></data>
   <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>已确认提醒</value></data>
+  <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>已选择 {0} 条候选</value></data>
+  <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个待确认候选</value></data>
+  <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>忽略</value></data>
+  <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>全选</value></data>
+  <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>选择全部已加载的待确认候选</value></data>
+  <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>取消选择</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>退出候选多选</value></data>
+  <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>忽略所选候选</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>已忽略 {0} 个候选，{1} 个失败。</value></data>
   <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>选择</value></data>
   <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>选择多个已确认提醒</value></data>
   <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>进入多选</value></data>
@@ -865,7 +875,6 @@
   <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>完整 API 地址</value></data>
   <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>完整 API 地址</value></data>
-  <data name="ApiEndpointEditDescription.Text" xml:space="preserve"><value>支持公共 HTTPS 或本机 loopback 地址。更改地址会使当前测试与同意失效，并在保存前要求确认风险。</value></data>
   <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>自定义接口契约</value></data>
   <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>仅自定义接口需要声明请求协议、鉴权、结构化输出和网络边界。</value></data>
   <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>更改 API 地址？</value></data>
@@ -932,8 +941,7 @@
   <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>截图导入失败。原有图片和设置未受影响。</value></data>
   <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>这张截图已存在，无需重复导入。</value></data>
   <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>未检测到新的截图，本次会话已结束。</value></data>
-  <data name="ScreenshotHotKeyDialog.Title" xml:space="preserve"><value>更改截图快捷键</value></data>
-  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>保存快捷键</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>保存</value></data>
   <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>更改截图快捷键</value></data>
   <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>修饰键</value></data>

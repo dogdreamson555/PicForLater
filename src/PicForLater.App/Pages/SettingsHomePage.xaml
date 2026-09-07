@@ -24,7 +24,7 @@
                 MaxWidth="{StaticResource AppSinglePaneDetailMaxWidth}"
                 Margin="{StaticResource AppPagePaddingNarrow}"
                 HorizontalAlignment="Stretch"
-                RowSpacing="{StaticResource AppSpacingXl}">
+                RowSpacing="{StaticResource AppSpacingLg}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -103,6 +103,7 @@
                                     IsEnabled="{x:Bind ScreenshotViewModel.CanToggle, Mode=OneWay}"
                                     IsOn="{x:Bind ScreenshotViewModel.IsEnabledRequested, Mode=OneWay}"
                                     MinWidth="0"
+                                    Loaded="ContentlessToggleSwitch_Loaded"
                                     OffContent="{x:Null}"
                                     OnContent="{x:Null}"
                                     Toggled="ScreenshotCaptureToggle_Toggled" />
@@ -111,7 +112,7 @@
                             <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
 
                             <StackPanel
-                                Padding="12"
+                                Padding="12,10"
                                 Spacing="{StaticResource AppSpacingMd}">
                                 <Grid
                                     x:Name="ScreenshotHotKeyRow"
@@ -120,7 +121,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                    <StackPanel Spacing="3">
                                         <TextBlock
                                             x:Uid="ScreenshotHotKeyLabel"
                                             Foreground="{ThemeResource AppSecondaryTextBrush}" />
@@ -193,6 +194,7 @@
                                     AutomationProperties.AutomationId="LocalSendReceiveToggle"
                                     IsEnabled="{x:Bind ViewModel.CanToggleLocalSend, Mode=OneWay}"
                                     MinWidth="0"
+                                    Loaded="ContentlessToggleSwitch_Loaded"
                                     OffContent="{x:Null}"
                                     OnContent="{x:Null}"
                                     Toggled="LocalSendReceiveToggle_Toggled" />
@@ -201,7 +203,7 @@
                             <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
 
                             <StackPanel
-                                Padding="12"
+                                Padding="12,10"
                                 Spacing="{StaticResource AppSpacingSm}">
                                 <Grid ColumnSpacing="{StaticResource AppSpacingMd}">
                                     <Grid.ColumnDefinitions>
@@ -280,8 +282,8 @@
                             <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
 
                             <StackPanel
-                                Padding="12"
-                                Spacing="{StaticResource AppSpacingSm}">
+                                Padding="12,9,12,11"
+                                Spacing="7">
                                 <TextBlock
                                     x:Uid="LocalSendTrustedDevicesTitle"
                                     FontWeight="SemiBold" />
@@ -298,11 +300,14 @@
                                     IsEnabled="{x:Bind ViewModel.CanManageLocalSendDevices, Mode=OneWay}"
                                     ItemsSource="{x:Bind ViewModel.LocalSendTrustedDevices, Mode=OneWay}"
                                     Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.HasLocalSendTrustedDevices), Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Spacing="5" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="models:LocalSendTrustedDeviceItem">
                                             <Grid
-                                                MinHeight="52"
-                                                Padding="0,6"
                                                 ColumnSpacing="{StaticResource AppSpacingMd}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
@@ -338,16 +343,14 @@
 
                 <StackPanel Grid.Row="1" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="CurrentExecutionSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
-                    <Border
-                        Padding="0,0,0,3"
-                        Style="{StaticResource AppSettingsListGroupStyle}">
+                    <Border Style="{StaticResource AppSettingsListGroupStyle}">
                         <StackPanel
                             x:Name="AnalysisSourceOptions"
                             x:Uid="AnalysisSourceOptions"
                             AutomationProperties.AutomationId="AnalysisSourceOptions">
                             <Grid
                                 MinHeight="64"
-                                Padding="12,6,12,10"
+                                Padding="12,0"
                                 ColumnSpacing="{StaticResource AppSpacingMd}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -355,6 +358,7 @@
                                 </Grid.ColumnDefinitions>
                                 <RadioButton
                                     x:Uid="LocalAnalysisSourceOption"
+                                    Margin="0,6,0,10"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     AutomationProperties.AutomationId="LocalAnalysisSourceOption"
@@ -394,8 +398,8 @@
                             <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
 
                             <Grid
-                                MinHeight="60"
-                                Padding="12,4,12,8"
+                                MinHeight="64"
+                                Padding="12,0"
                                 ColumnSpacing="{StaticResource AppSpacingMd}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -403,6 +407,7 @@
                                 </Grid.ColumnDefinitions>
                                 <RadioButton
                                     x:Uid="ApiAnalysisSourceOption"
+                                    Margin="0,6,0,10"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     AutomationProperties.AutomationId="ApiAnalysisSourceOption"
@@ -474,7 +479,7 @@
                     <Border Style="{StaticResource AppSettingsListGroupStyle}">
                         <StackPanel>
                             <Grid
-                                MinHeight="72"
+                                MinHeight="64"
                                 Padding="12,8"
                                 ColumnSpacing="{StaticResource AppSpacingMd}">
                                 <Grid.ColumnDefinitions>
