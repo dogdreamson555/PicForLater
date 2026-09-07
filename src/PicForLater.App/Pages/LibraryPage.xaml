@@ -93,17 +93,17 @@
                         <TextBlock
                             MaxLines="1"
                             Style="{StaticResource AppCardTitleTextBlockStyle}"
-                            Text="{x:Bind Title, Mode=OneTime}"
+                            Text="{x:Bind Title, Mode=OneWay}"
                             TextWrapping="NoWrap"
-                            ToolTipService.ToolTip="{x:Bind Title, Mode=OneTime}" />
+                            ToolTipService.ToolTip="{x:Bind Title, Mode=OneWay}" />
                         <TextBlock
                             Style="{StaticResource LibraryCardMetadataTextBlockStyle}"
-                            Text="{x:Bind CategorySummary, Mode=OneTime}"
-                            ToolTipService.ToolTip="{x:Bind CategorySummary, Mode=OneTime}" />
+                            Text="{x:Bind CategorySummary, Mode=OneWay}"
+                            ToolTipService.ToolTip="{x:Bind CategorySummary, Mode=OneWay}" />
                         <TextBlock
                             AutomationProperties.AutomationId="{x:Bind local:LibraryPage.GetAnalysisStateAutomationId(Id), Mode=OneTime}"
                             Style="{StaticResource LibraryCardMetadataTextBlockStyle}"
-                            Text="{x:Bind local:LibraryPage.GetAnalysisStatus(AnalysisState), Mode=OneTime}" />
+                            Text="{x:Bind local:LibraryPage.GetAnalysisStatus(AnalysisState), Mode=OneWay}" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -184,13 +184,13 @@
                     </Grid.RowDefinitions>
                     <TextBlock
                         FontWeight="SemiBold"
-                        Text="{x:Bind Title, Mode=OneTime}"
+                        Text="{x:Bind Title, Mode=OneWay}"
                         TextTrimming="CharacterEllipsis" />
                     <TextBlock
                         Grid.Row="1"
                         Foreground="{ThemeResource AppSecondaryTextBrush}"
                         MaxLines="2"
-                        Text="{x:Bind ListSummary, Mode=OneTime}"
+                        Text="{x:Bind ListSummary, Mode=OneWay}"
                         TextTrimming="CharacterEllipsis"
                         TextWrapping="Wrap" />
                     <Grid Grid.Row="2" ColumnSpacing="{StaticResource AppSpacingMd}">
@@ -202,7 +202,7 @@
                         <TextBlock
                             Foreground="{ThemeResource AppSecondaryTextBrush}"
                             Style="{StaticResource CaptionTextBlockStyle}"
-                            Text="{x:Bind CategorySummary, Mode=OneTime}"
+                            Text="{x:Bind CategorySummary, Mode=OneWay}"
                             TextTrimming="CharacterEllipsis" />
                         <TextBlock
                             Grid.Column="1"

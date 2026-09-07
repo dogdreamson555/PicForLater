@@ -197,8 +197,12 @@ public partial class LibraryPageViewModel : ObservableObject
         var library = GetLibrary();
         await library.SetCategoryAssignmentAsync(imageItemId, option.Id, isAssigned).ConfigureAwait(true);
         option.IsAssigned = isAssigned;
-        await LoadItemsAsync(reset: true).ConfigureAwait(true);
-        await LoadDetailAsync(imageItemId).ConfigureAwait(true);
+        var entry = await library.GetAsync(imageItemId).ConfigureAwait(true);
+        if (entry is not null && entry.Item.DeletedAtUtc is null)
+        {
+            UpdateDisplayedItem(entry);
+            await ApplyDetailAsync(entry, preserveUserInput: IsDetailDirty).ConfigureAwait(true);
+        }
     }
 
     public async Task<CategoryFilterOption> CreateCategoryAsync(string name)
@@ -314,14 +318,7 @@ public partial class LibraryPageViewModel : ObservableObject
             return;
         }
 
-        var itemIndex = Items
-            .Select((item, index) => (item, index))
-            .FirstOrDefault(candidate => candidate.item.Id == imageItemId)
-            .index;
-        if (itemIndex >= 0 && itemIndex < Items.Count && Items[itemIndex].Id == imageItemId)
-        {
-            Items[itemIndex] = MapEntry(entry);
-        }
+        UpdateDisplayedItem(entry);
 
         if (SelectedItemId == imageItemId)
         {
@@ -530,8 +527,28 @@ public partial class LibraryPageViewModel : ObservableObject
             DetailTitle,
             DetailSummary).ConfigureAwait(true);
         ShowStatus(_resources.GetString("DetailsSavedStatus"));
-        await LoadItemsAsync(reset: true).ConfigureAwait(true);
-        await LoadDetailAsync(imageItemId).ConfigureAwait(true);
+        var entry = await GetLibrary().GetAsync(imageItemId).ConfigureAwait(true);
+        if (entry is not null && entry.Item.DeletedAtUtc is null)
+        {
+            UpdateDisplayedItem(entry);
+            await ApplyDetailAsync(entry, preserveUserInput: false).ConfigureAwait(true);
+        }
+    }
+
+    private void UpdateDisplayedItem(LibraryEntry entry)
+    {
+        var displayedItem = Items.FirstOrDefault(item => item.Id == entry.Item.Id);
+        if (displayedItem is null)
+        {
+            return;
+        }
+
+        var updatedItem = MapEntry(entry);
+        displayedItem.UpdateDisplayContent(
+            updatedItem.Title,
+            updatedItem.Summary,
+            updatedItem.AnalysisState,
+            updatedItem.CategorySummary);
     }
 
     private LibraryItem MapEntry(LibraryEntry entry)
