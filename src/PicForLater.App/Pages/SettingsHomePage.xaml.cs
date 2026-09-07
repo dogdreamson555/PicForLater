@@ -1,6 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Models;
 using PicForLater.App.Services;
@@ -528,6 +529,33 @@ public sealed partial class SettingsHomePage : Page
     private void SynchronizeLocalSendToggle()
     {
         LocalSendReceiveToggle.IsOn = ViewModel.IsLocalSendEnabled;
+    }
+
+    private void ContentlessToggleSwitch_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleSwitch { OnContent: null, OffContent: null } toggle)
+        {
+            return;
+        }
+
+        toggle.ApplyTemplate();
+        RemoveToggleContentSpacing(toggle);
+    }
+
+    private static void RemoveToggleContentSpacing(DependencyObject parent)
+    {
+        // The standard template reserves a 12-DIP column even when both labels are empty.
+        if (parent is ContentPresenter { Name: "OffContentPresenter", Parent: Grid grid }
+            && grid.ColumnDefinitions.Count == 3)
+        {
+            grid.ColumnDefinitions[1].Width = new GridLength(0);
+            return;
+        }
+
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            RemoveToggleContentSpacing(VisualTreeHelper.GetChild(parent, index));
+        }
     }
 
     private void SynchronizeScreenshotCaptureToggle()

@@ -36,6 +36,26 @@ public sealed partial class ScreenshotHotKeyDialog : ContentDialog, INotifyPrope
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+
+        ApplyDialogButtonLayout(GetTemplateChild("PrimaryButton") as Button);
+        ApplyDialogButtonLayout(GetTemplateChild("CloseButton") as Button);
+
+        // Use a compact outer inset without stacking content/footer padding.
+        // Text descent adds to this gap between the preview and the action buttons.
+        if (GetTemplateChild("ContentScrollViewer") is ScrollViewer { Content: Grid contentGrid })
+        {
+            contentGrid.Padding = new Thickness(16, 16, 16, 0);
+        }
+
+        if (GetTemplateChild("CommandSpace") is Grid commandSpace)
+        {
+            commandSpace.Padding = new Thickness(16, 16, 16, 14);
+        }
+    }
+
     public string KeyText
     {
         get => _keyText;
@@ -236,6 +256,7 @@ public sealed partial class ScreenshotHotKeyDialog : ContentDialog, INotifyPrope
 
     private void ShowError(string message)
     {
+        DialogErrorInfoBar.Visibility = Visibility.Visible;
         DialogErrorInfoBar.Message = message;
         DialogErrorInfoBar.IsOpen = true;
     }
@@ -244,6 +265,7 @@ public sealed partial class ScreenshotHotKeyDialog : ContentDialog, INotifyPrope
     {
         DialogErrorInfoBar.Message = string.Empty;
         DialogErrorInfoBar.IsOpen = false;
+        DialogErrorInfoBar.Visibility = Visibility.Collapsed;
     }
 
     private static void AddIfChecked(
@@ -272,4 +294,17 @@ public sealed partial class ScreenshotHotKeyDialog : ContentDialog, INotifyPrope
     private static bool IsModifierKey(int virtualKey) =>
         virtualKey is 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or
             >= 0xA0 and <= 0xA5;
+
+    private static void ApplyDialogButtonLayout(Button? button)
+    {
+        if (button is null)
+        {
+            return;
+        }
+
+        button.CornerRadius = new CornerRadius(4);
+        button.HorizontalAlignment = HorizontalAlignment.Stretch;
+        button.HorizontalContentAlignment = HorizontalAlignment.Center;
+        button.Margin = new Thickness(0);
+    }
 }

@@ -174,10 +174,71 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock
-                        x:Uid="ReminderCandidatesHeading"
-                        Margin="0,0,16,8"
-                        Style="{StaticResource SubtitleTextBlockStyle}" />
+                    <Grid Margin="0,0,16,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            x:Uid="ReminderCandidatesHeading"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}" />
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            AutomationProperties.AutomationId="CandidateSelectionSummary"
+                            Style="{StaticResource SubtitleTextBlockStyle}"
+                            Text="{x:Bind ViewModel.CandidateSelectionSummary, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis"
+                            Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}" />
+                        <CommandBar
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Background="Transparent"
+                            DefaultLabelPosition="Right"
+                            IsDynamicOverflowEnabled="True"
+                            IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}">
+                            <AppBarButton
+                                x:Name="CandidateSelectionModeButton"
+                                x:Uid="CandidateSelectionModeButton"
+                                AutomationProperties.AutomationId="CandidateSelectionModeButton"
+                                Click="CandidateSelectionModeButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.InvertBoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="{StaticResource AppEnterSelectionIconGlyph}" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Uid="CandidateSelectAllButton"
+                                AutomationProperties.AutomationId="CandidateSelectAllButton"
+                                Click="CandidateSelectAllButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <FontIcon Glyph="{StaticResource AppSelectAllIconGlyph}" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Uid="CandidateDismissSelectedButton"
+                                AutomationProperties.AutomationId="CandidateDismissSelectedButton"
+                                Click="CandidateDismissSelectedButton_Click"
+                                IsEnabled="{x:Bind ViewModel.HasSelectedCandidates, Mode=OneWay}"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <SymbolIcon Symbol="Cancel" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                            <AppBarButton
+                                x:Uid="CandidateCancelSelectionButton"
+                                AutomationProperties.AutomationId="CandidateCancelSelectionButton"
+                                Click="CandidateCancelSelectionButton_Click"
+                                Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsCandidateSelectionModeActive), Mode=OneWay}">
+                                <AppBarButton.Icon>
+                                    <SymbolIcon Symbol="Cancel" />
+                                </AppBarButton.Icon>
+                            </AppBarButton>
+                        </CommandBar>
+                    </Grid>
 
                     <Grid
                         Grid.Row="1"
@@ -197,9 +258,13 @@
                             x:Name="ReminderCandidatesList"
                             x:Uid="ReminderCandidatesList"
                             AutomationProperties.AutomationId="ReminderCandidatesList"
+                            IsEnabled="{x:Bind ViewModel.CanInteract, Mode=OneWay}"
                             IsItemClickEnabled="True"
                             ItemClick="ReminderCandidatesList_ItemClick"
                             ItemsSource="{x:Bind ViewModel.Candidates, Mode=OneWay}"
+                            SelectionChanged="ReminderCandidatesList_SelectionChanged"
+                            ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             SelectionMode="None"
                             Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasCandidates), Mode=OneWay}">
                             <ListView.ItemTemplate>
@@ -260,31 +325,23 @@
                                                 Source="{x:Bind local:RemindersPage.ToImageSource(ThumbnailUri), Mode=OneTime}"
                                                 Stretch="UniformToFill" />
                                         </Button>
-                                        <StackPanel Grid.Column="1" Spacing="3">
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                                             <TextBlock
                                                 FontWeight="SemiBold"
                                                 Text="{x:Bind DisplayTitle, Mode=OneTime}"
                                                 TextTrimming="CharacterEllipsis" />
                                             <TextBlock
                                                 Text="{x:Bind SuggestedDateText, Mode=OneTime}"
-                                                TextWrapping="Wrap" />
+                                                TextTrimming="CharacterEllipsis" />
                                             <TextBlock
                                                 Foreground="{ThemeResource AppSecondaryTextBrush}"
                                                 Text="{x:Bind LocationText, Mode=OneTime}"
                                                 TextTrimming="CharacterEllipsis" />
-                                            <TextBlock
-                                                Style="{StaticResource CaptionTextBlockStyle}"
-                                                Text="{x:Bind SourceText, Mode=OneTime}" />
-                                            <TextBlock
-                                                Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                                                Style="{StaticResource CaptionTextBlockStyle}"
-                                                Text="{x:Bind AmbiguityText, Mode=OneTime}"
-                                                TextWrapping="Wrap"
-                                                Visibility="{x:Bind local:RemindersPage.StringToVisibility(AmbiguityText), Mode=OneTime}" />
                                         </StackPanel>
                                         <Button
                                             Grid.Column="2"
                                             x:Uid="ReviewReminderCandidateButton"
+                                            Visibility="{Binding Visibility, ElementName=CandidateSelectionModeButton, Mode=OneWay}"
                                             VerticalAlignment="Center"
                                             AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateAutomationId(Candidate.Id), Mode=OneTime}"
                                             Click="ReviewReminderCandidateButton_Click" />
@@ -387,6 +444,8 @@
                             IsItemClickEnabled="True"
                             ItemClick="ConfirmedRemindersList_ItemClick"
                             ItemsSource="{x:Bind ViewModel.Reminders, Mode=OneWay}"
+                            ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                             SelectionChanged="ConfirmedRemindersList_SelectionChanged"
                             SelectionMode="None"
                             Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.HasReminders), Mode=OneWay}">
@@ -483,6 +542,7 @@
                                         <Button
                                             Grid.Column="2"
                                             x:Uid="EditConfirmedReminderButton"
+                                            Visibility="{Binding Visibility, ElementName=ReminderSelectionModeButton, Mode=OneWay}"
                                             VerticalAlignment="Bottom"
                                             AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetReminderAutomationId(Reminder.Id), Mode=OneTime}"
                                             Click="EditConfirmedReminderButton_Click" />

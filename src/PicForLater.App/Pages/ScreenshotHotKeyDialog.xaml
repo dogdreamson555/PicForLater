@@ -9,19 +9,26 @@
     x:Name="DialogRoot"
     x:Uid="ScreenshotHotKeyDialog"
     AutomationProperties.AutomationId="ScreenshotHotKeyDialog"
+    Style="{StaticResource DefaultContentDialogStyle}"
     DefaultButton="Primary"
     PrimaryButtonClick="DialogRoot_PrimaryButtonClick"
     mc:Ignorable="d">
 
+    <ContentDialog.Resources>
+        <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="Transparent" />
+        <Thickness x:Key="ContentDialogSeparatorThickness">0</Thickness>
+    </ContentDialog.Resources>
+
     <StackPanel
         MinWidth="280"
         MaxWidth="420"
-        Spacing="16">
+        Spacing="8">
         <StackPanel Spacing="8">
             <TextBlock
                 x:Uid="ScreenshotHotKeyModifiersLabel"
+                FontSize="16"
                 FontWeight="SemiBold" />
-            <Grid ColumnSpacing="12" RowSpacing="4">
+            <Grid ColumnSpacing="0" RowSpacing="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -64,15 +71,19 @@
         <StackPanel Spacing="8">
             <TextBlock
                 x:Uid="ScreenshotHotKeyKeyLabel"
+                FontSize="16"
                 FontWeight="SemiBold" />
             <TextBox
                 x:Name="KeyCaptureTextBox"
                 x:Uid="ScreenshotHotKeyKeyInput"
                 HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
                 AutomationProperties.AutomationId="ScreenshotHotKeyKeyInput"
                 IsReadOnly="True"
                 IsSpellCheckEnabled="False"
                 IsTextPredictionEnabled="False"
+                TextAlignment="Center"
                 Text="{x:Bind KeyText, Mode=OneWay}" />
             <TextBlock
                 x:Uid="ScreenshotHotKeyKeyInputHint"
@@ -81,9 +92,14 @@
                 TextWrapping="Wrap" />
             <TextBlock
                 x:Uid="ScreenshotHotKeySpecialKeysLabel"
+                FontSize="16"
                 Margin="0,4,0,0"
                 FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
                 <RadioButton
                     x:Name="TabKeyOption"
                     x:Uid="ScreenshotHotKeyTabOption"
@@ -93,10 +109,11 @@
                 <RadioButton
                     x:Name="CapsLockKeyOption"
                     x:Uid="ScreenshotHotKeyCapsLockOption"
+                    Grid.Column="1"
                     AutomationProperties.AutomationId="ScreenshotHotKeyCapsLockOption"
                     Checked="ScreenshotHotKeyCapsLockOption_Checked"
                     GroupName="SpecialScreenshotPrimaryKey" />
-            </StackPanel>
+            </Grid>
         </StackPanel>
 
         <Grid ColumnSpacing="16">
@@ -131,6 +148,7 @@
             AutomationProperties.LiveSetting="Assertive"
             IsClosable="False"
             IsOpen="False"
+            Visibility="Collapsed"
             Severity="Error" />
 
     </StackPanel>
