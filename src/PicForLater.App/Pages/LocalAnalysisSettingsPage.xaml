@@ -274,7 +274,7 @@
 
                 <Border Style="{StaticResource AppSettingsListGroupStyle}">
                     <StackPanel>
-                        <Grid Padding="12,7,12,12" ColumnSpacing="{StaticResource AppSpacingLg}">
+                        <Grid Padding="12,10" ColumnSpacing="{StaticResource AppSpacingLg}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -303,7 +303,7 @@
 
                         <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
 
-                        <Grid Padding="12" ColumnSpacing="{StaticResource AppSpacingLg}">
+                        <Grid Padding="12,10" ColumnSpacing="{StaticResource AppSpacingLg}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
