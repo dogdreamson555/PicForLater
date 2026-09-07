@@ -875,7 +875,6 @@
   <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>Complete API address</value></data>
   <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>Complete API address</value></data>
-  <data name="ApiEndpointEditDescription.Text" xml:space="preserve"><value>Public HTTPS and loopback addresses are supported. Changing the address invalidates the current test and consent and requires a risk confirmation before saving.</value></data>
   <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>Custom interface contract</value></data>
   <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>Only a custom interface must declare the request protocol, authentication, structured output, and network boundary.</value></data>
   <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>Change the API address?</value></data>

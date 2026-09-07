@@ -82,7 +82,7 @@
                         TextWrapping="Wrap" />
                 </StackPanel>
                 <Border
-                    Padding="12"
+                    Padding="12,10"
                     Style="{StaticResource AppSettingsListSectionStyle}">
                     <Grid ColumnSpacing="{StaticResource AppSpacingLg}">
                         <Grid.ColumnDefinitions>
@@ -99,22 +99,14 @@
                                 Text="{x:Bind ViewModel.LocalInferenceComponentStatusMessage, Mode=OneWay}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel
+                        <Button
                             Grid.Column="1"
                             VerticalAlignment="Center"
-                            Spacing="{StaticResource AppSpacingSm}">
-                            <Button
-                                x:Uid="InstallLocalInferenceComponentButton"
-                                AutomationProperties.AutomationId="InstallLocalInferenceComponentButton"
-                                Click="InstallLocalInferenceComponentButton_Click"
-                                Content="{x:Bind ViewModel.LocalInferenceComponentActionText, Mode=OneWay}"
-                                IsEnabled="{x:Bind ViewModel.CanInstallLocalInferenceComponent, Mode=OneWay}" />
-                            <Button
-                                x:Uid="RemoveLocalInferenceComponentButton"
-                                AutomationProperties.AutomationId="RemoveLocalInferenceComponentButton"
-                                Click="RemoveLocalInferenceComponentButton_Click"
-                                IsEnabled="{x:Bind ViewModel.CanRemoveLocalInferenceComponent, Mode=OneWay}" />
-                        </StackPanel>
+                            x:Uid="InstallLocalInferenceComponentButton"
+                            AutomationProperties.AutomationId="InstallLocalInferenceComponentButton"
+                            Click="InstallLocalInferenceComponentButton_Click"
+                            Content="{x:Bind ViewModel.LocalInferenceComponentActionText, Mode=OneWay}"
+                            IsEnabled="{x:Bind ViewModel.CanInstallLocalInferenceComponent, Mode=OneWay}" />
                     </Grid>
                 </Border>
             </StackPanel>
