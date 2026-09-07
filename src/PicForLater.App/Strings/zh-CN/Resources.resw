@@ -875,7 +875,6 @@
   <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>完整 API 地址</value></data>
   <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>完整 API 地址</value></data>
-  <data name="ApiEndpointEditDescription.Text" xml:space="preserve"><value>支持公共 HTTPS 或本机 loopback 地址。更改地址会使当前测试与同意失效，并在保存前要求确认风险。</value></data>
   <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>自定义接口契约</value></data>
   <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>仅自定义接口需要声明请求协议、鉴权、结构化输出和网络边界。</value></data>
   <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>更改 API 地址？</value></data>

@@ -115,6 +115,7 @@
                                     <TextBlock
                                         x:Uid="ApiCategoryRowTitle"
                                         VerticalAlignment="Center"
+                                        FontSize="16"
                                         FontWeight="SemiBold" />
                                     <ComboBox
                                         x:Name="ApiCategoryComboBox"
@@ -147,6 +148,7 @@
                                     <TextBlock
                                         x:Uid="ApiProviderRowTitle"
                                         VerticalAlignment="Center"
+                                        FontSize="16"
                                         FontWeight="SemiBold" />
                                     <ComboBox
                                         x:Name="ApiProviderComboBox"
@@ -179,6 +181,7 @@
                                     <TextBlock
                                         x:Uid="ApiModelRowTitle"
                                         VerticalAlignment="Center"
+                                        FontSize="16"
                                         FontWeight="SemiBold" />
                                     <TextBox
                                         x:Name="ApiModelIdTextBox"
@@ -332,6 +335,7 @@
                                 <TextBlock
                                     x:Uid="ApiOutputLanguageRowTitle"
                                     VerticalAlignment="Center"
+                                    FontSize="16"
                                     FontWeight="SemiBold" />
                                 <ComboBox
                                     x:Name="ApiOutputLanguageComboBox"
@@ -450,13 +454,11 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel VerticalAlignment="Center" Spacing="{StaticResource AppSpacingXs}">
-                                    <TextBlock x:Uid="ApiEndpointRowTitle" FontWeight="SemiBold" />
-                                    <TextBlock
-                                        x:Uid="ApiEndpointEditDescription"
-                                        Foreground="{ThemeResource AppSecondaryTextBrush}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
+                                <TextBlock
+                                    x:Uid="ApiEndpointRowTitle"
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    FontWeight="SemiBold" />
                                 <TextBox
                                     x:Name="ApiEndpointTextBox"
                                     x:Uid="ApiEndpointTextBox"
@@ -487,6 +489,7 @@
                                 <TextBlock
                                     x:Uid="ApiReasoningRowTitle"
                                     VerticalAlignment="Center"
+                                    FontSize="16"
                                     FontWeight="SemiBold" />
                                 <ComboBox
                                     x:Name="ApiReasoningModeComboBox"
@@ -519,6 +522,7 @@
                                 <TextBlock
                                     x:Uid="ApiMaxOutputTokensRowTitle"
                                     VerticalAlignment="Center"
+                                    FontSize="16"
                                     FontWeight="SemiBold" />
                                 <NumberBox
                                     x:Name="ApiMaxOutputTokensNumberBox"
@@ -554,6 +558,7 @@
                                 <TextBlock
                                     x:Uid="ApiTimeoutRowTitle"
                                     VerticalAlignment="Center"
+                                    FontSize="16"
                                     FontWeight="SemiBold" />
                                 <NumberBox
                                     x:Name="ApiTimeoutSecondsNumberBox"
