@@ -9,16 +9,21 @@ namespace PicForLater.App.Services;
 /// </summary>
 internal static class StartupLanguageService
 {
-    internal static void ApplySystemLanguageOverride()
+    internal static void ApplyStartupLanguageOverride()
     {
+        var languagePreferenceService = LanguagePreferenceService.Instance;
         var systemLanguageTag = TryGetSystemLanguageTag();
-        var requestedLanguageTag =
-            StartupLanguageResolver.ResolveApplicationLanguage(systemLanguageTag);
+        var requestedLanguageTag = languagePreferenceService.ResolveRequestedLanguageTag(
+            languagePreferenceService.CurrentPreference,
+            systemLanguageTag);
         var applicationLanguageTag =
-            StartupLanguageResolver.ResolveAvailableApplicationLanguage(systemLanguageTag);
+            StartupLanguageResolver.ResolveAvailableApplicationLanguage(requestedLanguageTag);
 
         if (TryApplyLanguageOverride(applicationLanguageTag))
         {
+            languagePreferenceService.SetStartupLanguageContext(
+                systemLanguageTag,
+                applicationLanguageTag);
             Debug.WriteLine(
                 $"Startup language resolved from '{systemLanguageTag ?? "<unknown>"}' " +
                 $"to requested '{requestedLanguageTag}', active '{applicationLanguageTag}'.");
@@ -31,10 +36,18 @@ internal static class StartupLanguageService
                 StringComparison.Ordinal) &&
             TryApplyLanguageOverride(StartupLanguageResolver.EnglishLanguageTag))
         {
+            languagePreferenceService.SetStartupLanguageContext(
+                systemLanguageTag,
+                StartupLanguageResolver.EnglishLanguageTag);
             Debug.WriteLine(
                 $"Startup language fell back from '{applicationLanguageTag}' " +
                 $"to '{StartupLanguageResolver.EnglishLanguageTag}' after the initial override failed.");
+            return;
         }
+
+        languagePreferenceService.SetStartupLanguageContext(
+            systemLanguageTag,
+            applicationLanguageTag);
     }
 
     private static string? TryGetSystemLanguageTag()

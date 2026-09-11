@@ -17,13 +17,16 @@ public sealed partial class SettingsHomePage : Page
     private ILocalSendReceiverService? _localSendReceiverSource;
     private IScreenshotCaptureService? _screenshotCaptureSource;
     private bool _synchronizingAnalysisSource;
+    private bool _synchronizingInterfaceLanguage;
     private bool _synchronizingLocalSendToggle;
     private bool _synchronizingScreenshotCaptureToggle;
+    private bool _interfaceLanguageSelectionReady;
     private int _loadGeneration;
     private CancellationTokenSource? _updateCheckCancellation;
 
     public SettingsHomePageViewModel ViewModel { get; } = new(
         ThemePreferenceService.Instance,
+        LanguagePreferenceService.Instance,
         App.StorageReadiness,
         () => App.RemoteApiProfiles,
         () => App.RemoteApiCredentials,
@@ -46,6 +49,8 @@ public sealed partial class SettingsHomePage : Page
         var loadGeneration = ++_loadGeneration;
         try
         {
+            SynchronizeInterfaceLanguageSelection();
+            _interfaceLanguageSelectionReady = true;
             _synchronizingAnalysisSource = true;
             _synchronizingLocalSendToggle = true;
             _synchronizingScreenshotCaptureToggle = true;
@@ -76,6 +81,8 @@ public sealed partial class SettingsHomePage : Page
     private void SettingsHomePage_Unloaded(object sender, RoutedEventArgs e)
     {
         _loadGeneration++;
+        _interfaceLanguageSelectionReady = false;
+        _synchronizingInterfaceLanguage = false;
         _synchronizingAnalysisSource = false;
         _synchronizingLocalSendToggle = false;
         _synchronizingScreenshotCaptureToggle = false;
@@ -86,6 +93,43 @@ public sealed partial class SettingsHomePage : Page
         _updateCheckCancellation?.Cancel();
         _updateCheckCancellation = null;
         ViewModel.CancelUpdateCheck();
+    }
+
+    private void InterfaceLanguageComboBox_SelectionChanged(
+        object sender,
+        SelectionChangedEventArgs e)
+    {
+        if (!_interfaceLanguageSelectionReady
+            || _synchronizingInterfaceLanguage
+            || sender is not ComboBox comboBox)
+        {
+            return;
+        }
+
+        try
+        {
+            _synchronizingInterfaceLanguage = true;
+            ViewModel.SetInterfaceLanguagePreference(comboBox.SelectedIndex);
+            comboBox.SelectedIndex = ViewModel.SelectedInterfaceLanguageIndex;
+        }
+        finally
+        {
+            _synchronizingInterfaceLanguage = false;
+        }
+    }
+
+    private void SynchronizeInterfaceLanguageSelection()
+    {
+        _synchronizingInterfaceLanguage = true;
+        try
+        {
+            InterfaceLanguageComboBox.SelectedIndex =
+                ViewModel.SelectedInterfaceLanguageIndex;
+        }
+        finally
+        {
+            _synchronizingInterfaceLanguage = false;
+        }
     }
 
     public static bool IsSelected(int selectedIndex, int candidateIndex) =>

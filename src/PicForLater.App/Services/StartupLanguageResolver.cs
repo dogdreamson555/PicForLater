@@ -1,3 +1,5 @@
+using PicForLater.App.Models;
+
 namespace PicForLater.App.Services;
 
 /// <summary>
@@ -63,6 +65,17 @@ internal static class StartupLanguageResolver
             _ => EnglishLanguageTag,
         };
     }
+
+    internal static string ResolvePreferenceLanguage(
+        AppLanguagePreference preference,
+        string? systemLanguageTag) =>
+        preference switch
+        {
+            AppLanguagePreference.SimplifiedChinese => SimplifiedChineseLanguageTag,
+            AppLanguagePreference.TraditionalChineseTaiwan => TraditionalChineseLanguageTag,
+            AppLanguagePreference.English => EnglishLanguageTag,
+            _ => ResolveApplicationLanguage(systemLanguageTag),
+        };
 
     internal static string ResolveAvailableApplicationLanguage(string? languageTag)
     {

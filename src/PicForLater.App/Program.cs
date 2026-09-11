@@ -41,7 +41,7 @@ public static class Program
                 DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
 #if !PICFORLATER_UI_VISUAL_FIXTURE
-            StartupLanguageService.ApplySystemLanguageOverride();
+            StartupLanguageService.ApplyStartupLanguageOverride();
 #endif
             _ = new App();
         });
