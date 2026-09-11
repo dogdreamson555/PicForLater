@@ -25,6 +25,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\src\PicForLater.App\Strings\en-US\Resources.resw"
+          Link="Resources\en-US\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\PicForLater.App\Strings\zh-CN\Resources.resw"
+          Link="Resources\zh-CN\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\PicForLater.App\Strings\zh-TW\Resources.resw"
+          Link="Resources\zh-TW\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\src\PicForLater.App\Models\AppLanguagePreference.cs"
              Link="AppSource\AppLanguagePreference.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\StorageReadiness.cs"

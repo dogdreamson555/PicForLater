@@ -30,11 +30,11 @@ public sealed class StartupLanguageResolverTests
     }
 
     [Theory]
-    [InlineData("zh-Hant", "en-US")]
-    [InlineData("zh-TW", "en-US")]
+    [InlineData("zh-Hant", "zh-TW")]
+    [InlineData("zh-TW", "zh-TW")]
     [InlineData("zh-Hans", "zh-CN")]
     [InlineData("en-US", "en-US")]
-    public void ResolveAvailableApplicationLanguage_UsesOnlyStepOneResources(
+    public void ResolveAvailableApplicationLanguage_UsesAllApplicationResources(
         string languageTag,
         string expected)
     {

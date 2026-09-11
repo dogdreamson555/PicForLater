@@ -81,11 +81,12 @@ internal static class StartupLanguageResolver
     {
         var requestedLanguageTag = ResolveApplicationLanguage(languageTag);
 
-        // Step 1 deliberately uses only the existing en-US and zh-CN resource
-        // files. Enable zh-TW here when the complete Taiwan resource is added.
+        // All three application resource sets are now available.
         return requestedLanguageTag switch
         {
-            SimplifiedChineseLanguageTag or EnglishLanguageTag => requestedLanguageTag,
+            SimplifiedChineseLanguageTag or
+                TraditionalChineseLanguageTag or
+                EnglishLanguageTag => requestedLanguageTag,
             _ => EnglishLanguageTag,
         };
     }
