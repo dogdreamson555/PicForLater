@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppDisplayName" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="UiTestAppDisplayName" xml:space="preserve"><value>PicForLater UI 測試</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>在本機儲存、整理並稍後回顧圖片。</value></data>
+  <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主導覽</value></data>
+  <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>背景處理已停止</value></data>
+  <data name="BackgroundWorkersRetryButton.Content" xml:space="preserve"><value>重試</value></data>
+  <data name="BackgroundWorkersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重試已停止的背景工作</value></data>
+  <data name="BackgroundAnalysisStoppedMessage" xml:space="preserve"><value>背景分析已停止。已保留排隊工作，可以重試。</value></data>
+  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>背景提醒處理已停止。提醒資料已保留，可以重試。</value></data>
+  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>本機推理處理序連續異常結束，已停止重新啟動。可以重試。</value></data>
+  <data name="BackgroundWorkersStoppedMessage" xml:space="preserve"><value>一個或多個背景工作已停止。資料已保留，可以重試。</value></data>
+  <data name="LibraryNavItem.Content" xml:space="preserve"><value>資料庫</value></data>
+  <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>資料庫</value></data>
+  <data name="LibraryNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>開啟資料庫</value></data>
+  <data name="RemindersNavItem.Content" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersNavItem.AutomationProperties.Name" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>開啟提醒</value></data>
+  <data name="RecycleBinNavItem.Content" xml:space="preserve"><value>資源回收筒</value></data>
+  <data name="RecycleBinNavItem.AutomationProperties.Name" xml:space="preserve"><value>資源回收筒</value></data>
+  <data name="RecycleBinNavItem.ToolTipService.ToolTip" xml:space="preserve"><value>開啟資源回收筒</value></data>
+  <data name="LibraryPageTitle.Text" xml:space="preserve"><value>資料庫</value></data>
+  <data name="LibraryPageSubtitle.Text" xml:space="preserve"><value>儲存在此裝置上的圖片會顯示在這裡。</value></data>
+  <data name="SelectionInfoBar.Title" xml:space="preserve"><value>已選擇項目</value></data>
+  <data name="SelectionCountLabel.Text" xml:space="preserve"><value>數量：</value></data>
+  <data name="LibraryGridView.AutomationProperties.Name" xml:space="preserve"><value>圖片資料庫</value></data>
+  <data name="LibraryLoadingTitle.Text" xml:space="preserve"><value>正在讀取資料庫</value></data>
+  <data name="LibraryLoadingMessage.Text" xml:space="preserve"><value>正在從本機儲存空間載入圖片資訊。</value></data>
+  <data name="LibraryEmptyTitle.Text" xml:space="preserve"><value>資料庫為空</value></data>
+  <data name="LibraryEmptyMessage.Text" xml:space="preserve"><value>拖曳圖片，或使用“匯入”和 Ctrl+V 將圖片可靠儲存到此裝置。</value></data>
+  <data name="LibraryErrorTitle.Text" xml:space="preserve"><value>無法讀取資料庫</value></data>
+  <data name="LibraryErrorMessage.Text" xml:space="preserve"><value>本機資料暫時無法讀取。重新開啟應用程式後仍有問題時，請保留資料並檢視診斷資訊。</value></data>
+  <data name="LibraryRetryButton.Content" xml:space="preserve"><value>重試</value></data>
+  <data name="LibraryRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重試讀取本機資料庫</value></data>
+  <data name="LibraryPermissionDeniedTitle.Text" xml:space="preserve"><value>無法存取本機儲存空間</value></data>
+  <data name="LibraryPermissionDeniedMessage.Text" xml:space="preserve"><value>應用程式沒有讀取受管圖片目錄所需的權限。請檢查 Windows 應用程式權限後重試。</value></data>
+  <data name="LibraryUnsupportedTitle.Text" xml:space="preserve"><value>目前內容不受支援</value></data>
+  <data name="LibraryUnsupportedMessage.Text" xml:space="preserve"><value>資料庫包含目前版本無法顯示的資料。原始檔案不會被修改或刪除。</value></data>
+  <data name="LibraryStateLoadingAnnouncement" xml:space="preserve"><value>正在讀取資料庫。</value></data>
+  <data name="LibraryStateEmptyAnnouncement" xml:space="preserve"><value>資料庫已讀取，目前為空。</value></data>
+  <data name="LibraryStateReadyAnnouncement" xml:space="preserve"><value>資料庫已讀取，圖片清單可用。</value></data>
+  <data name="LibraryStateErrorAnnouncement" xml:space="preserve"><value>無法讀取資料庫，可以重試。</value></data>
+  <data name="LibraryStatePermissionDeniedAnnouncement" xml:space="preserve"><value>無法存取本機儲存空間，請檢查權限後重試。</value></data>
+  <data name="LibraryStateUnsupportedAnnouncement" xml:space="preserve"><value>資料庫包含目前版本不支援的內容。</value></data>
+  <data name="RemindersPageTitle.Text" xml:space="preserve"><value>提醒</value></data>
+  <data name="RemindersPageSubtitle.Text" xml:space="preserve"><value>核對圖片中的日期和地點證據；只有你確認後才會建立本機提醒。</value></data>
+  <data name="RemindersEmptyTitle.Text" xml:space="preserve"><value>沒有待處理的候選或提醒</value></data>
+  <data name="RemindersEmptyMessage.Text" xml:space="preserve"><value>從圖片中辨識出的日期和地點只會作為候選；經你確認後，提醒才會顯示在這裡。</value></data>
+  <data name="RecycleBinPageTitle.Text" xml:space="preserve"><value>資源回收筒</value></data>
+  <data name="RecycleBinPageSubtitle.Text" xml:space="preserve"><value>已刪除的圖片會保留在應用程式內，直到你明確永久刪除。</value></data>
+  <data name="RecycleBinEmptyTitle.Text" xml:space="preserve"><value>資源回收筒為空</value></data>
+  <data name="RecycleBinEmptyMessage.Text" xml:space="preserve"><value>從資料庫刪除的圖片會出現在這裡，並可還原其原有資訊。</value></data>
+  <data name="SettingsPageTitle.Text" xml:space="preserve"><value>設定</value></data>
+  <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>偏好設定儲存在此裝置的應用程式資料中；API 金鑰單獨儲存在 Windows 認證保管庫。</value></data>
+  <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>外觀</value></data>
+  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>選擇應用程式介面跟隨 Windows，或固定使用淺色或深色主題。高對比由 Windows 控制。</value></data>
+  <data name="ThemeOptions.AutomationProperties.Name" xml:space="preserve"><value>應用程式主題</value></data>
+  <data name="SystemThemeOption.Content" xml:space="preserve"><value>跟隨系統</value></data>
+  <data name="SystemThemeOption.AutomationProperties.Name" xml:space="preserve"><value>跟隨系統主題</value></data>
+  <data name="LightThemeOption.Content" xml:space="preserve"><value>淺色</value></data>
+  <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>淺色主題</value></data>
+  <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
+  <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主題</value></data>
+  <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>介面語言 / Language</value></data>
+  <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>介面語言</value></data>
+  <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>選擇 PicForLater 使用的介面語言。變更將在下次啟動應用程式時生效。</value></data>
+  <data name="InterfaceLanguageComboBox.AutomationProperties.Name" xml:space="preserve"><value>介面語言</value></data>
+  <data name="SystemInterfaceLanguageOption.Content" xml:space="preserve"><value>跟隨系統</value></data>
+  <data name="SystemInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>跟隨 Windows 顯示語言</value></data>
+  <data name="SimplifiedChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>簡體中文</value></data>
+  <data name="SimplifiedChineseInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>簡體中文</value></data>
+  <data name="TraditionalChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="TraditionalChineseInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="EnglishInterfaceLanguageOption.Content" xml:space="preserve"><value>English</value></data>
+  <data name="EnglishInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>English</value></data>
+  <data name="InterfaceLanguageNameEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="InterfaceLanguageNameSimplifiedChinese" xml:space="preserve"><value>簡體中文</value></data>
+  <data name="InterfaceLanguageNameTraditionalChineseTaiwan" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="InterfaceLanguageStatusInfoBar.Title" xml:space="preserve"><value>介面語言</value></data>
+  <data name="InterfaceLanguageSavedStatusFormat" xml:space="preserve"><value>已儲存。PicForLater 下次啟動時將使用 {0}。</value></data>
+  <data name="InterfaceLanguageSaveFailedStatus" xml:space="preserve"><value>無法儲存介面語言，已保留之前的選擇。</value></data>
+  <data name="InterfaceLanguageSaveFailedWithPendingStatusFormat" xml:space="preserve"><value>無法儲存介面語言，已保留之前的選擇；PicForLater 下次啟動時將使用 {0}。</value></data>
+  <data name="AboutUpdatesSectionTitle.Text" xml:space="preserve"><value>關於與更新</value></data>
+  <data name="AboutUpdatesAppName.Text" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="CurrentAppVersionFormat" xml:space="preserve"><value>目前版本 {0}</value></data>
+  <data name="CheckForUpdatesButton.AutomationProperties.Name" xml:space="preserve"><value>檢查 PicForLater 更新</value></data>
+  <data name="CheckForUpdatesButtonText.Text" xml:space="preserve"><value>檢查更新</value></data>
+  <data name="UpdateStatusInfoBar.Title" xml:space="preserve"><value>更新狀態</value></data>
+  <data name="ViewReleasePageButton.Content" xml:space="preserve"><value>檢視版本發行頁</value></data>
+  <data name="ViewReleasePageButton.AutomationProperties.Name" xml:space="preserve"><value>在瀏覽器中檢視新版本發行頁</value></data>
+  <data name="UpdateCheckingStatus" xml:space="preserve"><value>正在檢查 GitHub 上的最新穩定版本…</value></data>
+  <data name="UpdateUpToDateStatusFormat" xml:space="preserve"><value>目前已是最新版本（{0}）。</value></data>
+  <data name="UpdateAvailableStatusFormat" xml:space="preserve"><value>發現新版本 {0}，目前版本為 {1}。</value></data>
+  <data name="UpdateLocalAheadStatusFormat" xml:space="preserve"><value>目前版本 {0} 高於最新發行版本 {1}，可能是開發或測試建置。</value></data>
+  <data name="UpdateUnavailableStatus" xml:space="preserve"><value>暫時無法檢查更新，請稍後重試。</value></data>
+  <data name="UpdateReleasePageOpenFailedStatus" xml:space="preserve"><value>無法開啟版本發行頁；版本檢查結果仍然有效，可以稍後重試。</value></data>
+  <data name="SettingsEmptyState.Title" xml:space="preserve"><value>暫無其他設定</value></data>
+  <data name="SettingsEmptyState.Message" xml:space="preserve"><value>相關功能加入後，它們的本機設定會顯示在這裡。</value></data>
+  <data name="AnalysisStatePending" xml:space="preserve"><value>等待分析</value></data>
+  <data name="AnalysisStateRunning" xml:space="preserve"><value>分析中</value></data>
+  <data name="AnalysisStateNeedsAttention" xml:space="preserve"><value>需要處理</value></data>
+  <data name="AnalysisStateCompleted" xml:space="preserve"><value>完成</value></data>
+  <data name="ImportButton.Label" xml:space="preserve"><value>匯入</value></data>
+  <data name="ImportButton.AutomationProperties.Name" xml:space="preserve"><value>匯入圖片</value></data>
+  <data name="ImportButton.ToolTipService.ToolTip" xml:space="preserve"><value>從檔案選擇圖片</value></data>
+  <data name="PasteButton.Label" xml:space="preserve"><value>貼上</value></data>
+  <data name="PasteButton.AutomationProperties.Name" xml:space="preserve"><value>貼上剪貼簿圖片</value></data>
+  <data name="PasteButton.ToolTipService.ToolTip" xml:space="preserve"><value>貼上剪貼簿圖片 (Ctrl+V)</value></data>
+  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜尋標題、簡介、文字、分類或地點</value></data>
+  <data name="LibrarySearchBox.AutomationProperties.Name" xml:space="preserve"><value>搜尋資料庫</value></data>
+  <data name="CategoryFilterComboBox.AutomationProperties.Name" xml:space="preserve"><value>按分類篩選</value></data>
+  <data name="ClearFiltersButton.AutomationProperties.Name" xml:space="preserve"><value>清除搜尋和篩選</value></data>
+  <data name="ClearFiltersButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除搜尋和篩選</value></data>
+  <data name="LibraryStatusInfoBar.Title" xml:space="preserve"><value>資料庫狀態</value></data>
+  <data name="EmptyImportButton.Content" xml:space="preserve"><value>匯入圖片</value></data>
+  <data name="EmptyImportButton.AutomationProperties.Name" xml:space="preserve"><value>從檔案匯入圖片</value></data>
+  <data name="EmptyPasteButton.Content" xml:space="preserve"><value>貼上圖片</value></data>
+  <data name="EmptyPasteButton.AutomationProperties.Name" xml:space="preserve"><value>貼上剪貼簿圖片</value></data>
+  <data name="LoadMoreButton.Content" xml:space="preserve"><value>載入更多</value></data>
+  <data name="LoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>載入更多圖片</value></data>
+  <data name="DetailPlaceholderTitle.Text" xml:space="preserve"><value>選擇一張圖片</value></data>
+  <data name="DetailPlaceholderMessage.Text" xml:space="preserve"><value>選擇資料庫中的項目以檢視和編輯詳細資料。</value></data>
+  <data name="DetailBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回資料庫</value></data>
+  <data name="DetailBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回資料庫</value></data>
+  <data name="DetailPaneTitle.Text" xml:space="preserve"><value>圖片詳細資料</value></data>
+  <data name="DeleteImageButton.AutomationProperties.Name" xml:space="preserve"><value>移到資源回收筒</value></data>
+  <data name="DeleteImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>將這張圖片移到資源回收筒</value></data>
+  <data name="DetailTitleLabel.Text" xml:space="preserve"><value>標題</value></data>
+  <data name="DetailTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片標題</value></data>
+  <data name="DetailSummaryTextBox.Header" xml:space="preserve"><value>簡介</value></data>
+  <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>新增便於回顧的說明</value></data>
+  <data name="DetailSummaryTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片簡介</value></data>
+  <data name="DetailContentSourceInfoBar.Title" xml:space="preserve"><value>內容來源</value></data>
+  <data name="DetailContentSourcePending" xml:space="preserve"><value>本機分析完成後會在這裡填入可編輯的標題和簡介。</value></data>
+  <data name="DetailContentSourceOcr" xml:space="preserve"><value>已根據本機 OCR 事實產生可編輯草稿；視覺增強失敗也不會遺失此結果。</value></data>
+  <data name="DetailContentSourceModel" xml:space="preserve"><value>標題和簡介由 AI 模型產生，屬於可編輯候選。</value></data>
+  <data name="DetailContentSourceUser" xml:space="preserve"><value>標題或簡介已由你儲存，重新分析不會靜默覆寫。</value></data>
+  <data name="DetailContentSourceUnsaved" xml:space="preserve"><value>存在尚未儲存的人工修改；背景分析重新整理不會覆寫目前輸入。</value></data>
+  <data name="DetailContentSourceNeedsAttention" xml:space="preserve"><value>本機分析未完成。原圖和已有內容已保留，可以選擇重新分析。</value></data>
+  <data name="CategoriesSectionTitle.Text" xml:space="preserve"><value>分類</value></data>
+  <data name="AddCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>新增分類</value></data>
+  <data name="AddCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>新增自訂分類</value></data>
+  <data name="DetailCategoriesRepeater.AutomationProperties.Name" xml:space="preserve"><value>圖片分類</value></data>
+  <data name="RenameCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>重新命名分類</value></data>
+  <data name="RenameCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>重新命名分類</value></data>
+  <data name="DeleteCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>刪除分類</value></data>
+  <data name="DeleteCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>刪除分類但保留圖片</value></data>
+  <data name="SaveDetailsButton.Content" xml:space="preserve"><value>儲存變更</value></data>
+  <data name="SaveDetailsButton.AutomationProperties.Name" xml:space="preserve"><value>儲存圖片詳細資料</value></data>
+  <data name="ContextAddReminderMenuItem.Text" xml:space="preserve"><value>新增提醒</value></data>
+  <data name="ContextAddReminderMenuItem.AutomationProperties.Name" xml:space="preserve"><value>為此圖片新增提醒</value></data>
+  <data name="ContextReanalyzeMenuItem.Text" xml:space="preserve"><value>重新分析</value></data>
+  <data name="ContextReanalyzeMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用目前分析設定重新分析圖片</value></data>
+  <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>新增提醒</value></data>
+  <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>為目前圖片新增提醒</value></data>
+  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>儲存尚未儲存的詳細資料後開啟提醒確認</value></data>
+  <data name="DropOverlayTitle.Text" xml:space="preserve"><value>放開即可匯入</value></data>
+  <data name="DropOverlayMessage.Text" xml:space="preserve"><value>每張圖片將獨立儲存；損壞檔案不會影響其他圖片。</value></data>
+  <data name="RestoreButton.Label" xml:space="preserve"><value>還原</value></data>
+  <data name="RestoreButton.AutomationProperties.Name" xml:space="preserve"><value>還原選中的圖片</value></data>
+  <data name="RestoreButton.ToolTipService.ToolTip" xml:space="preserve"><value>還原圖片及其原有分類和資訊</value></data>
+  <data name="PermanentDeleteButton.Label" xml:space="preserve"><value>永久刪除</value></data>
+  <data name="PermanentDeleteButton.AutomationProperties.Name" xml:space="preserve"><value>永久刪除選中的圖片</value></data>
+  <data name="PermanentDeleteButton.ToolTipService.ToolTip" xml:space="preserve"><value>永久刪除選中的圖片</value></data>
+  <data name="RecycleBinStatusInfoBar.Title" xml:space="preserve"><value>資源回收筒狀態</value></data>
+  <data name="RecycleBinLoadingTitle.Text" xml:space="preserve"><value>正在讀取資源回收筒</value></data>
+  <data name="RecycleBinErrorTitle.Text" xml:space="preserve"><value>無法讀取資源回收筒</value></data>
+  <data name="RecycleBinErrorMessage.Text" xml:space="preserve"><value>本機資料暫時無法使用。現有圖片不會被自動刪除。</value></data>
+  <data name="RecycleBinRetryButton.Content" xml:space="preserve"><value>重試</value></data>
+  <data name="RecycleBinRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重試載入資源回收筒</value></data>
+  <data name="RecycleBinLoadMoreButton.Content" xml:space="preserve"><value>載入更多</value></data>
+  <data name="RecycleBinLoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>載入更多資源回收筒圖片</value></data>
+  <data name="RecycleBinLoadMoreFailedStatus" xml:space="preserve"><value>無法載入更多資源回收筒圖片，請重試。</value></data>
+  <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>資源回收筒圖片</value></data>
+  <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>選擇</value></data>
+  <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>選擇多個資源回收筒圖片</value></data>
+  <data name="RecycleBinSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>進入資源回收筒多選模式</value></data>
+  <data name="RecycleBinSelectAllButton.Label" xml:space="preserve"><value>全選</value></data>
+  <data name="RecycleBinSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>選擇全部資源回收筒圖片</value></data>
+  <data name="RecycleBinSelectAllButton.ToolTipService.ToolTip" xml:space="preserve"><value>選擇目前已載入的全部資源回收筒圖片</value></data>
+  <data name="RecycleBinCancelSelectionButton.Label" xml:space="preserve"><value>取消選擇</value></data>
+  <data name="RecycleBinCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>離開資源回收筒多選模式</value></data>
+  <data name="RecycleBinCancelSelectionButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除選擇並離開資源回收筒多選模式</value></data>
+  <data name="RecycleBinSelectionCountFormat" xml:space="preserve"><value>已選擇 {0} 張圖片</value></data>
+  <data name="RecycleBinContextPermanentDeleteMenuItem.Text" xml:space="preserve"><value>永久刪除</value></data>
+  <data name="RecycleBinContextPermanentDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>永久刪除圖片</value></data>
+  <data name="RecycleBinContextRestoreMenuItem.Text" xml:space="preserve"><value>還原</value></data>
+  <data name="RecycleBinContextRestoreMenuItem.AutomationProperties.Name" xml:space="preserve"><value>還原圖片</value></data>
+  <data name="RecycleBinContextSelectMenuItem.Text" xml:space="preserve"><value>選擇</value></data>
+  <data name="RecycleBinContextSelectMenuItem.AutomationProperties.Name" xml:space="preserve"><value>選擇圖片並進入多選模式</value></data>
+  <data name="AllCategories" xml:space="preserve"><value>全部分類</value></data>
+  <data name="Uncategorized" xml:space="preserve"><value>未分類</value></data>
+  <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}，{2}</value></data>
+  <data name="DetailsSavedStatus" xml:space="preserve"><value>圖片詳細資料已儲存。</value></data>
+  <data name="RestoreCompletedStatus" xml:space="preserve"><value>圖片已還原；未來提醒需要重新確認後才會排程。</value></data>
+  <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已還原 {0}/{1} 張圖片；未來提醒需要重新確認後才會排程。</value></data>
+  <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>圖片及無其他引用的受管檔案已永久刪除。</value></data>
+  <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>永久刪除尚未完成，應用程式已保留刪除計畫以便安全重試。</value></data>
+  <data name="PermanentDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已永久刪除 {0} 張圖片及無其他引用的受管檔案。</value></data>
+  <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>已永久刪除 {0}/{1} 張圖片；未完成的刪除保留了可安全重試的計畫。</value></data>
+  <data name="ImportPickerCommitText" xml:space="preserve"><value>匯入</value></data>
+  <data name="ClipboardFileNameFormat" xml:space="preserve"><value>剪貼簿圖片 {0:yyyyMMdd-HHmmss}.png</value></data>
+  <data name="QuickScreenshotImportedStatus" xml:space="preserve"><value>螢幕擷取畫面已儲存，資料庫已重新整理。</value></data>
+  <data name="QuickScreenshotDuplicateStatus" xml:space="preserve"><value>這張螢幕擷取畫面已存在，目前資料庫檢視未改變。</value></data>
+  <data name="ClipboardImportFailedStatus" xml:space="preserve"><value>無法讀取或儲存剪貼簿圖片。</value></data>
+  <data name="ClipboardNoImageStatus" xml:space="preserve"><value>剪貼簿中沒有可匯入的圖片。</value></data>
+  <data name="DropCaption" xml:space="preserve"><value>複製到 PicForLater</value></data>
+  <data name="ImportBatchStatusFormat" xml:space="preserve"><value>已匯入 {0} 張，發現 {1} 張重複，{2} 張失敗。</value></data>
+  <data name="ImportCompletedStatus" xml:space="preserve"><value>圖片已儲存並加入等待分析佇列。</value></data>
+  <data name="ImportDuplicateStatus" xml:space="preserve"><value>這張圖片已存在，已開啟現有項目。</value></data>
+  <data name="ImportFailedStatus" xml:space="preserve"><value>圖片未能匯入；現有資料庫沒有被修改。</value></data>
+  <data name="CategoryUpdateFailedStatus" xml:space="preserve"><value>無法更新分類，原有分類保持不變。</value></data>
+  <data name="AddCategoryDialogTitle" xml:space="preserve"><value>新增分類</value></data>
+  <data name="AddCategoryDialogPrimary" xml:space="preserve"><value>建立</value></data>
+  <data name="RenameCategoryDialogTitle" xml:space="preserve"><value>重新命名分類</value></data>
+  <data name="RenameCategoryDialogPrimary" xml:space="preserve"><value>重新命名</value></data>
+  <data name="CategoryNameFieldHeader" xml:space="preserve"><value>分類名稱</value></data>
+  <data name="CategoryNameConflictStatus" xml:space="preserve"><value>分類名稱為空、過長或已存在。</value></data>
+  <data name="DeleteCategoryDialogTitle" xml:space="preserve"><value>刪除分類？</value></data>
+  <data name="DeleteCategoryDialogMessageFormat" xml:space="preserve"><value>將刪除分類“{0}”，圖片本身不會被刪除。</value></data>
+  <data name="DeleteCategoryDialogPrimary" xml:space="preserve"><value>刪除分類</value></data>
+  <data name="SoftDeleteDialogTitle" xml:space="preserve"><value>移到資源回收筒？</value></data>
+  <data name="SoftDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}”將進入應用程式內資源回收筒，並可還原。</value></data>
+  <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>移到資源回收筒</value></data>
+  <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>圖片已移到資源回收筒。</value></data>
+  <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>永久刪除圖片？</value></data>
+  <data name="PermanentDeleteDialogMessageFormat" xml:space="preserve"><value>將永久刪除“{0}”及無其他引用的受管檔案。此操作無法從應用程式內還原。</value></data>
+  <data name="PermanentDeleteBatchDialogTitle" xml:space="preserve"><value>永久刪除所選圖片？</value></data>
+  <data name="PermanentDeleteBatchDialogMessageFormat" xml:space="preserve"><value>將永久刪除所選的 {0} 張圖片及無其他引用的受管檔案。此操作無法從應用程式內還原。</value></data>
+  <data name="PermanentDeleteDialogPrimary" xml:space="preserve"><value>永久刪除</value></data>
+  <data name="CancelButtonText" xml:space="preserve"><value>取消</value></data>
+  <data name="ByteUnitBytes" xml:space="preserve"><value>B</value></data>
+  <data name="ByteUnitKilobytes" xml:space="preserve"><value>KB</value></data>
+  <data name="ByteUnitMegabytes" xml:space="preserve"><value>MB</value></data>
+  <data name="ByteUnitGigabytes" xml:space="preserve"><value>GB</value></data>
+  <data name="SelectionModeButton.Label" xml:space="preserve"><value>選擇</value></data>
+  <data name="SelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>選擇多個圖片</value></data>
+  <data name="SelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>進入或離開多選模式</value></data>
+  <data name="SortButton.Label" xml:space="preserve"><value>排序</value></data>
+  <data name="SortButton.AutomationProperties.Name" xml:space="preserve"><value>變更資料庫排序</value></data>
+  <data name="SortButton.ToolTipService.ToolTip" xml:space="preserve"><value>按時間、名稱、大小或分類排序</value></data>
+  <data name="GridViewModeButton.Label" xml:space="preserve"><value>方格</value></data>
+  <data name="GridViewModeButton.AutomationProperties.Name" xml:space="preserve"><value>使用方格檢視</value></data>
+  <data name="GridViewModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>以方格顯示圖片</value></data>
+  <data name="ListViewModeButton.Label" xml:space="preserve"><value>清單</value></data>
+  <data name="ListViewModeButton.AutomationProperties.Name" xml:space="preserve"><value>使用清單檢視</value></data>
+  <data name="ListViewModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>以緊湊清單顯示圖片</value></data>
+  <data name="SelectionSummaryFormat" xml:space="preserve"><value>已選擇 {0} 項</value></data>
+  <data name="SelectAllLoadedButton.Label" xml:space="preserve"><value>全選已載入項</value></data>
+  <data name="SelectAllLoadedButton.AutomationProperties.Name" xml:space="preserve"><value>選擇全部已載入圖片</value></data>
+  <data name="SelectAllLoadedButton.ToolTipService.ToolTip" xml:space="preserve"><value>選擇目前已載入的圖片</value></data>
+  <data name="DeleteSelectedButton.Label" xml:space="preserve"><value>刪除</value></data>
+  <data name="DeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>把所選圖片移到資源回收筒</value></data>
+  <data name="DeleteSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>把所選圖片移到資源回收筒</value></data>
+  <data name="CancelSelectionButton.Label" xml:space="preserve"><value>取消選擇</value></data>
+  <data name="CancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>離開多選模式</value></data>
+  <data name="CancelSelectionButton.ToolTipService.ToolTip" xml:space="preserve"><value>清除選擇並離開多選模式</value></data>
+  <data name="LibraryListView.AutomationProperties.Name" xml:space="preserve"><value>圖片資料庫清單</value></data>
+  <data name="ContextOpenImageMenuItem.Text" xml:space="preserve"><value>開啟圖片</value></data>
+  <data name="ContextOpenImageMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用預設應用程式開啟圖片</value></data>
+  <data name="ContextViewDetailsMenuItem.Text" xml:space="preserve"><value>檢視詳細資料</value></data>
+  <data name="ContextViewDetailsMenuItem.AutomationProperties.Name" xml:space="preserve"><value>檢視圖片詳細資料</value></data>
+  <data name="ContextSelectMenuItem.Text" xml:space="preserve"><value>選擇</value></data>
+  <data name="ContextSelectMenuItem.AutomationProperties.Name" xml:space="preserve"><value>選擇此圖片</value></data>
+  <data name="ContextDeleteMenuItem.Text" xml:space="preserve"><value>刪除</value></data>
+  <data name="ContextDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>把圖片移到資源回收筒</value></data>
+  <data name="DetailImageButton.AutomationProperties.Name" xml:space="preserve"><value>使用預設應用程式開啟原圖</value></data>
+  <data name="DetailImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>開啟原圖</value></data>
+  <data name="OpenImageFailedStatus" xml:space="preserve"><value>無法使用 Windows 預設圖片應用程式開啟這張圖片。受管原圖沒有被修改。</value></data>
+  <data name="SortByTimeSubItem.Text" xml:space="preserve"><value>時間</value></data>
+  <data name="SortNewestMenuItem.Text" xml:space="preserve"><value>最新優先</value></data>
+  <data name="SortOldestMenuItem.Text" xml:space="preserve"><value>最早優先</value></data>
+  <data name="SortByNameSubItem.Text" xml:space="preserve"><value>名稱</value></data>
+  <data name="SortNameAscendingMenuItem.Text" xml:space="preserve"><value>A 到 Z</value></data>
+  <data name="SortNameDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
+  <data name="SortBySizeSubItem.Text" xml:space="preserve"><value>圖片大小</value></data>
+  <data name="SortSizeDescendingMenuItem.Text" xml:space="preserve"><value>從大到小</value></data>
+  <data name="SortSizeAscendingMenuItem.Text" xml:space="preserve"><value>從小到大</value></data>
+  <data name="SortByCategorySubItem.Text" xml:space="preserve"><value>分類</value></data>
+  <data name="SortCategoryAscendingMenuItem.Text" xml:space="preserve"><value>A 到 Z</value></data>
+  <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
+  <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>把所選圖片移到資源回收筒？</value></data>
+  <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>將把所選的 {0} 張圖片移到應用程式內資源回收筒，並可分別還原。</value></data>
+  <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已將 {0}/{1} 張圖片移到資源回收筒。</value></data>
+  <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>圖片未能移到資源回收筒，現有資料保持不變。</value></data>
+  <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>
+  <data name="AnalysisSectionDescription.Text" xml:space="preserve"><value>分析策略只影響新匯入和新增的重新分析工作；已有結果不會自動重新執行。</value></data>
+  <data name="OcrOnlyAnalysisOption.Content" xml:space="preserve"><value>僅 OCR — 不載入視覺模型</value></data>
+  <data name="BalancedAnalysisOption.Content" xml:space="preserve"><value>平衡 — 一律執行 OCR；視需要執行視覺模型，並合併兩者的提醒候選</value></data>
+  <data name="AlwaysEnhanceAnalysisOption.Content" xml:space="preserve"><value>一律增強 — 一律執行 OCR 和已選擇的本機視覺模型，並合併兩者的提醒候選</value></data>
+  <data name="InferenceAccelerationSectionTitle.Text" xml:space="preserve"><value>推理加速</value></data>
+  <data name="InferenceAccelerationSectionDescription.Text" xml:space="preserve"><value>為本機模型選擇執行裝置。自動會使用目前模型套件已驗證的裝置；x64 可在下方偵測 NVIDIA 環境。</value></data>
+  <data name="InferenceAccelerationOptions.AutomationProperties.Name" xml:space="preserve"><value>本機模型推理裝置</value></data>
+  <data name="AutomaticAccelerationOption.Content" xml:space="preserve"><value>自動（建議）</value></data>
+  <data name="AutomaticAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>自動選擇推理裝置</value></data>
+  <data name="DirectMlGpuAccelerationOption.Content" xml:space="preserve"><value>DirectML GPU</value></data>
+  <data name="DirectMlGpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>使用 DirectML GPU</value></data>
+  <data name="CpuAccelerationOption.Content" xml:space="preserve"><value>CPU</value></data>
+  <data name="CpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>僅使用 CPU</value></data>
+  <data name="CudaGpuAccelerationOption.Content" xml:space="preserve"><value>NVIDIA CUDA GPU</value></data>
+  <data name="CudaGpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>使用 CUDA GPU</value></data>
+  <data name="InferenceAccelerationSavedStatus" xml:space="preserve"><value>推理裝置偏好已儲存，將用於後續模型工作。</value></data>
+  <data name="InferenceAccelerationSaveFailedStatus" xml:space="preserve"><value>無法儲存推理裝置偏好。</value></data>
+  <data name="InferenceAccelerationNotRunStatus" xml:space="preserve"><value>本次啟動後尚未執行本機模型。</value></data>
+  <data name="InferenceWorkloadPpOcr" xml:space="preserve"><value>PP-OCRv6-small</value></data>
+  <data name="InferenceWorkloadQwen3Vl" xml:space="preserve"><value>Qwen3-VL-2B-Instruct</value></data>
+  <data name="InferenceDeviceDirectMlGpu" xml:space="preserve"><value>DirectML GPU</value></data>
+  <data name="InferenceDeviceCudaGpu" xml:space="preserve"><value>CUDA GPU</value></data>
+  <data name="InferenceDeviceCpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="InferenceExecutionStatusFormat" xml:space="preserve"><value>上次執行：{0} · {1}</value></data>
+  <data name="InferenceExecutionFallbackStatusFormat" xml:space="preserve"><value>上次執行：{0} · {1}（GPU 不相容後自動切換至備援）</value></data>
+  <data name="InferenceExecutionFailedStatusFormat" xml:space="preserve"><value>上次嘗試：{0} · {1}（工作未完成）</value></data>
+  <data name="NvidiaEnvironmentInfoBar.Title" xml:space="preserve"><value>NVIDIA 環境</value></data>
+  <data name="DetectNvidiaEnvironmentButton.Content" xml:space="preserve"><value>重新偵測</value></data>
+  <data name="DetectNvidiaEnvironmentButton.AutomationProperties.Name" xml:space="preserve"><value>重新偵測 NVIDIA 環境</value></data>
+  <data name="InstallNvidiaRuntimeButton.Content" xml:space="preserve"><value>安裝執行階段函式庫</value></data>
+  <data name="InstallNvidiaRuntimeButton.AutomationProperties.Name" xml:space="preserve"><value>安裝 NVIDIA CUDA 與 cuDNN 執行階段函式庫</value></data>
+  <data name="OpenNvidiaDriverPageButton.Content" xml:space="preserve"><value>開啟 NVIDIA 驅動程式頁面</value></data>
+  <data name="OpenNvidiaDriverPageButton.AutomationProperties.Name" xml:space="preserve"><value>在瀏覽器中開啟 NVIDIA 官方驅動程式下載頁面</value></data>
+  <data name="NvidiaEnvironmentReadyStatusFormat" xml:space="preserve"><value>已就緒：{0}，顯示記憶體 {1}，計算能力 {2}，驅動程式支援 CUDA {3}；執行階段函式庫來源：{4}。最終仍以模型自我檢查為準。</value></data>
+  <data name="NvidiaEnvironmentUnsupportedStatus" xml:space="preserve"><value>目前應用程式架構不支援 NVIDIA CUDA；請使用 CPU 模型。</value></data>
+  <data name="NvidiaDriverMissingStatus" xml:space="preserve"><value>未偵測到可用的 NVIDIA 顯示卡驅動程式。請先透過 NVIDIA 官方管道安裝或更新驅動程式，然後重新偵測。</value></data>
+  <data name="NvidiaCudaDeviceMissingStatus" xml:space="preserve"><value>驅動程式已載入，但沒有偵測到可用的 NVIDIA CUDA GPU；請使用 CPU 模型。</value></data>
+  <data name="NvidiaDriverTooOldStatus" xml:space="preserve"><value>NVIDIA 驅動程式不滿足 CUDA 12.x 要求，請先透過 NVIDIA 官方管道更新驅動程式。</value></data>
+  <data name="NvidiaDriverTooOldStatusFormat" xml:space="preserve"><value>已偵測到 {0}，但驅動程式只支援 CUDA {1}；請先透過 NVIDIA 官方管道更新驅動程式。</value></data>
+  <data name="NvidiaInsufficientVramStatus" xml:space="preserve"><value>CUDA 模型需要標稱 8 GB 級顯示卡（偵測值至少 7.5 GiB）；請使用 CPU 模型。</value></data>
+  <data name="NvidiaInsufficientVramStatusFormat" xml:space="preserve"><value>已偵測到 {0}（顯示記憶體 {1}），低於標稱 8 GB 顯示卡的相容門檻（偵測值 7.5 GiB）；請使用 CPU 模型。</value></data>
+  <data name="NvidiaRuntimeMissingStatusFormat" xml:space="preserve"><value>已偵測到 {0}（顯示記憶體 {1}，驅動程式支援 CUDA {2}），但缺少 CUDA/cuDNN 使用者模式執行階段函式庫。可由 PicForLater 安裝到應用程式私有目錄，無需完整 CUDA Toolkit 或修改 PATH。</value></data>
+  <data name="NvidiaRuntimeIncompleteStatusFormat" xml:space="preserve"><value>已偵測到 {0}（顯示記憶體 {1}，驅動程式支援 CUDA {2}），但應用程式私有 CUDA/cuDNN 執行階段函式庫不完整。可重新下載安裝修復。</value></data>
+  <data name="NvidiaEnvironmentDetectionFailedStatus" xml:space="preserve"><value>無法完成 NVIDIA 環境偵測；未修改模型與現有資料。</value></data>
+  <data name="NvidiaUnknownDeviceName" xml:space="preserve"><value>NVIDIA GPU</value></data>
+  <data name="NvidiaRuntimeSourceApp" xml:space="preserve"><value>PicForLater 私有目錄</value></data>
+  <data name="NvidiaRuntimeSourceSystem" xml:space="preserve"><value>現有系統安裝</value></data>
+  <data name="NvidiaRuntimeSourceNone" xml:space="preserve"><value>未安裝</value></data>
+  <data name="NvidiaRuntimeInstallDialogTitle" xml:space="preserve"><value>安裝 NVIDIA 執行階段函式庫？</value></data>
+  <data name="NvidiaRuntimeInstallAction" xml:space="preserve"><value>下載並安裝</value></data>
+  <data name="NvidiaRuntimeAndModelInstallAction" xml:space="preserve"><value>安裝執行階段函式庫和模型</value></data>
+  <data name="NvidiaRuntimeInstallConfirmationFormat" xml:space="preserve"><value>PicForLater 將從 NVIDIA 官方 HTTPS 再散佈來源下載固定版本 CUDA {0} 與 cuDNN {1}。精確下載大小：{2}；應用程式私有安裝最多佔用 {3}。封存檔會驗證大小和 SHA-256，只擷取允許清單 DLL，不安裝完整 Toolkit、不執行安裝程式、不修改系統 PATH。繼續即表示你同意 NVIDIA CUDA 授權條款（{4}）和 cuDNN 授權條款（{5}）。來源：{6}</value></data>
+  <data name="NvidiaRuntimeAndModelConfirmationFormat" xml:space="preserve"><value>{0}&#x0A;&#x0A;接著：{1}</value></data>
+  <data name="NvidiaRuntimePreparingStatus" xml:space="preserve"><value>正在準備 NVIDIA 執行階段函式庫下載並檢查磁碟空間…</value></data>
+  <data name="NvidiaRuntimeDownloadingStatus" xml:space="preserve"><value>正在從 NVIDIA 官方來源下載執行階段函式庫；已完成的封存檔可用於重試…</value></data>
+  <data name="NvidiaRuntimeVerifyingStatus" xml:space="preserve"><value>正在驗證 NVIDIA 封存檔的大小和 SHA-256…</value></data>
+  <data name="NvidiaRuntimeInstallingStatus" xml:space="preserve"><value>正在擷取允許清單 DLL 並原子安裝到應用程式私有目錄…</value></data>
+  <data name="NvidiaRuntimeCompletingStatus" xml:space="preserve"><value>NVIDIA 執行階段函式庫已安裝，正在重新偵測環境…</value></data>
+  <data name="NvidiaRuntimeInstalledStatus" xml:space="preserve"><value>NVIDIA CUDA/cuDNN 執行階段函式庫已安裝並通過本機偵測。</value></data>
+  <data name="NvidiaRuntimeAlreadyAvailableStatus" xml:space="preserve"><value>現有 NVIDIA CUDA/cuDNN 執行階段函式庫已經可用，無需重複下載。</value></data>
+  <data name="NvidiaRuntimeInstallFailedStatus" xml:space="preserve"><value>NVIDIA 執行階段函式庫未能安裝；現有模型和資料保持不變。</value></data>
+  <data name="NvidiaRuntimeUnsupportedStatus" xml:space="preserve"><value>目前 NVIDIA 環境不能使用該 CUDA 模型；請按偵測結果處理或改用 CPU 模型。</value></data>
+  <data name="ModelSlotsSectionTitle.Text" xml:space="preserve"><value>能力槽位與模型套件</value></data>
+  <data name="ModelSlotsSectionDescription.Text" xml:space="preserve"><value>為視覺理解和標題簡介選擇已安裝的本機模型；未通過相容性檢查的模型套件不會被啟用。</value></data>
+  <data name="ImportModelPackageButton.Content" xml:space="preserve"><value>匯入本機模型套件</value></data>
+  <data name="ImportModelPackageButton.AutomationProperties.Name" xml:space="preserve"><value>選擇受支援本機模型套件的 manifest.json</value></data>
+  <data name="OcrSlotTitle.Text" xml:space="preserve"><value>OCR 事實層</value></data>
+  <data name="OcrSlotDescription.Text" xml:space="preserve"><value>保留原文、行詞和邊界框</value></data>
+  <data name="OcrSlotCurrentValue.Text" xml:space="preserve"><value>PP-OCRv6-small，失敗時改用已安裝的 Windows OCR</value></data>
+  <data name="VisionSlotTitle.Text" xml:space="preserve"><value>視覺描述</value></data>
+  <data name="VisionSlotDescription.Text" xml:space="preserve"><value>物件、場景和版面關係候選</value></data>
+  <data name="VisionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>視覺描述模型</value></data>
+  <data name="TextCompositionSlotTitle.Text" xml:space="preserve"><value>標題與簡介</value></data>
+  <data name="TextCompositionSlotDescription.Text" xml:space="preserve"><value>嚴格結構化的標題、簡介和分類草稿</value></data>
+  <data name="TextCompositionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>標題與簡介模型</value></data>
+  <data name="EntitySlotTitle.Text" xml:space="preserve"><value>實體候選</value></data>
+  <data name="EntitySlotDescription.Text" xml:space="preserve"><value>日期、時間、地點等證據候選</value></data>
+  <data name="EntitySlotCurrentValue.Text" xml:space="preserve"><value>本機確定性解析；模型候選必須帶可核對證據</value></data>
+  <data name="InstalledModelsSectionTitle.Text" xml:space="preserve"><value>已安裝的模型套件</value></data>
+  <data name="InstalledModelsEmptyState.Title" xml:space="preserve"><value>尚未安裝選用的本機視覺模型</value></data>
+  <data name="InstalledModelsSummaryEmpty" xml:space="preserve"><value>尚未安裝本機模型套件</value></data>
+  <data name="InstalledModelsSummaryFormat" xml:space="preserve"><value>已安裝 {0} 個模型套件</value></data>
+  <data name="ModelManagementStatusInfoBar.Title" xml:space="preserve"><value>模型管理</value></data>
+  <data name="VisionBuiltInOptionName" xml:space="preserve"><value>不使用視覺模型</value></data>
+  <data name="VisionBuiltInOptionDescription" xml:space="preserve"><value>保持 OCR-only 視覺槽位</value></data>
+  <data name="TextComposerBuiltInOptionName" xml:space="preserve"><value>本機擷取式標題與簡介</value></data>
+  <data name="TextComposerBuiltInOptionDescription" xml:space="preserve"><value>不載入產生模型</value></data>
+  <data name="ModelManagementUnavailableStatus" xml:space="preserve"><value>本機儲存空間尚未就緒，暫時無法管理模型套件。</value></data>
+  <data name="AnalysisModeSavedStatus" xml:space="preserve"><value>分析策略已儲存，只影響之後建立的工作。</value></data>
+  <data name="AnalysisModeSaveFailedStatus" xml:space="preserve"><value>分析策略未能儲存，原設定保持不變。</value></data>
+  <data name="ModelImportCompletedStatusFormat" xml:space="preserve"><value>模型套件 {0} 已通過本機自我檢查並安裝。</value></data>
+  <data name="ModelImportFailedStatus" xml:space="preserve"><value>模型套件未通過匯入驗證，目前模型和已有資料保持不變。</value></data>
+  <data name="ModelOperationErrorCodeFormat" xml:space="preserve"><value>{0}（錯誤代碼：{1}）</value></data>
+  <data name="LocalModelPackageContractFailedStatus" xml:space="preserve"><value>模型清單或檔案結構與目前應用程式支援的本機模型套件通訊協定不一致；目前模型和已有資料保持不變。</value></data>
+  <data name="LocalModelExecutionProviderUnavailableStatus" xml:space="preserve"><value>模型套件宣告的執行 Provider 未包含在目前應用程式建置中；請使用 x64 CUDA 建置匯入 CUDA 套件，或改用 CPU 套件。</value></data>
+  <data name="LocalModelPackageConflictStatus" xml:space="preserve"><value>相同模型 ID 和版本已存在，但檔案內容或安裝目錄不一致；請保留已安裝版本，或為重新匯出的套件使用新版本號。</value></data>
+  <data name="LocalModelFileIoFailedStatus" xml:space="preserve"><value>複製或安裝模型檔案時發生本機磁碟讀寫錯誤；請確認來源檔案未被佔用、目標磁碟空間充足後重試。</value></data>
+  <data name="LocalModelFileAccessDeniedStatus" xml:space="preserve"><value>應用程式沒有讀取來源模型或寫入模型安裝目錄的權限；請選擇目前帳戶可存取的本機模型目錄後重試。</value></data>
+  <data name="LocalModelInsufficientMemoryStatus" xml:space="preserve"><value>驗證模型時可用記憶體不足；請關閉佔用記憶體較高的程式後重試，原模型和已有資料保持不變。</value></data>
+  <data name="ModelSwitchCompletedStatus" xml:space="preserve"><value>能力槽位已切換，只影響之後建立的工作。</value></data>
+  <data name="ModelSwitchFailedStatus" xml:space="preserve"><value>模型自我檢查或切換失敗，原能力槽位保持不變。</value></data>
+  <data name="ImportModelPickerCommitText" xml:space="preserve"><value>選擇清單</value></data>
+  <data name="ModelSwitchDialogTitle" xml:space="preserve"><value>切換本機模型？</value></data>
+  <data name="ModelSwitchDialogMessageFormat" xml:space="preserve"><value>將切換到“{0}”。切換前會再次執行本機自我檢查；已有工作和結果繼續使用原 profile。</value></data>
+  <data name="ModelSwitchDialogPrimary" xml:space="preserve"><value>驗證並切換</value></data>
+  <data name="ReanalyzeSelectedButton.Label" xml:space="preserve"><value>重新分析</value></data>
+  <data name="ReanalyzeSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>使用目前本機模型重新分析所選圖片</value></data>
+  <data name="ReanalyzeSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>選擇性重新分析</value></data>
+  <data name="ReanalysisDialogTitle" xml:space="preserve"><value>重新分析所選圖片？</value></data>
+  <data name="ReanalysisDialogMessageFormat" xml:space="preserve"><value>將為所選的 {0} 張圖片分別建立持久化工作，並鎖定目前分析策略和模型版本。人工標題、簡介和分類不會被覆寫。</value></data>
+  <data name="ReanalysisDialogPrimary" xml:space="preserve"><value>排隊重新分析</value></data>
+  <data name="ReanalysisQueuedStatusFormat" xml:space="preserve"><value>已排隊 {0} 項；跳過 {1} 項（已排隊、已刪除或無法使用）。</value></data>
+  <data name="ReanalysisFailedStatus" xml:space="preserve"><value>未能建立重新分析工作，現有結果保持不變。</value></data>
+  <data name="ModelPackageDetailsFormat" xml:space="preserve"><value>{0} · {1} · 下載 {2} · 安裝 {3}</value></data>
+  <data name="ModelPackageCapabilitiesFormat" xml:space="preserve"><value>能力：{0}</value></data>
+  <data name="ModelPackageLanguagesFormat" xml:space="preserve"><value>輸入：{0} · 輸出：{1} · 文字系統：{2}</value></data>
+  <data name="ModelPackageHardwareFormat" xml:space="preserve"><value>最低記憶體：{0} · 硬體建議：{1} · 已驗證執行裝置：{2}</value></data>
+  <data name="ModelPackageLicenseSourceFormat" xml:space="preserve"><value>授權條款：{0} · 來源：{1}</value></data>
+  <data name="ModelPackageSelfTestPassedStatus" xml:space="preserve"><value>本機推理自我檢查已通過；真實樣本基準待完成</value></data>
+  <data name="ModelPackageBenchmarkStatusFormat" xml:space="preserve"><value>基準狀態：{0}</value></data>
+  <data name="ModelCapabilityOcrName" xml:space="preserve"><value>OCR</value></data>
+  <data name="ModelCapabilityVisionCaptionName" xml:space="preserve"><value>視覺描述</value></data>
+  <data name="ModelCapabilityTextCompositionName" xml:space="preserve"><value>標題與簡介整理</value></data>
+  <data name="ModelCapabilityEntityExtractionName" xml:space="preserve"><value>實體擷取</value></data>
+  <data name="RecommendedModelsSectionTitle.Text" xml:space="preserve"><value>建議的本機模型</value></data>
+  <data name="RecommendedModelsSectionDescription.Text" xml:space="preserve"><value>僅在你確認後下載固定版本的模型檔案。請求不包含圖片、OCR 文字或其他使用者內容；安裝完成後的分析不需要網路。</value></data>
+  <data name="RecommendedPpOcrDescription" xml:space="preserve"><value>提高多語言文字辨識品質；無法使用時仍會改用 Windows OCR。</value></data>
+  <data name="RecommendedQwenCpuDescription" xml:space="preserve"><value>使用 CPU 產生視覺描述和標題簡介，不要求獨立顯示卡。</value></data>
+  <data name="RecommendedQwenCudaDescription" xml:space="preserve"><value>使用受支援的 NVIDIA 顯示卡加速視覺描述和標題簡介。</value></data>
+  <data name="RecommendedModelDetailsFormat" xml:space="preserve"><value>版本：{0} · 下載：{1} · 安裝：{2}</value></data>
+  <data name="RecommendedModelHardwareFormat" xml:space="preserve"><value>最低記憶體：{0} · {1}</value></data>
+  <data name="RecommendedPpOcrHardwareGuidance" xml:space="preserve"><value>支援 x64/ARM64 CPU 基準</value></data>
+  <data name="RecommendedQwenCpuHardwareGuidance" xml:space="preserve"><value>僅 CPU；建議 16 GiB 系統記憶體，Windows x64 實測峰值工作集約 6.43 GiB</value></data>
+  <data name="RecommendedQwenCudaHardwareGuidance" xml:space="preserve"><value>僅 CUDA；需要標稱 8 GB 級 NVIDIA GPU（驅動程式偵測值至少 7.5 GiB）與支援 CUDA 12.x 的驅動程式；缺少的 CUDA/cuDNN 使用者模式執行階段函式庫可由應用程式私有安裝，無需修改 PATH；建議 12 GiB 系統記憶體</value></data>
+  <data name="RecommendedQwenCpuBenchmarkStatus" xml:space="preserve"><value>Windows x64 的簡體中文、英文、日文真實樣本與嚴格結構化輸出已通過；完整黃金樣本基準待完成</value></data>
+  <data name="RecommendedQwenCudaBenchmarkStatus" xml:space="preserve"><value>Windows x64 CUDA 的簡體中文、英文、日文真實樣本與嚴格結構化輸出已通過；完整黃金樣本基準待完成</value></data>
+  <data name="RecommendedModelExperimentalStatus" xml:space="preserve"><value>選用實驗套件：固定檔案雜湊已核驗，Windows 真實樣本基準尚待完成</value></data>
+  <data name="RecommendedModelArtifactPinnedStatus" xml:space="preserve"><value>官方模型檔案和雜湊已固定；Windows 真實樣本基準尚待完成</value></data>
+  <data name="RecommendedModelDownloadAction" xml:space="preserve"><value>下載、匯入並啟用</value></data>
+  <data name="RecommendedModelEnableAction" xml:space="preserve"><value>驗證並啟用</value></data>
+  <data name="RecommendedModelEnabledAction" xml:space="preserve"><value>已啟用</value></data>
+  <data name="RecommendedModelConfirmationTitleFormat" xml:space="preserve"><value>下載並啟用 {0}？</value></data>
+  <data name="RecommendedModelDownloadConfirmationFormat" xml:space="preserve"><value>將從固定的 HTTPS 來源下載“{0}”。下載大小：{1}；安裝大小：{2}。授權條款：{3}。來源：{4}。最低記憶體：{5}；{6}。下載後會驗證檔案大小和 SHA-256、執行本機推理自我檢查，再原子安裝並啟用。取消或失敗時保留目前模型；不會上傳使用者內容。</value></data>
+  <data name="RecommendedModelEnableConfirmationFormat" xml:space="preserve"><value>“{0}”已安裝，將重新驗證並啟用。安裝大小：{2}。授權條款：{3}。來源：{4}。最低記憶體：{5}；{6}。切換失敗時繼續使用目前模型，已有分析結果不會自動重新執行。</value></data>
+  <data name="CancelModelOperationButton.Content" xml:space="preserve"><value>取消</value></data>
+  <data name="CancelModelOperationButton.AutomationProperties.Name" xml:space="preserve"><value>取消模型下載或安裝</value></data>
+  <data name="RecommendedModelPreparingStatus" xml:space="preserve"><value>正在檢查磁碟空間並準備安全暫存目錄…</value></data>
+  <data name="RecommendedModelDownloadingStatus" xml:space="preserve"><value>正在下載模型檔案…</value></data>
+  <data name="RecommendedModelVerifyingStatus" xml:space="preserve"><value>正在核對檔案大小和 SHA-256…</value></data>
+  <data name="RecommendedModelInstallingStatus" xml:space="preserve"><value>正在執行本機推理自我檢查並安裝…</value></data>
+  <data name="RecommendedModelEnablingStatus" xml:space="preserve"><value>正在原子更新能力槽位…</value></data>
+  <data name="RecommendedModelCompletingStatus" xml:space="preserve"><value>模型操作即將完成…</value></data>
+  <data name="RecommendedModelInstalledStatusFormat" xml:space="preserve"><value>{0} 已通過驗證和本機自我檢查，並已啟用。</value></data>
+  <data name="RecommendedModelEnabledStatusFormat" xml:space="preserve"><value>{0} 已驗證並啟用。</value></data>
+  <data name="RecommendedModelCanceledStatus" xml:space="preserve"><value>模型操作已取消，已安裝模型和目前能力槽位保持不變；已通過驗證的下載檔案可供下次重試重複使用。</value></data>
+  <data name="RecommendedModelInsufficientSpaceStatus" xml:space="preserve"><value>可用磁碟空間不足。下載沒有開始，目前模型保持不變。</value></data>
+  <data name="RecommendedModelDownloadTimedOutStatus" xml:space="preserve"><value>模型下載長時間沒有收到資料，操作已停止；未完成檔案已清理，已驗證檔案可供下次重試重複使用。</value></data>
+  <data name="RecommendedModelNetworkFailedStatus" xml:space="preserve"><value>多次重試後仍無法下載模型檔案；未完成檔案已清理，已驗證檔案可供下次重試重複使用。請在網路穩定後重試。</value></data>
+  <data name="RecommendedModelVerificationFailedStatus" xml:space="preserve"><value>下載來源、檔案大小或 SHA-256 驗證失敗；無效檔案已清理，先前已驗證檔案可供下次重試重複使用。</value></data>
+  <data name="RecommendedModelInstallFailedStatus" xml:space="preserve"><value>模型未能完成下載、匯入或啟用；未完成檔案已清理，已驗證下載可供下次重試重複使用，目前模型和已有資料保持不變。</value></data>
+  <data name="RecommendedQwenConfigurationFailedStatus" xml:space="preserve"><value>Qwen 檔案已完整下載並通過雜湊，但 GenAI 設定與受支援的套件清單不一致；模型未安裝，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenSelfTestFailedStatus" xml:space="preserve"><value>Qwen 檔案已完整下載並通過雜湊，但本機多模態推理自我檢查失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenSelfTestOutputMismatchStatus" xml:space="preserve"><value>Qwen 已完成本機推理，但沒有按固定自我檢查內容回傳結構化結果；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenModelLoadFailedStatus" xml:space="preserve"><value>Qwen 檔案已完整下載並通過雜湊，但 ONNX Runtime GenAI 無法載入模型圖；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>CUDA Qwen 檔案已通過雜湊，但 CUDA Provider 自我檢查未通過。若 NVIDIA 環境顯示已就緒，則目前 GPU 驅動程式或虛擬化環境可能不支援此執行階段；無需手動修改 PATH。模型未啟用，原能力槽位保持不變。</value></data>
+  <data name="RecommendedQwenDirectMlUnavailableStatus" xml:space="preserve"><value>DirectML Qwen 套件與目前應用程式內建執行階段不相符；模型未啟用，目前能力槽位保持不變。</value></data>
+  <data name="RecommendedQwenModelInspectionFailedStatus" xml:space="preserve"><value>Qwen 模型已載入，但執行階段報告的模型類型不相容；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenProcessorFailedStatus" xml:space="preserve"><value>Qwen 模型圖已載入，但多模態處理器或 tokenizer 初始化失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenImageInputFailedStatus" xml:space="preserve"><value>Qwen 執行階段無法讀取內建自我檢查圖片；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenParametersFailedStatus" xml:space="preserve"><value>Qwen 模型已載入，但結構化產生參數不受目前執行階段支援；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenInputProcessingFailedStatus" xml:space="preserve"><value>Qwen 模型已載入，但視覺輸入預處理失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenGeneratorFailedStatus" xml:space="preserve"><value>Qwen 輸入已處理，但本機產生器建立失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenInputBindingFailedStatus" xml:space="preserve"><value>Qwen 產生器已建立，但視覺 patch 張量與模型輸入簽章不相容；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenTokenizerFailedStatus" xml:space="preserve"><value>Qwen 產生器已建立，但 tokenizer 輸出流初始化失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenTokenLimitFailedStatus" xml:space="preserve"><value>Qwen 本機產生未能在受控 token 預算內完成結構化結果；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenStructuredOutputFailedStatus" xml:space="preserve"><value>Qwen 已完成本機產生，但結果未通過嚴格 JSON Schema 與證據驗證；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="RecommendedQwenGenerationFailedStatus" xml:space="preserve"><value>Qwen 自我檢查已進入本機產生階段，但產生或嚴格結構化輸出驗證失敗；模型未啟用，已驗證檔案已保留。</value></data>
+  <data name="LocalWorkerNativeRuntimeMissingStatus" xml:space="preserve"><value>缺少或無法載入 Microsoft Visual C++ 執行階段函式庫。請執行最新的 PicForLater Setup 完成前置元件安裝，然後重試；已驗證的模型檔案已保留。</value></data>
+  <data name="ReminderNotificationsUnavailableInfo.Title" xml:space="preserve"><value>系統通知目前無法使用</value></data>
+  <data name="ReminderNotificationsUnavailableInfo.Message" xml:space="preserve"><value>提醒仍儲存在本機，但 Windows 通知被關閉或目前環境不支援通知。啟用通知後重新開啟本頁即可重試排程。</value></data>
+  <data name="ReminderStatusInfo.Title" xml:space="preserve"><value>提醒已更新</value></data>
+  <data name="ReminderErrorInfo.Title" xml:space="preserve"><value>無法完成提醒操作</value></data>
+  <data name="RemindersLoadingText.Text" xml:space="preserve"><value>正在讀取候選並核對系統通知…</value></data>
+  <data name="RemindersErrorTitle.Text" xml:space="preserve"><value>無法讀取提醒</value></data>
+  <data name="RemindersErrorMessage.Text" xml:space="preserve"><value>本機提醒資料暫時無法使用。不會刪除候選或已經確認的提醒。</value></data>
+  <data name="RemindersRetryButton.Content" xml:space="preserve"><value>重試</value></data>
+  <data name="RemindersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>重試載入提醒</value></data>
+  <data name="RemindersPermissionTitle.Text" xml:space="preserve"><value>無法存取本機提醒資料</value></data>
+  <data name="RemindersPermissionMessage.Text" xml:space="preserve"><value>請檢查應用程式的資料目錄權限，然後重試。</value></data>
+  <data name="RemindersUnsupportedTitle.Text" xml:space="preserve"><value>目前環境不支援提醒儲存</value></data>
+  <data name="RemindersUnsupportedMessage.Text" xml:space="preserve"><value>圖片仍會保留；在受支援的 Windows 環境中可繼續確認提醒。</value></data>
+  <data name="ReminderCandidatesHeading.Text" xml:space="preserve"><value>待確認候選</value></data>
+  <data name="ReminderCandidatesDescription.Text" xml:space="preserve"><value>日期、時間、時區和地點都需要人工核對。</value></data>
+  <data name="ReminderCandidatesEmpty.Text" xml:space="preserve"><value>沒有待確認的日期候選。</value></data>
+  <data name="ReminderCandidatesList.AutomationProperties.Name" xml:space="preserve"><value>待確認提醒候選</value></data>
+  <data name="ConfirmedRemindersHeading.Text" xml:space="preserve"><value>已確認提醒</value></data>
+  <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>確認候選後，提醒會顯示在這裡。</value></data>
+  <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>已確認提醒</value></data>
+  <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>選擇</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>已選擇 {0} 條候選</value></data>
+  <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>選擇多個待確認候選</value></data>
+  <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>忽略</value></data>
+  <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>全選</value></data>
+  <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>選擇全部已載入的待確認候選</value></data>
+  <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>取消選擇</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>離開候選多選</value></data>
+  <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>忽略所選候選</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>已忽略 {0} 個候選，{1} 個失敗。</value></data>
+  <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>選擇</value></data>
+  <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>選擇多個已確認提醒</value></data>
+  <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>進入多選</value></data>
+  <data name="ReminderSelectAllButton.Label" xml:space="preserve"><value>全選</value></data>
+  <data name="ReminderSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>選擇全部已確認提醒</value></data>
+  <data name="ReminderDeleteSelectedButton.Label" xml:space="preserve"><value>刪除</value></data>
+  <data name="ReminderDeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>刪除選中的提醒</value></data>
+  <data name="ReminderCancelSelectionButton.Label" xml:space="preserve"><value>取消選擇</value></data>
+  <data name="ReminderCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>離開提醒多選</value></data>
+  <data name="ReminderSelectionCountFormat" xml:space="preserve"><value>已選擇 {0} 條提醒</value></data>
+  <data name="ReminderEditorPlaceholderTitle.Text" xml:space="preserve"><value>選擇候選或提醒</value></data>
+  <data name="ReminderEditorPlaceholderMessage.Text" xml:space="preserve"><value>在這裡核對原始證據、日期、時間、時區和地點。</value></data>
+  <data name="ReminderEditorBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回提醒清單</value></data>
+  <data name="ReminderEditorBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回提醒清單</value></data>
+  <data name="ReminderEditorImageButton.AutomationProperties.Name" xml:space="preserve"><value>開啟對應圖片詳細資料</value></data>
+  <data name="ReminderEditorImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>在資料庫中開啟這張圖片</value></data>
+  <data name="ReminderTitleTextBox.Header" xml:space="preserve"><value>提醒標題</value></data>
+  <data name="ReminderTitleTextBox.PlaceholderText" xml:space="preserve"><value>輸入便於辨識的標題</value></data>
+  <data name="ReminderTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>提醒標題</value></data>
+  <data name="ReminderAmbiguityInfo.Title" xml:space="preserve"><value>需要核對</value></data>
+  <data name="ReminderSummaryHeading.Text" xml:space="preserve"><value>簡介</value></data>
+  <data name="ReminderEvidenceHeading.Text" xml:space="preserve"><value>辨識依據</value></data>
+  <data name="ReminderDateLabel.Text" xml:space="preserve"><value>日期</value></data>
+  <data name="ReminderDatePicker.PlaceholderText" xml:space="preserve"><value>選擇日期</value></data>
+  <data name="ReminderDatePicker.AutomationProperties.Name" xml:space="preserve"><value>提醒日期</value></data>
+  <data name="ReminderTimeLabel.Text" xml:space="preserve"><value>時間</value></data>
+  <data name="ReminderTimePicker.AutomationProperties.Name" xml:space="preserve"><value>提醒時間</value></data>
+  <data name="ReminderTimeZoneComboBox.Header" xml:space="preserve"><value>時區</value></data>
+  <data name="ReminderTimeZoneComboBox.AutomationProperties.Name" xml:space="preserve"><value>提醒時區</value></data>
+  <data name="ReminderLocationTextBox.Header" xml:space="preserve"><value>地點（選用）</value></data>
+  <data name="ReminderLocationTextBox.PlaceholderText" xml:space="preserve"><value>核對或編輯地點</value></data>
+  <data name="ReminderLocationTextBox.AutomationProperties.Name" xml:space="preserve"><value>提醒地點</value></data>
+  <data name="ReminderDeliveryLimitation.Text" xml:space="preserve"><value>Windows 通知可能延遲約 5 分鐘；關機期間錯過時會在下次啟動後標記。</value></data>
+  <data name="ReminderDismissCandidateButton.Content" xml:space="preserve"><value>忽略候選</value></data>
+  <data name="ReminderDismissCandidateButton.AutomationProperties.Name" xml:space="preserve"><value>忽略目前提醒候選</value></data>
+  <data name="ReminderCancelButton.Content" xml:space="preserve"><value>取消提醒</value></data>
+  <data name="ReminderCancelButton.AutomationProperties.Name" xml:space="preserve"><value>取消目前提醒</value></data>
+  <data name="ReminderDeleteEditorButton.Content" xml:space="preserve"><value>刪除提醒</value></data>
+  <data name="ReminderDeleteEditorButton.AutomationProperties.Name" xml:space="preserve"><value>刪除目前提醒記錄</value></data>
+  <data name="ReminderSaveButton.Content" xml:space="preserve"><value>確認提醒</value></data>
+  <data name="ReminderSaveButton.AutomationProperties.Name" xml:space="preserve"><value>確認並儲存提醒</value></data>
+  <data name="ReminderPrimaryConfirmText" xml:space="preserve"><value>確認提醒</value></data>
+  <data name="ReminderPrimaryConfirmAutomationName" xml:space="preserve"><value>確認並儲存提醒</value></data>
+  <data name="ReminderPrimarySaveChangesText" xml:space="preserve"><value>儲存變更</value></data>
+  <data name="ReminderPrimarySaveChangesAutomationName" xml:space="preserve"><value>儲存提醒變更</value></data>
+  <data name="ReminderPrimaryRestoreText" xml:space="preserve"><value>還原提醒</value></data>
+  <data name="ReminderPrimaryRestoreAutomationName" xml:space="preserve"><value>還原並重新排程提醒</value></data>
+  <data name="ReviewReminderCandidateButton.Content" xml:space="preserve"><value>核對</value></data>
+  <data name="ReviewReminderCandidateButton.AutomationProperties.Name" xml:space="preserve"><value>核對提醒候選</value></data>
+  <data name="EditConfirmedReminderButton.Content" xml:space="preserve"><value>編輯</value></data>
+  <data name="EditConfirmedReminderButton.AutomationProperties.Name" xml:space="preserve"><value>編輯已確認提醒</value></data>
+  <data name="ReminderCandidateThumbnailButton.AutomationProperties.Name" xml:space="preserve"><value>開啟候選對應的圖片詳細資料</value></data>
+  <data name="ReminderCandidateThumbnailButton.ToolTipService.ToolTip" xml:space="preserve"><value>在資料庫中開啟圖片</value></data>
+  <data name="ReminderThumbnailButton.AutomationProperties.Name" xml:space="preserve"><value>開啟提醒對應的圖片詳細資料</value></data>
+  <data name="ReminderThumbnailButton.ToolTipService.ToolTip" xml:space="preserve"><value>在資料庫中開啟圖片</value></data>
+  <data name="ReminderContextOpenImageMenuItem.Text" xml:space="preserve"><value>圖片詳細資料</value></data>
+  <data name="ReminderContextReviewCandidateMenuItem.Text" xml:space="preserve"><value>編輯</value></data>
+  <data name="ReminderContextEditMenuItem.Text" xml:space="preserve"><value>編輯</value></data>
+  <data name="ReminderContextSelectMenuItem.Text" xml:space="preserve"><value>選擇</value></data>
+  <data name="ReminderContextDismissCandidateMenuItem.Text" xml:space="preserve"><value>忽略</value></data>
+  <data name="ReminderContextDeleteMenuItem.Text" xml:space="preserve"><value>刪除</value></data>
+  <data name="ReminderDeleteDialogTitle" xml:space="preserve"><value>刪除提醒？</value></data>
+  <data name="ReminderDeleteDialogMessageFormat" xml:space="preserve"><value>將刪除“{0}”的提醒記錄並取消對應的系統通知。圖片和辨識結果不會被刪除。</value></data>
+  <data name="ReminderDeleteBatchDialogTitle" xml:space="preserve"><value>刪除選中的提醒？</value></data>
+  <data name="ReminderDeleteBatchDialogMessageFormat" xml:space="preserve"><value>將刪除 {0} 條提醒記錄並取消對應的系統通知。圖片和辨識結果不會被刪除。</value></data>
+  <data name="ReminderDeleteDialogPrimary" xml:space="preserve"><value>刪除提醒</value></data>
+  <data name="ReminderDeletedStatusFormat" xml:space="preserve"><value>已刪除 {0} 條提醒；{1} 條未能刪除。</value></data>
+  <data name="NotificationReminderBody" xml:space="preserve"><value>該回顧這張圖片了。</value></data>
+  <data name="NotificationOpenButton" xml:space="preserve"><value>開啟圖片</value></data>
+  <data name="NotificationLocationFormat" xml:space="preserve"><value>地點：{0}</value></data>
+  <data name="ReminderConfirmedEvidence" xml:space="preserve"><value>已確認提醒；儲存修改後將重新排程通知。</value></data>
+  <data name="ReminderCancelledEvidence" xml:space="preserve"><value>該提醒已取消；還原後將重新排程通知。</value></data>
+  <data name="ReminderManualEvidence" xml:space="preserve"><value>此提醒由你從資料庫手動建立。請確認日期、時間、時區和地點。</value></data>
+  <data name="ReminderManualImageUnavailableError" xml:space="preserve"><value>無法為已刪除或不存在的圖片建立提醒。</value></data>
+  <data name="ReminderDateLocationEvidenceFormat" xml:space="preserve"><value>日期依據：{0}&#xA;地點依據：{1}</value></data>
+  <data name="ReminderDateTimeRequiredError" xml:space="preserve"><value>請同時選擇日期和時間；應用程式不會替你猜測缺失的時間。</value></data>
+  <data name="ReminderUpdatedStatus" xml:space="preserve"><value>提醒已更新，系統通知正在重新排程。</value></data>
+  <data name="ReminderRestoredStatus" xml:space="preserve"><value>提醒已還原，系統通知正在重新排程。</value></data>
+  <data name="ReminderConfirmedStatus" xml:space="preserve"><value>提醒已確認，系統通知正在排程。</value></data>
+  <data name="ReminderCandidateDismissedStatus" xml:space="preserve"><value>候選已忽略；一般重新分析不會把同一證據靜默加回。</value></data>
+  <data name="ReminderCandidateDismissFailedError" xml:space="preserve"><value>無法忽略該候選，請重試。</value></data>
+  <data name="ReminderCancelledStatus" xml:space="preserve"><value>提醒已取消，已提交系統通知取消工作。</value></data>
+  <data name="ReminderCancelFailedError" xml:space="preserve"><value>無法取消提醒，請重試。</value></data>
+  <data name="ReminderSaveFailedError" xml:space="preserve"><value>無法儲存提醒；原候選和已有提醒沒有被覆寫。</value></data>
+  <data name="MissedReminderReconciledFormat" xml:space="preserve"><value>啟動核對發現 {0} 條已經錯過投遞視窗的提醒。</value></data>
+  <data name="ReminderLoadFailedError" xml:space="preserve"><value>讀取或核對提醒失敗，請重試。</value></data>
+  <data name="ReminderLoadMoreFailedError" xml:space="preserve"><value>無法載入更多提醒，請重試。</value></data>
+  <data name="LoadMoreReminderCandidatesButton.Content" xml:space="preserve"><value>載入更多候選</value></data>
+  <data name="LoadMoreReminderCandidatesButton.AutomationProperties.Name" xml:space="preserve"><value>載入更多提醒候選</value></data>
+  <data name="LoadMoreConfirmedRemindersButton.Content" xml:space="preserve"><value>載入更多提醒</value></data>
+  <data name="LoadMoreConfirmedRemindersButton.AutomationProperties.Name" xml:space="preserve"><value>載入更多已確認提醒</value></data>
+  <data name="ReminderCandidateSourceMetadata" xml:space="preserve"><value>圖片元資料證據</value></data>
+  <data name="ReminderCandidateSourceOcr" xml:space="preserve"><value>OCR 原文證據</value></data>
+  <data name="ReminderCandidateSourceModel" xml:space="preserve"><value>本機模型候選</value></data>
+  <data name="ReminderAmbiguousDateOrder" xml:space="preserve"><value>數字日期的月/日順序不明確，請手動選擇。</value></data>
+  <data name="ReminderMissingYear" xml:space="preserve"><value>原文缺少年份，已使用參考時區中的分析當年預填；請核對。</value></data>
+  <data name="ReminderMissingMonthAndDay" xml:space="preserve"><value>原文只明確到年份，已暫填 1 月 1 日以便編輯；確認前請改為實際日期。</value></data>
+  <data name="ReminderMissingDay" xml:space="preserve"><value>原文只明確到月份，已暫填該月 1 日以便編輯；確認前請改為實際日期。</value></data>
+  <data name="ReminderDefaultTime" xml:space="preserve"><value>原文未辨識到具體時間，已暫填上午 10:00；確認前請核對。</value></data>
+  <data name="ReminderMissingDate" xml:space="preserve"><value>只辨識到了時間。請選擇提醒日期後再確認。</value></data>
+  <data name="ReminderAmbiguousTimeOfDay" xml:space="preserve"><value>原文缺少明確的上午、下午或 24 小時制線索，請核對時間。</value></data>
+  <data name="ReminderRelativeDate" xml:space="preserve"><value>原文使用了“今晚/明天”等相對日期，已按圖片分析時的本機日期預填；請核對。</value></data>
+  <data name="ReminderModelInterpretation" xml:space="preserve"><value>此日期由已安裝的本機模型解釋，仍需結合原文證據核對。</value></data>
+  <data name="ReminderModelOnlyInterpretation" xml:space="preserve"><value>此日期僅由已安裝的本機視覺模型從圖片中辨識，OCR 未能復核；請重點對照原圖。</value></data>
+  <data name="ReminderRemoteVisionNoLocalOcrEvidence" xml:space="preserve"><value>此候選由遠端視覺模型從圖片中推斷，沒有本機 OCR 定位證據；請重點對照原圖核對。</value></data>
+  <data name="ReminderCandidateNeedsReview" xml:space="preserve"><value>此候選存在歧義，請核對後再確認。</value></data>
+  <data name="ReminderTitleRequiredError" xml:space="preserve"><value>請輸入提醒標題。</value></data>
+  <data name="ReminderTitleTooLongError" xml:space="preserve"><value>提醒標題不能超過 300 個字元。</value></data>
+  <data name="ReminderNoLocation" xml:space="preserve"><value>未確認地點</value></data>
+  <data name="ReminderDueWithZoneFormat" xml:space="preserve"><value>{0:g} · {1}</value></data>
+  <data name="ReminderStateActive" xml:space="preserve"><value>待提醒</value></data>
+  <data name="ReminderStateCompleted" xml:space="preserve"><value>已完成</value></data>
+  <data name="ReminderStateCancelled" xml:space="preserve"><value>已取消</value></data>
+  <data name="ReminderStateSuspendedByDeletion" xml:space="preserve"><value>已隨圖片暫停</value></data>
+  <data name="ReminderStateMissed" xml:space="preserve"><value>已錯過</value></data>
+  <data name="ReminderStateNeedsReconfirmation" xml:space="preserve"><value>需要重新確認</value></data>
+  <data name="ReminderNotificationStatePending" xml:space="preserve"><value>等待系統排程</value></data>
+  <data name="ReminderNotificationStateScheduled" xml:space="preserve"><value>系統通知已排程</value></data>
+  <data name="ReminderNotificationStateFailed" xml:space="preserve"><value>系統通知排程失敗</value></data>
+  <data name="ReminderNotificationStateCancelled" xml:space="preserve"><value>系統通知已取消</value></data>
+  <data name="ReminderNotificationStateActivated" xml:space="preserve"><value>已從系統通知開啟</value></data>
+  <data name="ReminderDueTimeFutureError" xml:space="preserve"><value>提醒時間必須晚於目前時間。</value></data>
+  <data name="ReminderDstInvalidError" xml:space="preserve"><value>該本機時間處於夏令時間跳轉空檔，請選擇其他時間。</value></data>
+  <data name="ReminderDstAmbiguousError" xml:space="preserve"><value>該本機時間在夏令時間切換中出現兩次，請選擇明確的其他時間。</value></data>
+  <data name="ReminderTimeZoneError" xml:space="preserve"><value>所選時區在目前 Windows 中無法使用，請重新選擇。</value></data>
+  <data name="ReminderLocationTooLongError" xml:space="preserve"><value>地點文字過長，請縮短到 300 個字元以內。</value></data>
+  <data name="ReminderCandidateUnavailableError" xml:space="preserve"><value>該候選已被處理或來自已刪除圖片，請重新整理後重試。</value></data>
+  <data name="SettingsNavigation.PaneTitle" xml:space="preserve"><value>設定</value></data>
+  <data name="SettingsHomeNavigationItem.Content" xml:space="preserve"><value>概覽</value></data>
+  <data name="SettingsHomeNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>設定概覽</value></data>
+  <data name="LocalAnalysisSettingsNavigationItem.Content" xml:space="preserve"><value>本機分析</value></data>
+  <data name="LocalAnalysisSettingsNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>本機分析設定</value></data>
+  <data name="ApiAnalysisSettingsNavigationItem.Content" xml:space="preserve"><value>API 分析</value></data>
+  <data name="ApiAnalysisSettingsNavigationItem.AutomationProperties.Name" xml:space="preserve"><value>API 分析設定</value></data>
+  <data name="SettingsBackButton.AutomationProperties.Name" xml:space="preserve"><value>返回設定概覽</value></data>
+  <data name="SettingsBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>返回設定概覽 (Alt+左方向鍵)</value></data>
+  <data name="SettingsBackButtonLabel.Text" xml:space="preserve"><value>設定</value></data>
+  <data name="LocalAnalysisSettingsPageTitle.Text" xml:space="preserve"><value>本機分析</value></data>
+  <data name="LocalAnalysisSettingsPageSubtitle.Text" xml:space="preserve"><value>調整本機 OCR、視覺增強、硬體加速和模型套件。</value></data>
+  <data name="CurrentExecutionSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>
+  <data name="AnalysisSourceOptions.AutomationProperties.Name" xml:space="preserve"><value>選擇新工作的分析來源</value></data>
+  <data name="LocalAnalysisSourceOption.AutomationProperties.Name" xml:space="preserve"><value>使用本機分析</value></data>
+  <data name="ApiAnalysisSourceOption.AutomationProperties.Name" xml:space="preserve"><value>使用 API 分析</value></data>
+  <data name="AnalysisSettingsSectionTitle.Text" xml:space="preserve"><value>分析設定</value></data>
+  <data name="OpenLocalAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>開啟本機分析設定</value></data>
+  <data name="OpenLocalAnalysisSettingsButton.Content" xml:space="preserve"><value>設定</value></data>
+  <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>本機分析</value></data>
+  <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>在本機裝置上完成 OCR、視覺模型與推理，資料不上雲端。</value></data>
+  <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>就緒</value></data>
+  <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>開啟 API 分析設定</value></data>
+  <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>設定</value></data>
+  <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>雲端 API</value></data>
+  <data name="ApiAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>透過雲端服務完成分析，需設定供應商與金鑰後才能使用。</value></data>
+  <data name="ApiConfigurationReadyStatus" xml:space="preserve"><value>已設定</value></data>
+  <data name="ApiConfigurationMissingStatus" xml:space="preserve"><value>未設定</value></data>
+  <data name="ApiConfigurationUnavailableStatus" xml:space="preserve"><value>狀態無法使用</value></data>
+  <data name="ExecutionTargetLocal" xml:space="preserve"><value>本機</value></data>
+  <data name="ExecutionTargetLocalDetail" xml:space="preserve"><value>新工作使用完整本機流水線；聯網分析已關閉。若選擇 API 分析但尚未設定，會先進入設定頁。</value></data>
+  <data name="ExecutionTargetRemoteOcrText" xml:space="preserve"><value>API · OCR 文字</value></data>
+  <data name="ExecutionTargetRemoteVision" xml:space="preserve"><value>API · 圖片</value></data>
+  <data name="ExecutionTargetRemoteDetailFormat" xml:space="preserve"><value>{0} · {1}。只影響新匯入和你明確重新分析的項目。</value></data>
+  <data name="ExecutionTargetRemoteMissingProfileDetail" xml:space="preserve"><value>所選 API profile 無法使用。繼續匯入前請切回本機。</value></data>
+  <data name="ExecutionTargetUnavailable" xml:space="preserve"><value>無法使用</value></data>
+  <data name="ExecutionTargetUnavailableDetail" xml:space="preserve"><value>儲存尚未就緒，無法讀取目前執行目標。</value></data>
+  <data name="ApiAnalysisSettingsPageTitle.Text" xml:space="preserve"><value>雲端 API</value></data>
+  <data name="ApiAnalysisSettingsPageSubtitle.Text" xml:space="preserve"><value>完成設定、連線測試與隱私確認後，應用程式才會連線並進行分析。</value></data>
+  <data name="ApiProviderSectionTitle.Text" xml:space="preserve"><value>選擇服務</value></data>
+  <data name="ApiProviderRowTitle.Text" xml:space="preserve"><value>API 供應商</value></data>
+  <data name="ApiProviderComboBox.AutomationProperties.Name" xml:space="preserve"><value>API 供應商</value></data>
+  <data name="ApiEndpointLabel.Text" xml:space="preserve"><value>API 位址</value></data>
+  <data name="ApiModelRowTitle.Text" xml:space="preserve"><value>模型</value></data>
+  <data name="ApiModelIdTextBox.PlaceholderText" xml:space="preserve"><value>輸入此供應商支援的模型</value></data>
+  <data name="ApiModelIdTextBox.AutomationProperties.Name" xml:space="preserve"><value>遠端模型 ID</value></data>
+  <data name="ApiInputModeSectionTitle.Text" xml:space="preserve"><value>傳送內容</value></data>
+  <data name="ApiInputModeOptions.Header" xml:space="preserve"><value>選擇傳送給 API 的內容</value></data>
+  <data name="ApiInputModeOptions.AutomationProperties.Name" xml:space="preserve"><value>遠端輸入模式</value></data>
+  <data name="ApiInputModeOptionsCompact.AutomationProperties.Name" xml:space="preserve"><value>遠端輸入模式</value></data>
+  <data name="ApiInputModeSectionDescription.Text" xml:space="preserve"><value>選擇傳送給 API 的內容範圍。</value></data>
+  <data name="RemoteOcrTextOption.Content" xml:space="preserve"><value>僅傳送 OCR 文字</value></data>
+  <data name="RemoteOcrTextOption.AutomationProperties.Name" xml:space="preserve"><value>向 API 傳送本機 OCR 文字</value></data>
+  <data name="RemoteVisionOption.Content" xml:space="preserve"><value>傳送圖片</value></data>
+  <data name="RemoteVisionOption.AutomationProperties.Name" xml:space="preserve"><value>向 API 傳送清理後的分析圖片</value></data>
+  <data name="ApiOutputLanguageSectionTitle.Text" xml:space="preserve"><value>結果語言</value></data>
+  <data name="ApiOutputLanguageSectionDescription.Text" xml:space="preserve"><value>選擇雲端分析結果的語言。適用於之後的雲端分析，已有結果不會自動更新。</value></data>
+  <data name="ApiOutputLanguageRowTitle.Text" xml:space="preserve"><value>首選語言</value></data>
+  <data name="ApiOutputLanguageComboBox.AutomationProperties.Name" xml:space="preserve"><value>雲端分析結果語言</value></data>
+  <data name="ApiOutputLanguageModelDefault.Content" xml:space="preserve"><value>自動（由模型決定）</value></data>
+  <data name="ApiOutputLanguageSimplifiedChinese.Content" xml:space="preserve"><value>簡體中文</value></data>
+  <data name="ApiOutputLanguageTraditionalChineseTaiwan.Content" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="ApiOutputLanguageEnglish.Content" xml:space="preserve"><value>English</value></data>
+  <data name="ApiOutputLanguageSaveFailedStatus" xml:space="preserve"><value>無法儲存結果語言，已還原之前的選擇。</value></data>
+  <data name="ApiPayloadDisclosureInfoBar.Title" xml:space="preserve"><value>承載邊界</value></data>
+  <data name="ApiRemoteOcrTextPayloadDisclosure" xml:space="preserve"><value>先執行完整本機 OCR 和確定性實體擷取，只傳送有界 OCR 文字、語言標籤、輸出語言策略、參考日期和時區。絕不傳送圖片、檔案名、路徑、雜湊、內部 ID、EXIF、邊界框或資料庫上下文。</value></data>
+  <data name="ApiRemoteVisionPayloadDisclosure" xml:space="preserve"><value>跳過本機 OCR 和本機視覺模型，只傳送按上限重新編碼、已去除 EXIF/XMP、檔案名和路徑的像素副本；不傳送本機 OCR、雜湊、內部 ID 或資料庫上下文。圖片內容本身仍可能辨識人或地點。</value></data>
+  <data name="ApiCredentialSectionTitle.Text" xml:space="preserve"><value>API 金鑰</value></data>
+  <data name="ApiCredentialSectionDescription.Text" xml:space="preserve"><value>輸入並儲存您的 API 金鑰。</value></data>
+  <data name="ApiCredentialPasswordBox.PlaceholderText" xml:space="preserve"><value>輸入 API 金鑰</value></data>
+  <data name="ApiCredentialPasswordBox.AutomationProperties.Name" xml:space="preserve"><value>新 API 金鑰</value></data>
+  <data name="SaveApiCredentialButton.Content" xml:space="preserve"><value>儲存認證資訊</value></data>
+  <data name="SaveApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>儲存 API 認證資訊</value></data>
+  <data name="DeleteApiCredentialButton.Content" xml:space="preserve"><value>刪除認證資訊</value></data>
+  <data name="DeleteApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>刪除 API 認證資訊並切回本機分析</value></data>
+  <data name="ApiCredentialSavedState" xml:space="preserve"><value>已儲存到 Windows 認證保管庫；正文保持隱藏。</value></data>
+  <data name="ApiCredentialMissingState" xml:space="preserve"><value>未儲存。</value></data>
+  <data name="ApiPolicySectionTitle.Text" xml:space="preserve"><value>供應商政策、限制與費用</value></data>
+  <data name="ApiPolicyVerifiedFormat" xml:space="preserve"><value>政策說明最近核驗：{0:d}</value></data>
+  <data name="ApiLimitsFormat" xml:space="preserve"><value>本機限制：最多 {0:N0} 個 OCR 字元或 {1:N0} MiB 清理過的圖片；逾時 {2:N0} 秒。</value></data>
+  <data name="OpenAiRetentionStatement" xml:space="preserve"><value>OpenAI 宣告 API 資料預設不用於訓練，除非帳戶主動選擇加入。濫用監控記錄可能保留內容最多 30 天，仍受帳戶控制及法律、安全例外約束。</value></data>
+  <data name="GoogleGeminiRetentionStatement" xml:space="preserve"><value>Google 對 Gemini API 付費與免費服務採用不同資料規則。付費服務的提示和回應不用於改進產品；有限期安全記錄和目前條款仍然適用。</value></data>
+  <data name="XaiRetentionStatement" xml:space="preserve"><value>xAI 的保留和訓練處理取決於目前 API 條款與帳戶控制。PicForLater 不承諾更短保留期或不訓練；同意前請檢視連結政策。</value></data>
+  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>隱私</value></data>
+  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>開啟供應商隱私政策</value></data>
+  <data name="ApiTermsLink.Content" xml:space="preserve"><value>條款</value></data>
+  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>開啟供應商條款</value></data>
+  <data name="ApiPricingLink.Content" xml:space="preserve"><value>價格</value></data>
+  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>開啟供應商價格頁</value></data>
+  <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>連線測試只使用內建測試內容：文字模式傳送固定短句，圖片模式傳送內建授權貓咪圖片；不會讀取使用者圖片、OCR 或資料庫。供應商可能對測試和分析收費；逾時或取消時也可能已經處理並計費。</value></data>
+  <data name="ApiConnectionSectionTitle.Text" xml:space="preserve"><value>連線測試</value></data>
+  <data name="TestApiConnectionButton.Content" xml:space="preserve"><value>測試連線</value></data>
+  <data name="TestApiConnectionButton.AutomationProperties.Name" xml:space="preserve"><value>使用合成內容測試 API</value></data>
+  <data name="ApiConnectionStatusInfoBar.Title" xml:space="preserve"><value>API 狀態</value></data>
+  <data name="ApiValidationUnverified" xml:space="preserve"><value>尚未驗證。請儲存認證資訊、選擇預期承載模式並執行合成測試。</value></data>
+  <data name="ApiValidationInvalid" xml:space="preserve"><value>上次合成測試失敗，遠端傳送已阻止。</value></data>
+  <data name="ApiValidationModelChanged" xml:space="preserve"><value>模型 ID 已在本頁變更；啟用前請執行合成測試以儲存並驗證。</value></data>
+  <data name="ApiValidationValidFormat" xml:space="preserve"><value>已於 {0:g} 驗證相容的合成回應。</value></data>
+  <data name="ApiActivationSectionTitle.Text" xml:space="preserve"><value>測試並啟用</value></data>
+  <data name="ApiActivationSectionDescription.Text" xml:space="preserve"><value>先測試連線，再確認傳送範圍並啟用。</value></data>
+  <data name="EnableRemoteApiButton.Content" xml:space="preserve"><value>核對同意並啟用</value></data>
+  <data name="EnableRemoteApiButton.AutomationProperties.Name" xml:space="preserve"><value>核對同意並啟用所選 API 模式</value></data>
+  <data name="UseLocalAnalysisButton.Content" xml:space="preserve"><value>使用本機分析</value></data>
+  <data name="UseLocalAnalysisButton.AutomationProperties.Name" xml:space="preserve"><value>讓新工作切回本機分析</value></data>
+  <data name="RevokeApiConsentButton.Content" xml:space="preserve"><value>撤銷同意</value></data>
+  <data name="RevokeApiConsentButton.AutomationProperties.Name" xml:space="preserve"><value>撤銷目前 API 同意並切回本機分析</value></data>
+  <data name="ApiShutdownInfoBar.Title" xml:space="preserve"><value>停用後會發生什麼</value></data>
+  <data name="ApiShutdownInfoBar.Message" xml:space="preserve"><value>切回本機、撤銷同意或刪除認證資訊會阻止尚未傳送的請求；無法召回供應商已經收到的內容、撤銷可能產生的費用，也不能保證取消已在傳輸或處理中的請求。</value></data>
+  <data name="ApiRemoteOcrTextModeName" xml:space="preserve"><value>API · OCR 文字</value></data>
+  <data name="ApiRemoteVisionModeName" xml:space="preserve"><value>API · 圖片</value></data>
+  <data name="ApiConsentDialogTitle" xml:space="preserve"><value>確認遠端分析邊界</value></data>
+  <data name="ApiConsentDialogPrimary" xml:space="preserve"><value>啟用遠端分析</value></data>
+  <data name="ApiConsentCheckBoxFormat" xml:space="preserve"><value>我為新分析工作選擇 {0} 的“{1}”，並接受上述承載。</value></data>
+  <data name="ApiConsentConsequencesText" xml:space="preserve"><value>同意按供應商和承載模式版本化。供應商、endpoint、政策範圍或模式變化後必須重新確認；供應商失敗時絕不會自動改變模式或供應商。</value></data>
+  <data name="ApiSettingsUnavailableStatus" xml:space="preserve"><value>本機儲存空間就緒前無法使用 API 設定。</value></data>
+  <data name="ApiCredentialSavedStatus" xml:space="preserve"><value>認證資訊已儲存。此金鑰通過合成測試前，執行目標保持本機。</value></data>
+  <data name="ApiCredentialDeletedStatus" xml:space="preserve"><value>認證資訊和同意已刪除，尚未傳送的請求已阻止，新工作使用本機。</value></data>
+  <data name="ApiCredentialRequiredStatus" xml:space="preserve"><value>測試此 profile 前請先儲存認證資訊。</value></data>
+  <data name="ApiConnectionSucceededStatus" xml:space="preserve"><value>供應商已針對所選合成承載回傳相容的結構化結果。</value></data>
+  <data name="ApiConnectionCredentialRejectedStatus" xml:space="preserve"><value>供應商拒絕了認證資訊，不會自動重試。</value></data>
+  <data name="ApiConnectionRateLimitedStatus" xml:space="preserve"><value>合成測試被限流；再次嘗試前請核對供應商限制。</value></data>
+  <data name="ApiConnectionTimedOutStatus" xml:space="preserve"><value>合成測試逾時，仍可能已處理或計費；應用程式沒有重新傳送。</value></data>
+  <data name="ApiConnectionNetworkFailedStatus" xml:space="preserve"><value>合成測試無法連線目前 API 位址。</value></data>
+  <data name="ApiConnectionModelRejectedStatus" xml:space="preserve"><value>供應商拒絕了模型、所選輸入模式或嚴格輸出 schema。</value></data>
+  <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供應商已回應，但結果不符合 PicForLater 的嚴格結構化 schema。</value></data>
+  <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成測試失敗；沒有傳送使用者圖片或 OCR 文字。</value></data>
+  <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>啟用前請先讓此供應商、模型和承載模式通過合成測試。</value></data>
+  <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已為新工作啟用所選供應商和承載模式的遠端分析。</value></data>
+  <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新工作已切回本機，尚未傳送的請求已阻止。</value></data>
+  <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤銷，新工作已切回本機；供應商已經收到的內容無法召回。</value></data>
+  <data name="ApiOperationFailedStatus" xml:space="preserve"><value>未能更新 API 設定；隱私邊界沒有改變。</value></data>
+  <data name="ApiCategoryRowTitle.Text" xml:space="preserve"><value>供應商分類</value></data>
+  <data name="ApiCategoryComboBox.AutomationProperties.Name" xml:space="preserve"><value>API 供應商分類</value></data>
+  <data name="ApiCategoryInternational" xml:space="preserve"><value>國際主流模型官方 API（5）</value></data>
+  <data name="ApiCategoryChina" xml:space="preserve"><value>中國主流模型官方 API（8）</value></data>
+  <data name="ApiCategoryAggregator" xml:space="preserve"><value>多模型聚合與高速推理平台（4）</value></data>
+  <data name="ApiCategoryLocalPrivate" xml:space="preserve"><value>本機執行與私有化部署（2）</value></data>
+  <data name="ApiCategoryCustom" xml:space="preserve"><value>自訂介面</value></data>
+  <data name="GenericApiRetentionStatement" xml:space="preserve"><value>資料保留和訓練處理取決於供應商、方案、地區和目前帳戶控制；同意前請檢視連結中的供應商政策。</value></data>
+  <data name="LoopbackApiRetentionStatement" xml:space="preserve"><value>請求只傳送給本機所選 loopback 服務；儲存與模型行為由該本機服務控制。</value></data>
+  <data name="CustomApiRetentionStatement" xml:space="preserve"><value>PicForLater 無法驗證自訂服務的擁有者、保留、訓練或價格政策；測試和同意前請自行核驗 endpoint 與政策。</value></data>
+  <data name="ApiCredentialNotRequiredState" xml:space="preserve"><value>此 loopback/自訂 profile 不傳送驗證認證資訊。</value></data>
+  <data name="ApiCustomInterfaceTitle.Text" xml:space="preserve"><value>自訂相容契約</value></data>
+  <data name="ApiCustomEndpointTextBox.Header" xml:space="preserve"><value>完整 POST endpoint</value></data>
+  <data name="ApiCustomEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
+  <data name="ApiCustomProtocolComboBox.Header" xml:space="preserve"><value>請求通訊協定</value></data>
+  <data name="ApiProtocolOpenAi.Content" xml:space="preserve"><value>OpenAI Chat Completions</value></data>
+  <data name="ApiProtocolAnthropic.Content" xml:space="preserve"><value>Anthropic Messages</value></data>
+  <data name="ApiCustomAuthenticationComboBox.Header" xml:space="preserve"><value>驗證方式</value></data>
+  <data name="ApiAuthenticationBearer.Content" xml:space="preserve"><value>Authorization: Bearer</value></data>
+  <data name="ApiAuthenticationXApiKey.Content" xml:space="preserve"><value>x-api-key</value></data>
+  <data name="ApiAuthenticationNone.Content" xml:space="preserve"><value>無（建議僅用於 loopback）</value></data>
+  <data name="ApiCustomStructuredOutputComboBox.Header" xml:space="preserve"><value>結構化輸出</value></data>
+  <data name="ApiStructuredOutputJsonSchema.Content" xml:space="preserve"><value>JSON Schema</value></data>
+  <data name="ApiStructuredOutputJsonObject.Content" xml:space="preserve"><value>JSON Object</value></data>
+  <data name="ApiCustomEndpointTrustComboBox.Header" xml:space="preserve"><value>網路邊界</value></data>
+  <data name="ApiEndpointTrustPublicHttps.Content" xml:space="preserve"><value>僅公用 HTTPS</value></data>
+  <data name="ApiEndpointTrustLoopback.Content" xml:space="preserve"><value>僅 loopback HTTP/HTTPS</value></data>
+  <data name="ApiCustomEndpointSafetyInfoBar.Title" xml:space="preserve"><value>受限的自訂 endpoint</value></data>
+  <data name="ApiCustomEndpointSafetyInfoBar.Message" xml:space="preserve"><value>公用模式要求 HTTPS，並在 DNS 解析後阻止 loopback、私有網路和連結-本機位址；loopback 模式只接受 localhost、127.0.0.1 或 ::1。重新導向一律拒絕。</value></data>
+  <data name="SaveCustomApiProfileButton.Content" xml:space="preserve"><value>儲存自訂契約</value></data>
+  <data name="SaveCustomApiProfileButton.AutomationProperties.Name" xml:space="preserve"><value>儲存自訂 API 相容契約</value></data>
+  <data name="ApiCustomProfileSavedStatus" xml:space="preserve"><value>自訂契約已儲存；所選合成測試通過且確認同意前，遠端傳送仍保持本機。</value></data>
+  <data name="ApiStructuredOutputPromptOnly.Content" xml:space="preserve"><value>僅提示詞約束（相容性較廣）</value></data>
+  <data name="ApiAdvancedSettingsExpander.Header" xml:space="preserve"><value>進階模型參數</value></data>
+  <data name="ApiReasoningRowTitle.Text" xml:space="preserve"><value>思考規模</value></data>
+  <data name="ApiReasoningModeComboBox.AutomationProperties.Name" xml:space="preserve"><value>模型思考規模</value></data>
+  <data name="ApiReasoningProviderDefault" xml:space="preserve"><value>供應商預設</value></data>
+  <data name="ApiReasoningDisabled" xml:space="preserve"><value>關閉（結構化輸出建議）</value></data>
+  <data name="ApiReasoningLow" xml:space="preserve"><value>低</value></data>
+  <data name="ApiReasoningMedium" xml:space="preserve"><value>中</value></data>
+  <data name="ApiReasoningHigh" xml:space="preserve"><value>高</value></data>
+  <data name="ApiReasoningWireFormatComboBox.Header" xml:space="preserve"><value>自訂介面思考參數格式</value></data>
+  <data name="ApiReasoningWireNone.Content" xml:space="preserve"><value>不傳送思考參數</value></data>
+  <data name="ApiReasoningWireThinkingObject.Content" xml:space="preserve"><value>thinking.type</value></data>
+  <data name="ApiReasoningWireEffort.Content" xml:space="preserve"><value>reasoning_effort</value></data>
+  <data name="ApiReasoningWireEnableThinking.Content" xml:space="preserve"><value>enable_thinking</value></data>
+  <data name="ApiReasoningWireEnabledObject.Content" xml:space="preserve"><value>reasoning.enabled</value></data>
+  <data name="ApiMaxOutputTokensRowTitle.Text" xml:space="preserve"><value>最大輸出 token</value></data>
+  <data name="ApiTimeoutRowTitle.Text" xml:space="preserve"><value>請求逾時（秒）</value></data>
+  <data name="ApiAdvancedSettingsDescription.Text" xml:space="preserve"><value>儲存任何變更都會使連線驗證和舊同意失效；提高思考規模、token 或逾時可能增加延遲和費用。</value></data>
+  <data name="SaveApiAdvancedSettingsButton.Content" xml:space="preserve"><value>儲存進階設定</value></data>
+  <data name="SaveApiAdvancedSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>儲存 API 進階模型參數</value></data>
+  <data name="ApiAdvancedSettingsSavedStatus" xml:space="preserve"><value>進階參數已儲存；已切回本機，重新測試連線並確認同意後才會傳送內容。</value></data>
+  <data name="ApiConnectionContentFailedStatus" xml:space="preserve"><value>供應商回傳了結構化物件，但標題/簡介為空或內容沒有依據輸入；未通過 PicForLater 的草稿品質檢查。可保持關閉思考、確認模型支援指令遵循後重試。</value></data>
+  <data name="RecommendedPpOcrDisplayName" xml:space="preserve"><value>增強 OCR</value></data>
+  <data name="RecommendedQwenCpuDisplayName" xml:space="preserve"><value>CPU 視覺模型</value></data>
+  <data name="RecommendedQwenCudaDisplayName" xml:space="preserve"><value>NVIDIA GPU 視覺模型</value></data>
+  <data name="RecommendedLocalModelDisplayName" xml:space="preserve"><value>本機模型</value></data>
+  <data name="RecommendedModelDetailsExpander.Header" xml:space="preserve"><value>實作、大小與授權條款</value></data>
+  <data name="InstalledOcrModelDisplayName" xml:space="preserve"><value>已安裝的增強 OCR</value></data>
+  <data name="InstalledVisionModelDisplayName" xml:space="preserve"><value>已安裝的視覺模型</value></data>
+  <data name="InstalledLocalModelDisplayName" xml:space="preserve"><value>已安裝的本機模型</value></data>
+  <data name="InstalledModelDetailsExpander.Header" xml:space="preserve"><value>技術詳細資料</value></data>
+  <data name="RecommendedModelInfoButton.AutomationProperties.Name" xml:space="preserve"><value>檢視建議模型詳細資料</value></data>
+  <data name="RecommendedModelInfoButton.ToolTipService.ToolTip" xml:space="preserve"><value>實作、大小與授權條款</value></data>
+  <data name="InstalledModelInfoButton.AutomationProperties.Name" xml:space="preserve"><value>檢視已安裝模型詳細資料</value></data>
+  <data name="InstalledModelInfoButton.ToolTipService.ToolTip" xml:space="preserve"><value>檢視技術詳細資料</value></data>
+  <data name="ModelPackagesSectionTitle.Text" xml:space="preserve"><value>模型套件</value></data>
+  <data name="AdvancedSettingsSectionTitle.Text" xml:space="preserve"><value>進階設定</value></data>
+  <data name="AdvancedSettingsSectionDescription.Text" xml:space="preserve"><value>能力槽位與模型套件</value></data>
+  <data name="InstalledModelsExpander.AutomationProperties.Name" xml:space="preserve"><value>已安裝模型套件</value></data>
+  <data name="InstalledModelsExpander.AutomationProperties.HelpText" xml:space="preserve"><value>展開已安裝模型套件</value></data>
+  <data name="InstalledModelsExpandHelpText" xml:space="preserve"><value>展開已安裝模型套件</value></data>
+  <data name="InstalledModelsCollapseHelpText" xml:space="preserve"><value>收起已安裝模型套件</value></data>
+  <data name="ApiConfigurationSectionTitle.Text" xml:space="preserve"><value>API 設定</value></data>
+  <data name="ApiConfigurationSectionDescription.Text" xml:space="preserve"><value>選擇供應商、模型、傳送範圍和認證資訊。修改設定不會自動啟用聯網分析。</value></data>
+  <data name="ApiCustomInterfaceExpander.Header" xml:space="preserve"><value>自訂介面契約</value></data>
+  <data name="ApiConsentSectionTitle.Text" xml:space="preserve"><value>確認傳送範圍並啟用</value></data>
+  <data name="ApiPolicyExpander.Header" xml:space="preserve"><value>檢視供應商政策、限制與費用</value></data>
+  <data name="ApiConsentMissingState" xml:space="preserve"><value>尚未同意目前供應商和承載模式；即使連線測試通過，也不會傳送使用者內容。</value></data>
+  <data name="ApiConsentGrantedFormat" xml:space="preserve"><value>已同意“{0}”的目前揭露版本。</value></data>
+  <data name="ApiConsentDifferentModeState" xml:space="preserve"><value>同意適用於另一個承載模式；切換後需要重新核對並確認。</value></data>
+  <data name="InstalledModelsEmptyText.Text" xml:space="preserve"><value>安裝後的模型套件會顯示在這裡。</value></data>
+  <data name="ApiProviderSectionDescription.Text" xml:space="preserve"><value>選擇供應商和模型。切換選擇不會自動啟用聯網分析。</value></data>
+  <data name="ApiCredentialCardTitle.Text" xml:space="preserve"><value>Windows 認證保管庫</value></data>
+  <data name="ApiAdvancedSectionTitle.Text" xml:space="preserve"><value>進階設定</value></data>
+  <data name="ApiAdvancedSectionDescription.Text" xml:space="preserve"><value>調整 API 位址、模型推理參數和逾時；變更後需要重新測試。</value></data>
+  <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>完整 API 位址</value></data>
+  <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
+  <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>完整 API 位址</value></data>
+  <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>自訂介面契約</value></data>
+  <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>僅自訂介面需要宣告請求通訊協定、驗證、結構化輸出和網路邊界。</value></data>
+  <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>變更 API 位址？</value></data>
+  <data name="ApiEndpointChangeDialogMessageFormat" xml:space="preserve"><value>API 請求和金鑰將從“{0}”改為傳送至“{1}”。請確認服務擁有者、費用與隱私政策；應用程式仍會拒絕重新導向和不安全的網路目標。</value></data>
+  <data name="ApiEndpointChangeDialogPrimary" xml:space="preserve"><value>仍要變更</value></data>
+  <data name="ApiAdvancedSettingsSaveRequiredStatus" xml:space="preserve"><value>請先儲存進階設定，再測試連線。</value></data>
+  <data name="LocalInferenceComponentSectionTitle.Text" xml:space="preserve"><value>選用本機分析元件</value></data>
+  <data name="LocalInferenceComponentSectionDescription.Text" xml:space="preserve"><value>核心應用程式不隨附 ONNX 和 GenAI 執行階段函式庫。僅在需要本機分析時，從官方 GitHub Release 下載這一可執行元件；雲端 API 分析不需要它。</value></data>
+  <data name="LocalInferenceComponentStatusTitle.Text" xml:space="preserve"><value>本機執行元件</value></data>
+  <data name="InstallLocalInferenceComponentButton.AutomationProperties.Name" xml:space="preserve"><value>安裝或修復本機分析元件</value></data>
+  <data name="RemoveLocalInferenceComponentButton.Content" xml:space="preserve"><value>移除</value></data>
+  <data name="RemoveLocalInferenceComponentButton.AutomationProperties.Name" xml:space="preserve"><value>移除本機分析元件</value></data>
+  <data name="LocalInferenceComponentInstallAction" xml:space="preserve"><value>下載並安裝</value></data>
+  <data name="LocalInferenceComponentRepairAction" xml:space="preserve"><value>檢查更新或修復</value></data>
+  <data name="LocalInferenceComponentInstalledStatusFormat" xml:space="preserve"><value>已安裝並驗證版本 {0}。</value></data>
+  <data name="LocalInferenceComponentNotInstalledStatus" xml:space="preserve"><value>尚未安裝；雲端 API 分析仍可使用。</value></data>
+  <data name="LocalInferenceComponentTrustUnavailableStatus" xml:space="preserve"><value>尚未安裝。發佈簽章公鑰設定完成前，安全下載暫無法使用；雲端 API 分析仍可使用。</value></data>
+  <data name="LocalInferenceComponentInstallDialogTitle" xml:space="preserve"><value>下載本機分析元件？</value></data>
+  <data name="LocalInferenceComponentInstallConfirmation" xml:space="preserve"><value>這會從 PicForLater 官方 GitHub Release 下載大小較大的架構專用可執行元件。應用程式會先驗證簽章發佈清單、壓縮檔大小與 SHA-256，並逐檔案複驗後再原子啟用。不會上傳圖片、OCR 文字、模型輸入、API 金鑰或其他使用者內容。</value></data>
+  <data name="LocalInferenceComponentRemoveDialogTitle" xml:space="preserve"><value>移除本機分析元件？</value></data>
+  <data name="LocalInferenceComponentRemoveConfirmationFormat" xml:space="preserve"><value>移除本機執行元件版本 {0}？本機模型套件、圖片、分析結果、設定和雲端 API 設定都會保留。重新安裝元件前，本機分析將無法使用。</value></data>
+  <data name="LocalInferenceComponentRemoveAction" xml:space="preserve"><value>移除元件</value></data>
+  <data name="LocalInferenceComponentInstalledSuccessFormat" xml:space="preserve"><value>本機分析元件版本 {0} 已驗證並啟用。</value></data>
+  <data name="LocalInferenceComponentAlreadyCurrentFormat" xml:space="preserve"><value>本機分析元件版本 {0} 已是目前版本且驗證通過。</value></data>
+  <data name="LocalInferenceComponentCanceledStatus" xml:space="preserve"><value>元件操作已取消，目前元件保持不變。</value></data>
+  <data name="LocalInferenceComponentRemovingStatus" xml:space="preserve"><value>正在停止本機分析並移除執行元件…</value></data>
+  <data name="LocalInferenceComponentRemovedStatus" xml:space="preserve"><value>本機分析元件已移除；模型和使用者資料已保留。</value></data>
+  <data name="LocalInferenceComponentRemoveFailedStatus" xml:space="preserve"><value>無法移除本機分析元件；已盡可能還原之前的狀態。</value></data>
+  <data name="LocalInferenceComponentPreparingStatus" xml:space="preserve"><value>正在下載並驗證已簽章的元件清單…</value></data>
+  <data name="LocalInferenceComponentDownloadingStatus" xml:space="preserve"><value>正在下載本機分析元件…</value></data>
+  <data name="LocalInferenceComponentVerifyingStatus" xml:space="preserve"><value>正在檢查壓縮檔和安裝檔案完整性…</value></data>
+  <data name="LocalInferenceComponentActivatingStatus" xml:space="preserve"><value>正在停止舊 worker 並原子啟用已驗證元件…</value></data>
+  <data name="LocalInferenceComponentCompletingStatus" xml:space="preserve"><value>正在完成本機分析元件操作…</value></data>
+  <data name="LocalInferenceComponentInsufficientSpaceStatus" xml:space="preserve"><value>磁碟空間不足，無法同時容納下載檔案和解壓縮後的元件；目前元件保持不變。</value></data>
+  <data name="LocalInferenceComponentDownloadTimedOutStatus" xml:space="preserve"><value>元件下載因長時間未收到資料而逾時；不完整的 staging 資料已清理。</value></data>
+  <data name="LocalInferenceComponentNetworkFailedStatus" xml:space="preserve"><value>無法從 GitHub 下載元件；請在網路穩定後重試。</value></data>
+  <data name="LocalInferenceComponentSignatureFailedStatus" xml:space="preserve"><value>元件發佈清單沒有有效的受信任簽章，未安裝任何內容。</value></data>
+  <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>簽章清單、來源、大小、SHA-256、壓縮檔版面配置或安裝檔案未通過驗證；目前元件保持不變。</value></data>
+  <data name="LocalInferenceComponentInstallFailedStatus" xml:space="preserve"><value>無法安裝或啟用本機分析元件；目前元件和使用者資料保持不變。</value></data>
+  <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} 錯誤代碼：{1}</value></data>
+  <data name="ScreenshotCaptureSectionTitle.Text" xml:space="preserve"><value>快速螢幕擷取</value></data>
+  <data name="ScreenshotCaptureToggleTitle.Text" xml:space="preserve"><value>完成系統螢幕擷取後自動匯入</value></data>
+  <data name="ScreenshotCaptureToggleDescription.Text" xml:space="preserve"><value>按下快速鍵後可在 Windows 螢幕擷取工具中自由選擇螢幕擷取方式。</value></data>
+  <data name="ScreenshotCaptureAnalysisDisclosure.Text" xml:space="preserve"><value>只讀取本次短時螢幕擷取工作階段中的新圖片，並按目前分析設定處理。</value></data>
+  <data name="ScreenshotCaptureToggle.AutomationProperties.Name" xml:space="preserve"><value>完成系統螢幕擷取後自動匯入</value></data>
+  <data name="ScreenshotHotKeyLabel.Text" xml:space="preserve"><value>螢幕擷取快速鍵</value></data>
+  <data name="ChangeScreenshotHotKeyButton.Content" xml:space="preserve"><value>變更</value></data>
+  <data name="ChangeScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>變更螢幕擷取快速鍵</value></data>
+  <data name="ScreenshotCaptureStatusLabel.Text" xml:space="preserve"><value>狀態</value></data>
+  <data name="ScreenshotCaptureStatusInfoBar.Title" xml:space="preserve"><value>快速螢幕擷取</value></data>
+  <data name="ScreenshotCaptureStatusDisabled" xml:space="preserve"><value>已關閉</value></data>
+  <data name="ScreenshotCaptureStatusPreparing" xml:space="preserve"><value>正在準備</value></data>
+  <data name="ScreenshotCaptureStatusReady" xml:space="preserve"><value>已就緒</value></data>
+  <data name="ScreenshotCaptureStatusCapturing" xml:space="preserve"><value>等待螢幕擷取</value></data>
+  <data name="ScreenshotCaptureStatusImporting" xml:space="preserve"><value>正在匯入</value></data>
+  <data name="ScreenshotCaptureStatusUnavailable" xml:space="preserve"><value>快速鍵無法使用</value></data>
+  <data name="ScreenshotCaptureHotKeyConflictMessage" xml:space="preserve"><value>此快速鍵已被其他應用程式佔用。請更換組合後重試。</value></data>
+  <data name="ScreenshotCaptureRegistrationFailedMessage" xml:space="preserve"><value>快速螢幕擷取暫無法使用。請關閉後重試，或更換快速鍵。</value></data>
+  <data name="ScreenshotCapturePreferenceFailedMessage" xml:space="preserve"><value>無法儲存快速螢幕擷取設定。現有設定保持不變。</value></data>
+  <data name="ScreenshotCaptureNotReadyMessage" xml:space="preserve"><value>快速螢幕擷取仍在準備中，請稍後重試。</value></data>
+  <data name="ScreenshotCaptureLaunchFailedMessage" xml:space="preserve"><value>無法啟動 Windows 螢幕擷取工具。請稍後重試。</value></data>
+  <data name="ScreenshotCaptureClipboardUnavailableMessage" xml:space="preserve"><value>剪貼簿暫無法使用，本次螢幕擷取未匯入。</value></data>
+  <data name="ScreenshotCaptureUnsupportedImageMessage" xml:space="preserve"><value>螢幕擷取畫面不受支援，本次內容未匯入。</value></data>
+  <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>截圖匯入失敗。原有圖片和設定未受影響。</value></data>
+  <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>這張截圖已存在，無需重複匯入。</value></data>
+  <data name="ScreenshotCaptureTimedOutMessage" xml:space="preserve"><value>未偵測到新的截圖，本次會話已結束。</value></data>
+  <data name="ScreenshotHotKeyDialog.PrimaryButtonText" xml:space="preserve"><value>儲存</value></data>
+  <data name="ScreenshotHotKeyDialog.CloseButtonText" xml:space="preserve"><value>取消</value></data>
+  <data name="ScreenshotHotKeyDialog.AutomationProperties.Name" xml:space="preserve"><value>變更螢幕擷取快速鍵</value></data>
+  <data name="ScreenshotHotKeyModifiersLabel.Text" xml:space="preserve"><value>修飾鍵</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.Content" xml:space="preserve"><value>Win</value></data>
+  <data name="ScreenshotHotKeyWinCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Windows 鍵</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.Content" xml:space="preserve"><value>Ctrl</value></data>
+  <data name="ScreenshotHotKeyControlCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Ctrl 鍵</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.Content" xml:space="preserve"><value>Alt</value></data>
+  <data name="ScreenshotHotKeyAltCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Alt 鍵</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.Content" xml:space="preserve"><value>Shift</value></data>
+  <data name="ScreenshotHotKeyShiftCheckBox.AutomationProperties.Name" xml:space="preserve"><value>Shift 鍵</value></data>
+  <data name="ScreenshotHotKeyKeyLabel.Text" xml:space="preserve"><value>按鍵</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.Name" xml:space="preserve"><value>螢幕擷取快速鍵主按鍵</value></data>
+  <data name="ScreenshotHotKeyKeyInput.AutomationProperties.HelpText" xml:space="preserve"><value>將焦點置於輸入框後按下一個支援的單一按鍵。</value></data>
+  <data name="ScreenshotHotKeyKeyInputHint.Text" xml:space="preserve"><value>將焦點置於輸入框後按下單一按鍵</value></data>
+  <data name="ScreenshotHotKeySpecialKeysLabel.Text" xml:space="preserve"><value>特殊主按鍵</value></data>
+  <data name="ScreenshotHotKeyTabOption.Content" xml:space="preserve"><value>Tab</value></data>
+  <data name="ScreenshotHotKeyTabOption.AutomationProperties.Name" xml:space="preserve"><value>將主按鍵設為 Tab</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.Content" xml:space="preserve"><value>Caps Lock</value></data>
+  <data name="ScreenshotHotKeyCapsLockOption.AutomationProperties.Name" xml:space="preserve"><value>將主按鍵設為 Caps Lock</value></data>
+  <data name="ScreenshotHotKeyPreviewLabel.Text" xml:space="preserve"><value>預覽</value></data>
+  <data name="ScreenshotHotKeyDialogErrorInfoBar.Title" xml:space="preserve"><value>無法儲存快速鍵</value></data>
+  <data name="ResetScreenshotHotKeyButton.Content" xml:space="preserve"><value>還原預設</value></data>
+  <data name="ResetScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>將表單還原為預設快速鍵</value></data>
+  <data name="ScreenshotHotKeyInvalidMessage" xml:space="preserve"><value>請設定一個支援的主按鍵。</value></data>
+  <data name="ScreenshotHotKeyUnsupportedKeyMessage" xml:space="preserve"><value>此按鍵暫不支援，請按下其他單一按鍵。</value></data>
+  <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>手機接收</value></data>
+  <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>允許透過 LocalSend 自動接收圖片</value></data>
+  <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>僅建議在可信的家庭或個人區域網路中開啟。</value></data>
+  <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>收到的圖片會按目前分析方式處理；API 分析可能傳送到已設定的服務。</value></data>
+  <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>允許透過 LocalSend 自動接收圖片</value></data>
+  <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>手機接收狀態</value></data>
+  <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>配對新裝置</value></data>
+  <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>配對新裝置</value></data>
+  <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>在手機 LocalSend 中選擇 PicForLater，並傳送至少一張支援的圖片。</value></data>
+  <data name="LocalSendPairingPinLabel.Text" xml:space="preserve"><value>暫時 PIN</value></data>
+  <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>取消配對</value></data>
+  <data name="CancelLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>取消目前手機配對</value></data>
+  <data name="LocalSendTrustedDevicesTitle.Text" xml:space="preserve"><value>已信任裝置</value></data>
+  <data name="LocalSendTrustedDevicesEmpty.Text" xml:space="preserve"><value>尚未配對可信裝置。</value></data>
+  <data name="LocalSendTrustedDevicesList.AutomationProperties.Name" xml:space="preserve"><value>已信任的 LocalSend 裝置</value></data>
+  <data name="LocalSendRemoveDeviceButton.Content" xml:space="preserve"><value>移除</value></data>
+  <data name="LocalSendRemoveDeviceAutomationNameFormat" xml:space="preserve"><value>移除可信裝置 {0}</value></data>
+  <data name="LocalSendReceiverNameFormat" xml:space="preserve"><value>接收名稱：{0}</value></data>
+  <data name="LocalSendStatusDisabled" xml:space="preserve"><value>狀態：已關閉</value></data>
+  <data name="LocalSendStatusStarting" xml:space="preserve"><value>狀態：正在啟動</value></data>
+  <data name="LocalSendStatusListening" xml:space="preserve"><value>狀態：正在監聽</value></data>
+  <data name="LocalSendStatusDiscoveryLimited" xml:space="preserve"><value>狀態：正在監聽（發現受限）</value></data>
+  <data name="LocalSendStatusPairing" xml:space="preserve"><value>狀態：配對中</value></data>
+  <data name="LocalSendStatusReceiving" xml:space="preserve"><value>狀態：正在接收</value></data>
+  <data name="LocalSendStatusStopping" xml:space="preserve"><value>狀態：正在停止</value></data>
+  <data name="LocalSendStatusFaulted" xml:space="preserve"><value>狀態：服務異常</value></data>
+  <data name="LocalSendDiscoveryLimitedMessage" xml:space="preserve"><value>區域網路發現受限，但接收服務仍在執行。請檢查防火牆或網路介面設定。</value></data>
+  <data name="LocalSendReceiverFailedMessage" xml:space="preserve"><value>手機接收服務未能正常啟動或停止。關閉後重試；若問題持續，請檢查連接埠與防火牆。</value></data>
+  <data name="LocalSendReceiverUnavailableMessage" xml:space="preserve"><value>手機接收服務暫無法使用。請先解決本機儲存空間初始化問題。</value></data>
+  <data name="LocalSendPairingRemainingFormat" xml:space="preserve"><value>剩餘 {0}</value></data>
+  <data name="LocalSendTrustedDevicePairedFormat" xml:space="preserve"><value>已配對 {0:d}</value></data>
+  <data name="LocalSendRemoveDeviceDialogTitle" xml:space="preserve"><value>移除可信裝置？</value></data>
+  <data name="LocalSendRemoveDeviceDialogMessageFormat" xml:space="preserve"><value>移除“{0}”後，其下一次傳送會被拒絕，直到重新配對。</value></data>
+  <data name="LocalSendRemoveDeviceDialogRemove" xml:space="preserve"><value>移除</value></data>
+  <data name="LocalSendLibraryReceivingStatus" xml:space="preserve"><value>正在從手機接收圖片…</value></data>
+  <data name="LocalSendLibraryCancelledFormat" xml:space="preserve"><value>手機已取消本次傳送；已匯入 {0} 張，{1} 張已存在。</value></data>
+  <data name="LocalSendLibraryCompletedFormat" xml:space="preserve"><value>已匯入 {0} 張，{1} 張已存在。</value></data>
+  <data name="LocalSendLibraryCompletedWithFailuresFormat" xml:space="preserve"><value>已匯入 {0} 張，{1} 張已存在；另有 {2} 張未能匯入。</value></data>
+</root>

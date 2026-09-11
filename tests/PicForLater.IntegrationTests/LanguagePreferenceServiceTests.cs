@@ -62,9 +62,9 @@ public sealed class LanguagePreferenceServiceTests
     [Theory]
     [InlineData(AppLanguagePreference.System, "zh-CN")]
     [InlineData(AppLanguagePreference.SimplifiedChinese, "zh-CN")]
-    [InlineData(AppLanguagePreference.TraditionalChineseTaiwan, "en-US")]
+    [InlineData(AppLanguagePreference.TraditionalChineseTaiwan, "zh-TW")]
     [InlineData(AppLanguagePreference.English, "en-US")]
-    public void ResolveEffectiveLanguageTag_UsesStepTwoPreferenceAndResources(
+    public void ResolveEffectiveLanguageTag_UsesPreferenceAndAllResources(
         AppLanguagePreference preference,
         string expected)
     {
