@@ -61,6 +61,8 @@
              Link="AppSource\WindowsScreenshotCapturePlatform.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\WindowsClipboardImageReader.cs"
              Link="AppSource\WindowsClipboardImageReader.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\StartupLanguageResolver.cs"
+             Link="AppSource\StartupLanguageResolver.cs" />
   </ItemGroup>
 
 </Project>
