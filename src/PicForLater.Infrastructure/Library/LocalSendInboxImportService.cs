@@ -504,10 +504,7 @@ public sealed class LocalSendInboxImportService : ILocalSendInboxImportService
 
         foreach (var rune in fileName.EnumerateRunes())
         {
-            var value = rune.Value;
-            if (Rune.IsControl(rune)
-                || Rune.GetUnicodeCategory(rune) == UnicodeCategory.Format
-                || value is '<' or '>' or ':' or '"' or '/' or '\\' or '|' or '?' or '*')
+            if (IsUnsafeFileNameRune(rune))
             {
                 return false;
             }
@@ -563,11 +560,7 @@ public sealed class LocalSendInboxImportService : ILocalSendInboxImportService
         var builder = new StringBuilder(baseName.Length);
         foreach (var rune in baseName.EnumerateRunes())
         {
-            var value = rune.Value;
-            var invalid = Rune.IsControl(rune)
-                          || Rune.GetUnicodeCategory(rune) == UnicodeCategory.Format
-                          || value is '<' or '>' or ':' or '"' or '/' or '\\' or '|' or '?' or '*';
-            if (invalid)
+            if (IsUnsafeFileNameRune(rune))
             {
                 builder.Append('_');
             }
@@ -579,6 +572,14 @@ public sealed class LocalSendInboxImportService : ILocalSendInboxImportService
 
         var sanitized = builder.ToString().Trim().TrimEnd(' ', '.');
         return sanitized.Length == 0 ? "image" : sanitized;
+    }
+
+    private static bool IsUnsafeFileNameRune(Rune rune)
+    {
+        var value = rune.Value;
+        return Rune.IsControl(rune)
+            || Rune.GetUnicodeCategory(rune) == UnicodeCategory.Format
+            || value is '<' or '>' or ':' or '"' or '/' or '\\' or '|' or '?' or '*';
     }
 
     private static string TruncateWithoutSplittingRunes(string value, int maximumLength)
