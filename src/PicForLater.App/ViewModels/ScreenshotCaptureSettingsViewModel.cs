@@ -74,17 +74,7 @@ public partial class ScreenshotCaptureSettingsViewModel : ObservableObject
 
     public void ApplySettingsFailure(ScreenshotSettingsFailureKind failureKind)
     {
-        var resourceKey = failureKind switch
-        {
-            ScreenshotSettingsFailureKind.HotKeyConflict =>
-                "ScreenshotCaptureHotKeyConflictMessage",
-            ScreenshotSettingsFailureKind.Preference =>
-                "ScreenshotCapturePreferenceFailedMessage",
-            ScreenshotSettingsFailureKind.NotStarted =>
-                "ScreenshotCaptureNotReadyMessage",
-            _ => "ScreenshotCaptureRegistrationFailedMessage",
-        };
-        ShowInfo(SettingsStatusKind.Error, Resources.GetString(resourceKey));
+        ShowInfo(SettingsStatusKind.Error, SettingsFailureMessage(failureKind));
     }
 
     public void ApplySettingsSuccess() => ClearInfo();
