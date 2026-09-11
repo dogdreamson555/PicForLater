@@ -1,3 +1,4 @@
+using PicForLater.App.Models;
 using PicForLater.App.Services;
 
 namespace PicForLater.IntegrationTests;
@@ -40,6 +41,23 @@ public sealed class StartupLanguageResolverTests
         Assert.Equal(
             expected,
             StartupLanguageResolver.ResolveAvailableApplicationLanguage(languageTag));
+    }
+
+    [Theory]
+    [InlineData(AppLanguagePreference.System, "zh-TW", "zh-TW")]
+    [InlineData(AppLanguagePreference.SimplifiedChinese, "zh-TW", "zh-CN")]
+    [InlineData(AppLanguagePreference.TraditionalChineseTaiwan, "zh-CN", "zh-TW")]
+    [InlineData(AppLanguagePreference.English, "zh-CN", "en-US")]
+    public void ResolvePreferenceLanguage_ExplicitChoiceWinsOverSystem(
+        AppLanguagePreference preference,
+        string systemLanguageTag,
+        string expected)
+    {
+        Assert.Equal(
+            expected,
+            StartupLanguageResolver.ResolvePreferenceLanguage(
+                preference,
+                systemLanguageTag));
     }
 
     [Theory]
