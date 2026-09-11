@@ -115,6 +115,25 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Light theme</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>Dark</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Dark theme</value></data>
+  <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>Language / 界面语言</value></data>
+  <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>Interface language</value></data>
+  <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>Choose the language used by PicForLater. Changes take effect the next time the app starts.</value></data>
+  <data name="InterfaceLanguageComboBox.AutomationProperties.Name" xml:space="preserve"><value>Interface language</value></data>
+  <data name="SystemInterfaceLanguageOption.Content" xml:space="preserve"><value>Follow system</value></data>
+  <data name="SystemInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Follow the Windows display language</value></data>
+  <data name="SimplifiedChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>简体中文</value></data>
+  <data name="SimplifiedChineseInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Simplified Chinese</value></data>
+  <data name="TraditionalChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="TraditionalChineseInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Traditional Chinese (Taiwan)</value></data>
+  <data name="EnglishInterfaceLanguageOption.Content" xml:space="preserve"><value>English</value></data>
+  <data name="EnglishInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>English</value></data>
+  <data name="InterfaceLanguageNameEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="InterfaceLanguageNameSimplifiedChinese" xml:space="preserve"><value>简体中文</value></data>
+  <data name="InterfaceLanguageNameTraditionalChineseTaiwan" xml:space="preserve"><value>繁體中文（台灣）</value></data>
+  <data name="InterfaceLanguageStatusInfoBar.Title" xml:space="preserve"><value>Interface language</value></data>
+  <data name="InterfaceLanguageSavedStatusFormat" xml:space="preserve"><value>Saved. PicForLater will use {0} the next time it starts.</value></data>
+  <data name="InterfaceLanguageSaveFailedStatus" xml:space="preserve"><value>The interface language could not be saved. Your previous selection is still active.</value></data>
+  <data name="InterfaceLanguageSaveFailedWithPendingStatusFormat" xml:space="preserve"><value>The interface language could not be saved. Your previous selection is still active; PicForLater will use {0} the next time it starts.</value></data>
   <data name="AboutUpdatesSectionTitle.Text" xml:space="preserve"><value>About and updates</value></data>
   <data name="AboutUpdatesAppName.Text" xml:space="preserve"><value>PicForLater</value></data>
   <data name="CurrentAppVersionFormat" xml:space="preserve"><value>Current version {0}</value></data>
