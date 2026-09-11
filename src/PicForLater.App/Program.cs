@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using PicForLater.App.Services;
 using WinRT;
 
 namespace PicForLater.App;
@@ -39,6 +40,9 @@ public static class Program
             var context = new DispatcherQueueSynchronizationContext(
                 DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
+#if !PICFORLATER_UI_VISUAL_FIXTURE
+            StartupLanguageService.ApplyStartupLanguageOverride();
+#endif
             _ = new App();
         });
 

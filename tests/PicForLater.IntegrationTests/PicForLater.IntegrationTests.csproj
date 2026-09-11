@@ -25,6 +25,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\src\PicForLater.App\Strings\en-US\Resources.resw"
+          Link="Resources\en-US\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\PicForLater.App\Strings\zh-CN\Resources.resw"
+          Link="Resources\zh-CN\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\PicForLater.App\Strings\zh-TW\Resources.resw"
+          Link="Resources\zh-TW\Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\PicForLater.App\Models\AppLanguagePreference.cs"
+             Link="AppSource\AppLanguagePreference.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\StorageReadiness.cs"
              Link="AppSource\StorageReadiness.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\AppReleaseVersion.cs"
@@ -33,6 +47,16 @@
              Link="AppSource\UpdateCheckModels.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\IUpdateCheckService.cs"
              Link="AppSource\IUpdateCheckService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\ILanguagePreferenceService.cs"
+             Link="AppSource\ILanguagePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IInt32PreferenceStore.cs"
+             Link="AppSource\IInt32PreferenceStore.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\LanguagePreferenceService.cs"
+             Link="AppSource\LanguagePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\AppRuntimePaths.cs"
+             Link="AppSource\AppRuntimePaths.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\LocalPreferenceStore.cs"
+             Link="AppSource\LocalPreferenceStore.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\GitHubUpdateCheckService.cs"
              Link="AppSource\GitHubUpdateCheckService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\IStorageReadinessService.cs"
@@ -61,6 +85,8 @@
              Link="AppSource\WindowsScreenshotCapturePlatform.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\WindowsClipboardImageReader.cs"
              Link="AppSource\WindowsClipboardImageReader.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\StartupLanguageResolver.cs"
+             Link="AppSource\StartupLanguageResolver.cs" />
   </ItemGroup>
 
 </Project>

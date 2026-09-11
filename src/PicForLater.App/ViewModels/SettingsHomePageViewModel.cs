@@ -12,6 +12,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
 {
     private static readonly ResourceLoader Resources = new();
     private readonly IThemePreferenceService _themePreferenceService;
+    private readonly ILanguagePreferenceService _languagePreferenceService;
     private readonly IStorageReadinessService _storageReadinessService;
     private readonly Func<IRemoteApiProfileService?> _profileServiceAccessor;
     private readonly Func<IRemoteApiCredentialService?> _credentialServiceAccessor;
@@ -22,6 +23,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     public SettingsHomePageViewModel(
         IThemePreferenceService themePreferenceService,
+        ILanguagePreferenceService languagePreferenceService,
         IStorageReadinessService storageReadinessService,
         Func<IRemoteApiProfileService?> profileServiceAccessor,
         Func<IRemoteApiCredentialService?> credentialServiceAccessor,
@@ -32,6 +34,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
     {
         _themePreferenceService = themePreferenceService
             ?? throw new ArgumentNullException(nameof(themePreferenceService));
+        _languagePreferenceService = languagePreferenceService
+            ?? throw new ArgumentNullException(nameof(languagePreferenceService));
         _storageReadinessService = storageReadinessService
             ?? throw new ArgumentNullException(nameof(storageReadinessService));
         _profileServiceAccessor = profileServiceAccessor
@@ -45,6 +49,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
         _updateCheckService = updateCheckService
             ?? throw new ArgumentNullException(nameof(updateCheckService));
         SelectedThemeIndex = (int)_themePreferenceService.CurrentPreference;
+        SelectedInterfaceLanguageIndex = (int)_languagePreferenceService.CurrentPreference;
+        RefreshInterfaceLanguageStatus();
         IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
         CurrentAppVersion = string.Format(
             System.Globalization.CultureInfo.CurrentCulture,
@@ -54,6 +60,22 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     [ObservableProperty]
     public partial int SelectedThemeIndex { get; set; }
+
+    [ObservableProperty]
+    public partial int SelectedInterfaceLanguageIndex { get; set; }
+
+    [ObservableProperty]
+    public partial SettingsStatusKind InterfaceLanguageStatusKind { get; set; } =
+        SettingsStatusKind.Informational;
+
+    [ObservableProperty]
+    public partial string InterfaceLanguageStatusMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsInterfaceLanguageStatusOpen { get; set; }
+
+    [ObservableProperty]
+    public partial string? PendingInterfaceLanguageTag { get; private set; }
 
     [ObservableProperty]
     public partial string CurrentExecutionTarget { get; set; } = string.Empty;
@@ -167,6 +189,73 @@ public partial class SettingsHomePageViewModel : ObservableObject
             _themePreferenceService.SetPreference((AppThemePreference)value);
         }
     }
+
+    public void SetInterfaceLanguagePreference(int selectedIndex)
+    {
+        if (!Enum.IsDefined(typeof(AppLanguagePreference), selectedIndex))
+        {
+            SelectedInterfaceLanguageIndex = (int)_languagePreferenceService.CurrentPreference;
+            return;
+        }
+
+        var selectedPreference = (AppLanguagePreference)selectedIndex;
+        if (selectedPreference == _languagePreferenceService.CurrentPreference)
+        {
+            RefreshInterfaceLanguageStatus();
+            return;
+        }
+
+        try
+        {
+            _languagePreferenceService.SetPreference(selectedPreference);
+            RefreshInterfaceLanguageStatus();
+        }
+        catch
+        {
+            SelectedInterfaceLanguageIndex =
+                (int)_languagePreferenceService.CurrentPreference;
+            RefreshInterfaceLanguageStatus();
+            InterfaceLanguageStatusKind = SettingsStatusKind.Error;
+            InterfaceLanguageStatusMessage = PendingInterfaceLanguageTag is { } pendingLanguageTag
+                ? string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    Resources.GetString("InterfaceLanguageSaveFailedWithPendingStatusFormat"),
+                    GetLanguageDisplayName(pendingLanguageTag))
+                : Resources.GetString("InterfaceLanguageSaveFailedStatus");
+            IsInterfaceLanguageStatusOpen = true;
+        }
+    }
+
+    private void RefreshInterfaceLanguageStatus()
+    {
+        var effectiveLanguageTag = _languagePreferenceService.ResolveEffectiveLanguageTag(
+            _languagePreferenceService.CurrentPreference);
+        if (string.Equals(
+                effectiveLanguageTag,
+                _languagePreferenceService.CurrentStartupLanguageTag,
+                StringComparison.Ordinal))
+        {
+            PendingInterfaceLanguageTag = null;
+            InterfaceLanguageStatusMessage = string.Empty;
+            IsInterfaceLanguageStatusOpen = false;
+            return;
+        }
+
+        PendingInterfaceLanguageTag = effectiveLanguageTag;
+        InterfaceLanguageStatusKind = SettingsStatusKind.Success;
+        InterfaceLanguageStatusMessage = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            Resources.GetString("InterfaceLanguageSavedStatusFormat"),
+            GetLanguageDisplayName(effectiveLanguageTag));
+        IsInterfaceLanguageStatusOpen = true;
+    }
+
+    private static string GetLanguageDisplayName(string languageTag) => languageTag switch
+    {
+        "zh-CN" => Resources.GetString("InterfaceLanguageNameSimplifiedChinese"),
+        "zh-TW" => Resources.GetString("InterfaceLanguageNameTraditionalChineseTaiwan"),
+        _ => Resources.GetString("InterfaceLanguageNameEnglish"),
+    };
 
     public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {

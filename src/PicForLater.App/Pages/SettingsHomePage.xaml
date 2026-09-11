@@ -32,6 +32,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="WidthStates">
@@ -473,6 +474,109 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="5" Spacing="{StaticResource AppSpacingSm}">
+                    <TextBlock
+                        x:Uid="InterfaceLanguageSectionTitle"
+                        Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                    <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                        <Grid
+                            x:Name="InterfaceLanguageRow"
+                            Padding="12,11,12,3"
+                            ColumnSpacing="{StaticResource AppSpacingLg}"
+                            RowSpacing="{StaticResource AppSpacingSm}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition
+                                    x:Name="InterfaceLanguageControlColumn"
+                                    Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition x:Name="InterfaceLanguageSelectionRow" Height="0" />
+                            </Grid.RowDefinitions>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="InterfaceLanguageWidthStates">
+                                    <VisualState x:Name="InterfaceLanguageNarrow">
+                                        <VisualState.StateTriggers>
+                                            <AdaptiveTrigger MinWindowWidth="0" />
+                                        </VisualState.StateTriggers>
+                                        <VisualState.Setters>
+                                            <Setter Target="InterfaceLanguageControlColumn.Width" Value="0" />
+                                            <Setter Target="InterfaceLanguageComboBox.(Grid.Row)" Value="1" />
+                                            <Setter Target="InterfaceLanguageComboBox.(Grid.Column)" Value="0" />
+                                            <Setter Target="InterfaceLanguageComboBox.HorizontalAlignment" Value="Stretch" />
+                                            <Setter Target="InterfaceLanguageComboBox.MinWidth" Value="0" />
+                                            <Setter Target="InterfaceLanguageComboBox.Margin" Value="0" />
+                                            <Setter Target="InterfaceLanguageRow.RowSpacing" Value="{StaticResource AppSpacingSm}" />
+                                            <Setter Target="InterfaceLanguageSelectionRow.Height" Value="Auto" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="InterfaceLanguageWide">
+                                        <VisualState.StateTriggers>
+                                            <AdaptiveTrigger MinWindowWidth="{StaticResource AppBreakpointMedium}" />
+                                        </VisualState.StateTriggers>
+                                        <VisualState.Setters>
+                                            <Setter Target="InterfaceLanguageControlColumn.Width" Value="Auto" />
+                                            <Setter Target="InterfaceLanguageComboBox.(Grid.Row)" Value="0" />
+                                            <Setter Target="InterfaceLanguageComboBox.(Grid.Column)" Value="1" />
+                                            <Setter Target="InterfaceLanguageComboBox.HorizontalAlignment" Value="Right" />
+                                            <Setter Target="InterfaceLanguageComboBox.MinWidth" Value="220" />
+                                            <Setter Target="InterfaceLanguageComboBox.Margin" Value="0" />
+                                            <Setter Target="InterfaceLanguageRow.RowSpacing" Value="0" />
+                                            <Setter Target="InterfaceLanguageSelectionRow.Height" Value="0" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <StackPanel
+                                Grid.Row="0"
+                                Spacing="{StaticResource AppSpacingXs}">
+                                <TextBlock
+                                    x:Uid="InterfaceLanguageTitle"
+                                    FontWeight="SemiBold"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Uid="InterfaceLanguageDescription"
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ComboBox
+                                x:Name="InterfaceLanguageComboBox"
+                                x:Uid="InterfaceLanguageComboBox"
+                                Grid.Column="1"
+                                AutomationProperties.AutomationId="InterfaceLanguageComboBox"
+                                VerticalAlignment="Center"
+                                MaxWidth="320"
+                                SelectedIndex="{x:Bind ViewModel.SelectedInterfaceLanguageIndex, Mode=TwoWay}"
+                                SelectionChanged="InterfaceLanguageComboBox_SelectionChanged">
+                                <ComboBoxItem
+                                    x:Uid="SystemInterfaceLanguageOption"
+                                    AutomationProperties.AutomationId="SystemInterfaceLanguageOption" />
+                                <ComboBoxItem
+                                    x:Uid="SimplifiedChineseInterfaceLanguageOption"
+                                    AutomationProperties.AutomationId="SimplifiedChineseInterfaceLanguageOption" />
+                                <ComboBoxItem
+                                    x:Uid="TraditionalChineseInterfaceLanguageOption"
+                                    AutomationProperties.AutomationId="TraditionalChineseInterfaceLanguageOption" />
+                                <ComboBoxItem
+                                    x:Uid="EnglishInterfaceLanguageOption"
+                                    AutomationProperties.AutomationId="EnglishInterfaceLanguageOption" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                    <InfoBar
+                        x:Name="InterfaceLanguageStatusInfoBar"
+                        x:Uid="InterfaceLanguageStatusInfoBar"
+                        AutomationProperties.AutomationId="InterfaceLanguageStatusInfoBar"
+                        AutomationProperties.LiveSetting="Polite"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.IsInterfaceLanguageStatusOpen, Mode=OneWay}"
+                        Message="{x:Bind ViewModel.InterfaceLanguageStatusMessage, Mode=OneWay}"
+                        Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ViewModel.InterfaceLanguageStatusKind), Mode=OneWay}"
+                        Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsInterfaceLanguageStatusOpen), Mode=OneWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="6" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock
                         x:Uid="AboutUpdatesSectionTitle"
                         Style="{StaticResource AppSectionTitleTextBlockStyle}" />
