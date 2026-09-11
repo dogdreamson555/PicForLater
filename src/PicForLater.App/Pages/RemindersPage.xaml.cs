@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Globalization;
-using System.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -10,6 +9,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.Analysis;
 using PicForLater.App.Models;
+using PicForLater.App.Utilities;
 using PicForLater.App.ViewModels;
 
 namespace PicForLater.App.Pages;
@@ -742,7 +742,7 @@ public sealed partial class RemindersPage : Page
     {
         if (FindVisualDescendant<ScrollViewer>(sender, "ContentElement")?.RenderTransform is TranslateTransform transform)
         {
-            transform.Y = IsPureCjkText(sender.Text) ? PureCjkTextOpticalOffset : 0;
+            transform.Y = CjkTextHelper.IsPureCjkText(sender.Text) ? PureCjkTextOpticalOffset : 0;
         }
     }
 
@@ -754,7 +754,7 @@ public sealed partial class RemindersPage : Page
             return;
         }
 
-        var offset = IsPureCjkText(textBox.Text) ? PureCjkTextOpticalOffset : 0;
+        var offset = CjkTextHelper.IsPureCjkText(textBox.Text) ? PureCjkTextOpticalOffset : 0;
         if (contentElement.RenderTransform is TranslateTransform transform)
         {
             transform.Y = offset;
@@ -763,51 +763,6 @@ public sealed partial class RemindersPage : Page
 
         contentElement.RenderTransform = new TranslateTransform { Y = offset };
     }
-
-    private static bool IsPureCjkText(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return false;
-        }
-
-        var containsHan = false;
-        foreach (var rune in text.EnumerateRunes())
-        {
-            if (Rune.IsWhiteSpace(rune))
-            {
-                continue;
-            }
-
-            if (IsHanCharacter(rune.Value))
-            {
-                containsHan = true;
-                continue;
-            }
-
-            if (IsCjkPunctuation(rune.Value))
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        return containsHan;
-    }
-
-    private static bool IsHanCharacter(int value) =>
-        value is >= 0x3400 and <= 0x4DBF or
-            >= 0x4E00 and <= 0x9FFF or
-            >= 0xF900 and <= 0xFAFF or
-            >= 0x20000 and <= 0x2FA1F or
-            >= 0x30000 and <= 0x323AF;
-
-    private static bool IsCjkPunctuation(int value) =>
-        value is >= 0x3000 and <= 0x303F or
-            >= 0xFE10 and <= 0xFE1F or
-            >= 0xFE30 and <= 0xFE4F or
-            >= 0xFF01 and <= 0xFF65;
 
     private static T? FindVisualDescendant<T>(DependencyObject parent, string name)
         where T : FrameworkElement
