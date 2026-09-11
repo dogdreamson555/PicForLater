@@ -29,12 +29,12 @@ public sealed record ManagedRelativePath
         }
 
         var segments = normalized.Split('/', StringSplitOptions.None);
-        if (segments.Length == 0 || segments.Any(IsInvalidSegment))
+        if (segments.Any(IsInvalidSegment))
         {
             throw new ArgumentException("The managed path contains an invalid or unsafe segment.", nameof(value));
         }
 
-        return new ManagedRelativePath(string.Join('/', segments));
+        return new ManagedRelativePath(normalized);
     }
 
     public static bool TryParse(
