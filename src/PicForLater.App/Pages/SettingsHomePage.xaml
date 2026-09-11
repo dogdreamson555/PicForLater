@@ -480,7 +480,7 @@
                     <Border Style="{StaticResource AppSettingsListGroupStyle}">
                         <Grid
                             x:Name="InterfaceLanguageRow"
-                            Padding="12,10"
+                            Padding="12,11,12,3"
                             ColumnSpacing="{StaticResource AppSpacingLg}"
                             RowSpacing="{StaticResource AppSpacingSm}">
                             <Grid.ColumnDefinitions>
@@ -505,7 +505,7 @@
                                             <Setter Target="InterfaceLanguageComboBox.(Grid.Column)" Value="0" />
                                             <Setter Target="InterfaceLanguageComboBox.HorizontalAlignment" Value="Stretch" />
                                             <Setter Target="InterfaceLanguageComboBox.MinWidth" Value="0" />
-                                            <Setter Target="InterfaceLanguageComboBox.Margin" Value="0,4,0,0" />
+                                            <Setter Target="InterfaceLanguageComboBox.Margin" Value="0" />
                                             <Setter Target="InterfaceLanguageRow.RowSpacing" Value="{StaticResource AppSpacingSm}" />
                                             <Setter Target="InterfaceLanguageSelectionRow.Height" Value="Auto" />
                                         </VisualState.Setters>
@@ -545,6 +545,7 @@
                                 x:Uid="InterfaceLanguageComboBox"
                                 Grid.Column="1"
                                 AutomationProperties.AutomationId="InterfaceLanguageComboBox"
+                                VerticalAlignment="Center"
                                 MaxWidth="320"
                                 SelectedIndex="{x:Bind ViewModel.SelectedInterfaceLanguageIndex, Mode=TwoWay}"
                                 SelectionChanged="InterfaceLanguageComboBox_SelectionChanged">
