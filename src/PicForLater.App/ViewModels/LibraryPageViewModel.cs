@@ -695,6 +695,12 @@ public partial class LibraryPageViewModel : ObservableObject
                 imageItemId,
                 update).ConfigureAwait(true);
 
+            await LoadItemsAsync(reset: true).ConfigureAwait(true);
+            if (!IsCurrentDetailOperation(imageItemId, loadGeneration))
+            {
+                return true;
+            }
+
             LibraryEntry? entry;
             try
             {

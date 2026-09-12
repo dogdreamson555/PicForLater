@@ -297,11 +297,17 @@ public sealed class LibraryWorkflowTests
         Assert.Equal(ContentFieldSource.User, found.Item.TitleSource);
         Assert.Equal("活动", Assert.Single(found.Categories).Category.Name);
 
+        var searchedByNotes = await library.QueryAsync(new LibraryQuery("恢复后"));
+        Assert.Equal(imported.ImageItemId, Assert.Single(searchedByNotes.Items).Item.Id);
+
         await library.SoftDeleteAsync(imported.ImageItemId);
         Assert.Empty((await library.QueryAsync(new LibraryQuery())).Items);
         var recycled = Assert.Single((await library.QueryAsync(new LibraryQuery(IsDeleted: true))).Items);
         Assert.Equal(category.Id, Assert.Single(recycled.Categories).Category.Id);
         Assert.Equal("删除恢复后仍保留", recycled.Item.Notes);
+        Assert.Equal(
+            imported.ImageItemId,
+            Assert.Single((await library.QueryAsync(new LibraryQuery("恢复后", IsDeleted: true))).Items).Item.Id);
 
         await library.RestoreAsync(imported.ImageItemId);
         var restored = Assert.Single((await library.QueryAsync(new LibraryQuery())).Items);
@@ -316,6 +322,127 @@ public sealed class LibraryWorkflowTests
         Assert.Empty((await library.QueryAsync(new LibraryQuery(IsDeleted: true))).Items);
         await using var connection = await OpenAsync(root.Paths.DatabasePath);
         Assert.Equal(1L, await ScalarAsync(connection, "SELECT COUNT(*) FROM DeletionJobs WHERE State = 2;"));
+    }
+
+    [Fact]
+    public async Task Library_SearchesNotesWithLikeEscapingFiltersPagingAndSaveChanges()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
+
+        async Task<Guid> ImportUniqueAsync(string fileName, byte suffix)
+        {
+            var result = await importer.ImportAsync(
+                new MemoryStream(TinyPng.Concat([suffix]).ToArray(), writable: false),
+                fileName,
+                ImageSourceKind.File,
+                ManagedImageFormat.Png);
+            Assert.Equal(ImageImportStatus.Imported, result.Status);
+            return result.ImageItemId;
+        }
+
+        var literalId = await ImportUniqueAsync("literal.png", 1);
+        var wildcardDecoyId = await ImportUniqueAsync("wildcard-decoy.png", 2);
+        await library.UpdateDetailFieldsAsync(
+            literalId,
+            new ImageDetailUpdate(Notes: "release 100%_token"));
+        await library.UpdateDetailFieldsAsync(
+            wildcardDecoyId,
+            new ImageDetailUpdate(Notes: "release 100abc_token"));
+
+        var literalSearch = await library.QueryAsync(
+            new LibraryQuery(SearchText: "100%_token", Limit: 10));
+        Assert.Equal([literalId], literalSearch.Items.Select(entry => entry.Item.Id));
+
+        var category = await library.CreateCategoryAsync("筛选目标");
+        var categoryHitId = await ImportUniqueAsync("category-hit.png", 3);
+        var categoryMissId = await ImportUniqueAsync("category-miss.png", 4);
+        await library.UpdateDetailFieldsAsync(
+            categoryHitId,
+            new ImageDetailUpdate(Notes: "category marker"));
+        await library.UpdateDetailFieldsAsync(
+            categoryMissId,
+            new ImageDetailUpdate(Notes: "category marker"));
+        await library.SetCategoryAssignmentAsync(categoryHitId, category.Id, isAssigned: true);
+
+        var categorySearch = await library.QueryAsync(
+            new LibraryQuery(
+                SearchText: "category marker",
+                CategoryId: category.Id,
+                Limit: 10));
+        Assert.Equal([categoryHitId], categorySearch.Items.Select(entry => entry.Item.Id));
+
+        var pagingIds = new[]
+        {
+            await ImportUniqueAsync("page-1.png", 5),
+            await ImportUniqueAsync("page-2.png", 6),
+            await ImportUniqueAsync("page-3.png", 7),
+        };
+        foreach (var imageItemId in pagingIds)
+        {
+            await library.UpdateDetailFieldsAsync(
+                imageItemId,
+                new ImageDetailUpdate(Notes: "paging marker"));
+        }
+
+        var firstPage = await library.QueryAsync(
+            new LibraryQuery(SearchText: "paging marker", Limit: 2));
+        var secondPage = await library.QueryAsync(
+            new LibraryQuery(
+                SearchText: "paging marker",
+                Offset: firstPage.Items.Count,
+                Limit: 2));
+        Assert.Equal(2, firstPage.Items.Count);
+        Assert.True(firstPage.HasMore);
+        Assert.Single(secondPage.Items);
+        Assert.False(secondPage.HasMore);
+        Assert.Equal(
+            pagingIds.ToHashSet(),
+            firstPage.Items.Concat(secondPage.Items).Select(entry => entry.Item.Id).ToHashSet());
+
+        var changingId = await ImportUniqueAsync("changing.png", 8);
+        await library.UpdateDetailFieldsAsync(
+            changingId,
+            new ImageDetailUpdate(Notes: "before-save"));
+        Assert.Contains(
+            changingId,
+            (await library.QueryAsync(new LibraryQuery(SearchText: "before-save"))).Items
+                .Select(entry => entry.Item.Id));
+        await library.UpdateDetailFieldsAsync(
+            changingId,
+            new ImageDetailUpdate(Notes: "after-save"));
+        Assert.DoesNotContain(
+            changingId,
+            (await library.QueryAsync(new LibraryQuery(SearchText: "before-save"))).Items
+                .Select(entry => entry.Item.Id));
+        Assert.Contains(
+            changingId,
+            (await library.QueryAsync(new LibraryQuery(SearchText: "after-save"))).Items
+                .Select(entry => entry.Item.Id));
+
+        var activeId = await ImportUniqueAsync("active.png", 9);
+        var deletedId = await ImportUniqueAsync("deleted.png", 10);
+        await library.UpdateDetailFieldsAsync(
+            activeId,
+            new ImageDetailUpdate(Notes: "recycle marker"));
+        await library.UpdateDetailFieldsAsync(
+            deletedId,
+            new ImageDetailUpdate(Notes: "recycle marker"));
+        await library.SoftDeleteAsync(deletedId);
+
+        Assert.Equal(
+            [activeId],
+            (await library.QueryAsync(new LibraryQuery(SearchText: "recycle marker"))).Items
+                .Select(entry => entry.Item.Id));
+        Assert.Equal(
+            [deletedId],
+            (await library.QueryAsync(new LibraryQuery(
+                SearchText: "recycle marker",
+                IsDeleted: true))).Items
+                .Select(entry => entry.Item.Id));
     }
 
     [Fact]
