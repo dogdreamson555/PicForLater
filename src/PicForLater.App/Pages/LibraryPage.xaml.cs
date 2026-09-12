@@ -42,6 +42,7 @@ public sealed partial class LibraryPage : Page
     private readonly SemaphoreSlim _screenshotRefreshGate = new(1, 1);
     private bool _viewModelSubscribed = true;
     private int _loadGeneration;
+    private Task<bool>? _leaveCheckTask;
     private LibraryDisplayMode _displayMode = LibraryDisplayMode.Grid;
     private Guid? _navigationTargetImageItemId;
     private ItemsWrapGrid? _libraryGridItemsPanel;
@@ -116,13 +117,18 @@ public sealed partial class LibraryPage : Page
 
         if (_navigationTargetImageItemId is Guid imageItemId)
         {
-            await ViewModel.RefreshAndSelectAsync(imageItemId);
+            var selected = await ViewModel.RefreshAndSelectAsync(imageItemId);
             if (!IsCurrentLoad(loadGeneration))
             {
                 return;
             }
 
-            _navigationTargetImageItemId = null;
+            if (selected)
+            {
+                _navigationTargetImageItemId = null;
+                App.ClearPendingNotificationNavigation(imageItemId);
+                RestoreCollectionSelection();
+            }
         }
 
         TrySubscribeAnalysisUpdates();
@@ -140,6 +146,50 @@ public sealed partial class LibraryPage : Page
             _navigationTargetImageItemId = imageItemId;
         }
     }
+
+    public Task<bool> ConfirmLeaveAsync()
+    {
+        if (_leaveCheckTask is { IsCompleted: false } activeTask)
+        {
+            return activeTask;
+        }
+
+        _leaveCheckTask = null;
+
+        var task = ConfirmLeaveCoreAsync();
+        _leaveCheckTask = task;
+        _ = ClearCompletedLeaveTaskAsync(task);
+        return task;
+    }
+
+    public async Task<bool> NavigateToImageAsync(Guid imageItemId)
+    {
+        LastLeaveWasExplicitlyCancelled = false;
+        if (ViewModel.SelectedItemId != imageItemId
+            && !await ConfirmLeaveAsync())
+        {
+            return false;
+        }
+
+        SetSelectionMode(isActive: false);
+        var selected = await ViewModel.RefreshAndSelectAsync(imageItemId);
+        if (!selected)
+        {
+            RestoreCollectionSelection();
+            UpdateResponsiveLayout();
+            return false;
+        }
+
+        if (ViewModel.Items.FirstOrDefault(item => item.Id == imageItemId) is { } selectedItem)
+        {
+            SynchronizeSingleSelection(selectedItem);
+        }
+
+        UpdateResponsiveLayout();
+        return true;
+    }
+
+    public bool LastLeaveWasExplicitlyCancelled { get; private set; }
 
     private void LibraryPage_Unloaded(object sender, RoutedEventArgs e)
     {
@@ -441,7 +491,19 @@ public sealed partial class LibraryPage : Page
 
         if (e.ClickedItem is LibraryItem item)
         {
-            await ViewModel.SetSelectedItemAsync(item);
+            if (ViewModel.SelectedItemId != item.Id
+                && !await ConfirmLeaveAsync())
+            {
+                RestoreCollectionSelection();
+                return;
+            }
+
+            if (!await ViewModel.SetSelectedItemAsync(item))
+            {
+                RestoreCollectionSelection();
+                return;
+            }
+
             SynchronizeSingleSelection(item);
             UpdateResponsiveLayout();
         }
@@ -588,8 +650,20 @@ public sealed partial class LibraryPage : Page
             return;
         }
 
+        if (ViewModel.SelectedItemId != item.Id
+            && !await ConfirmLeaveAsync())
+        {
+            RestoreCollectionSelection();
+            return;
+        }
+
         SetSelectionMode(isActive: false);
-        await ViewModel.SetSelectedItemAsync(item);
+        if (!await ViewModel.SetSelectedItemAsync(item))
+        {
+            RestoreCollectionSelection();
+            return;
+        }
+
         SynchronizeSingleSelection(item);
         UpdateResponsiveLayout();
     }
@@ -679,9 +753,17 @@ public sealed partial class LibraryPage : Page
 
     private async Task OpenReminderEditorAsync(Guid imageItemId)
     {
-        if (ViewModel.SelectedItemId == imageItemId && ViewModel.IsDetailDirty)
+        if (ViewModel.SelectedItemId == imageItemId)
         {
-            await ViewModel.SaveDetailCommand.ExecuteAsync(null);
+            if (!await ViewModel.TrySaveDetailAsync())
+            {
+                return;
+            }
+        }
+        else if (!await ConfirmLeaveAsync())
+        {
+            RestoreCollectionSelection();
+            return;
         }
 
         App.RequestReminderCreation(imageItemId);
@@ -785,6 +867,7 @@ public sealed partial class LibraryPage : Page
         var imported = 0;
         var duplicates = 0;
         var failed = 0;
+        var selectImportedItems = !ViewModel.IsDetailDirty;
         ViewModel.IsWorking = true;
         try
         {
@@ -811,7 +894,8 @@ public sealed partial class LibraryPage : Page
                         stream,
                         Path.GetFileName(path),
                         ImageSourceKind.File,
-                        expectedFormat);
+                        expectedFormat,
+                        selectImportedItems);
                     if (result.Status == ImageImportStatus.Imported)
                     {
                         imported++;
@@ -846,10 +930,16 @@ public sealed partial class LibraryPage : Page
         ImageSourceKind sourceKind,
         ManagedImageFormat expectedFormat)
     {
+        var selectImportedItem = !ViewModel.IsDetailDirty;
         ViewModel.IsWorking = true;
         try
         {
-            var result = await ImportSingleCoreAsync(stream, fileName, sourceKind, expectedFormat);
+            var result = await ImportSingleCoreAsync(
+                stream,
+                fileName,
+                sourceKind,
+                expectedFormat,
+                selectImportedItem);
             ViewModel.ShowStatus(result.Status == ImageImportStatus.Imported
                 ? _resources.GetString("ImportCompletedStatus")
                 : _resources.GetString("ImportDuplicateStatus"));
@@ -868,7 +958,8 @@ public sealed partial class LibraryPage : Page
         Stream stream,
         string fileName,
         ImageSourceKind sourceKind,
-        ManagedImageFormat expectedFormat)
+        ManagedImageFormat expectedFormat,
+        bool selectImportedItem)
     {
         var importer = App.ImageImporter
             ?? throw new InvalidOperationException("The image importer is unavailable.");
@@ -877,11 +968,19 @@ public sealed partial class LibraryPage : Page
             fileName,
             sourceKind,
             expectedFormat);
-        await ViewModel.RefreshAndSelectAsync(result.ImageItemId);
-        var selectedItem = ViewModel.Items.FirstOrDefault(item => item.Id == result.ImageItemId);
-        if (selectedItem is not null)
+        if (selectImportedItem && !ViewModel.IsDetailDirty)
         {
-            SynchronizeSingleSelection(selectedItem);
+            await ViewModel.RefreshAndSelectAsync(result.ImageItemId);
+            var selectedItem = ViewModel.Items.FirstOrDefault(item => item.Id == result.ImageItemId);
+            if (selectedItem is not null)
+            {
+                SynchronizeSingleSelection(selectedItem);
+            }
+        }
+        else
+        {
+            await ViewModel.RefreshItemsAsync();
+            RestoreCollectionSelection();
         }
 
         UpdateResponsiveLayout();
@@ -1061,11 +1160,22 @@ public sealed partial class LibraryPage : Page
 
     private async Task ConfirmSingleSoftDeleteAsync(Guid imageItemId, string title)
     {
+        if (ViewModel.SelectedItemId == imageItemId && ViewModel.IsDetailSaving
+            && !await ViewModel.TrySaveDetailAsync())
+        {
+            return;
+        }
+
+        var hasUnsavedChanges = ViewModel.SelectedItemId == imageItemId
+            && ViewModel.IsDetailDirty;
+        var messageResource = hasUnsavedChanges
+            ? "SoftDeleteDialogMessageWithUnsavedFormat"
+            : "SoftDeleteDialogMessageFormat";
         var dialog = CreateDialog(
             _resources.GetString("SoftDeleteDialogTitle"),
             string.Format(
                 System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString("SoftDeleteDialogMessageFormat"),
+                _resources.GetString(messageResource),
                 title),
             _resources.GetString("SoftDeleteDialogPrimary"));
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -1088,11 +1198,25 @@ public sealed partial class LibraryPage : Page
             return;
         }
 
+        if (ViewModel.IsDetailSaving
+            && ViewModel.SelectedItemId is Guid savingItemId
+            && items.Any(item => item.Id == savingItemId)
+            && !await ViewModel.TrySaveDetailAsync())
+        {
+            return;
+        }
+
+        var hasUnsavedChanges = ViewModel.IsDetailDirty
+            && ViewModel.SelectedItemId is Guid currentItemId
+            && items.Any(item => item.Id == currentItemId);
+        var messageResource = hasUnsavedChanges
+            ? "SoftDeleteBatchDialogMessageWithUnsavedFormat"
+            : "SoftDeleteBatchDialogMessageFormat";
         var dialog = CreateDialog(
             _resources.GetString("SoftDeleteBatchDialogTitle"),
             string.Format(
                 System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString("SoftDeleteBatchDialogMessageFormat"),
+                _resources.GetString(messageResource),
                 items.Count),
             _resources.GetString("SoftDeleteDialogPrimary"));
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -1258,8 +1382,13 @@ public sealed partial class LibraryPage : Page
         }
     }
 
-    private void DetailBackButton_Click(object sender, RoutedEventArgs e)
+    private async void DetailBackButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!await ConfirmLeaveAsync())
+        {
+            return;
+        }
+
         ViewModel.CloseDetail();
         LibraryGridView.SelectedItem = null;
         LibraryListView.SelectedItem = null;
@@ -1415,6 +1544,66 @@ public sealed partial class LibraryPage : Page
         return await dialog.ShowAsync() == ContentDialogResult.Primary
             ? textBox.Text.Trim()
             : null;
+    }
+
+    private async Task<bool> ConfirmLeaveCoreAsync()
+    {
+        LastLeaveWasExplicitlyCancelled = false;
+        if (ViewModel.IsDetailSaving)
+        {
+            return await ViewModel.TrySaveDetailAsync();
+        }
+
+        if (!ViewModel.IsDetailDirty)
+        {
+            return true;
+        }
+
+        if (XamlRoot is null)
+        {
+            return false;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            RequestedTheme = ActualTheme,
+            Title = _resources.GetString("UnsavedChangesDialogTitle"),
+            Content = _resources.GetString("UnsavedChangesDialogMessage"),
+            PrimaryButtonText = _resources.GetString("UnsavedChangesDialogSave"),
+            SecondaryButtonText = _resources.GetString("UnsavedChangesDialogDiscard"),
+            CloseButtonText = _resources.GetString("CancelButtonText"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        var result = await dialog.ShowAsync();
+        switch (result)
+        {
+            case ContentDialogResult.Primary:
+                return await ViewModel.TrySaveDetailAsync();
+            case ContentDialogResult.Secondary:
+                return await ViewModel.DiscardDetailAsync();
+            default:
+                LastLeaveWasExplicitlyCancelled = true;
+                return false;
+        }
+    }
+
+    private async Task ClearCompletedLeaveTaskAsync(Task<bool> task)
+    {
+        try
+        {
+            await task;
+        }
+        catch
+        {
+            // The caller observes the decision task. This continuation only clears
+            // the duplicate-dialog guard.
+        }
+
+        if (ReferenceEquals(_leaveCheckTask, task))
+        {
+            _leaveCheckTask = null;
+        }
     }
 
     private ContentDialog CreateDialog(string title, string message, string primaryButtonText) => new()

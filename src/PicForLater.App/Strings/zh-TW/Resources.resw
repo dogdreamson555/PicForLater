@@ -184,13 +184,10 @@
   <data name="DetailSummaryTextBox.Header" xml:space="preserve"><value>簡介</value></data>
   <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>新增便於回顧的說明</value></data>
   <data name="DetailSummaryTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片簡介</value></data>
-  <data name="DetailContentSourceInfoBar.Title" xml:space="preserve"><value>內容來源</value></data>
-  <data name="DetailContentSourcePending" xml:space="preserve"><value>本機分析完成後會在這裡填入可編輯的標題和簡介。</value></data>
-  <data name="DetailContentSourceOcr" xml:space="preserve"><value>已根據本機 OCR 事實產生可編輯草稿；視覺增強失敗也不會遺失此結果。</value></data>
-  <data name="DetailContentSourceModel" xml:space="preserve"><value>標題和簡介由 AI 模型產生，屬於可編輯候選。</value></data>
-  <data name="DetailContentSourceUser" xml:space="preserve"><value>標題或簡介已由你儲存，重新分析不會在未提示的情況下覆寫。</value></data>
-  <data name="DetailContentSourceUnsaved" xml:space="preserve"><value>有尚未儲存的手動修改；背景分析重新整理不會覆寫目前輸入。</value></data>
-  <data name="DetailContentSourceNeedsAttention" xml:space="preserve"><value>本機分析未完成。原圖和已有內容已保留，可以選擇重新分析。</value></data>
+  <data name="DetailNotesTextBox.Header" xml:space="preserve"><value>備註</value></data>
+  <data name="DetailNotesTextBox.PlaceholderText" xml:space="preserve"><value>新增供日後回顧的個人備註</value></data>
+  <data name="DetailNotesTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片備註</value></data>
+  <data name="DetailSaveStatusTextBlock.AutomationProperties.Name" xml:space="preserve"><value>詳細資料儲存狀態</value></data>
   <data name="CategoriesSectionTitle.Text" xml:space="preserve"><value>分類</value></data>
   <data name="AddCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>新增分類</value></data>
   <data name="AddCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>新增自訂分類</value></data>
@@ -246,6 +243,15 @@
   <data name="Uncategorized" xml:space="preserve"><value>未分類</value></data>
   <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}，{2}</value></data>
   <data name="DetailsSavedStatus" xml:space="preserve"><value>圖片詳細資料已儲存。</value></data>
+  <data name="DetailsUnsavedStatus" xml:space="preserve"><value>有尚未儲存的變更</value></data>
+  <data name="DetailsSavingStatus" xml:space="preserve"><value>正在儲存變更…</value></data>
+  <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>無法儲存變更，目前輸入仍會保留。</value></data>
+  <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>變更已儲存，但無法載入最新詳細資料。</value></data>
+  <data name="DetailsDiscardFailedStatus" xml:space="preserve"><value>無法載入最新詳細資料，因此保留了目前變更。</value></data>
+  <data name="UnsavedChangesDialogTitle" xml:space="preserve"><value>離開前儲存變更？</value></data>
+  <data name="UnsavedChangesDialogMessage" xml:space="preserve"><value>這張圖片有尚未儲存的變更。</value></data>
+  <data name="UnsavedChangesDialogSave" xml:space="preserve"><value>儲存並離開</value></data>
+  <data name="UnsavedChangesDialogDiscard" xml:space="preserve"><value>放棄變更</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>圖片已還原；未來提醒需要重新確認後才會排程。</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已還原 {0}/{1} 張圖片；未來提醒需要重新確認後才會排程。</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>圖片及無其他引用的受管檔案已永久刪除。</value></data>
@@ -275,6 +281,7 @@
   <data name="DeleteCategoryDialogPrimary" xml:space="preserve"><value>刪除分類</value></data>
   <data name="SoftDeleteDialogTitle" xml:space="preserve"><value>移到資源回收筒？</value></data>
   <data name="SoftDeleteDialogMessageFormat" xml:space="preserve"><value>「{0}」將進入應用程式內資源回收筒，並可還原。</value></data>
+  <data name="SoftDeleteDialogMessageWithUnsavedFormat" xml:space="preserve"><value>「{0}」將進入應用程式內資源回收筒，並可還原。這張圖片尚未儲存的變更也會被放棄。</value></data>
   <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>移到資源回收筒</value></data>
   <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>圖片已移到資源回收筒。</value></data>
   <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>永久刪除圖片？</value></data>
@@ -335,6 +342,7 @@
   <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
   <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>將選取的圖片移至資源回收筒？</value></data>
   <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>將選取的 {0} 張圖片移至應用程式內資源回收筒，並可分別還原。</value></data>
+  <data name="SoftDeleteBatchDialogMessageWithUnsavedFormat" xml:space="preserve"><value>將選取的 {0} 張圖片移至應用程式內資源回收筒，並可分別還原；若包含目前圖片，其尚未儲存的變更也會被放棄。</value></data>
   <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已將 {0}/{1} 張圖片移到資源回收筒。</value></data>
   <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>圖片未能移至資源回收筒，現有資料不會變更。</value></data>
   <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>

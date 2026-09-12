@@ -16,6 +16,7 @@ public sealed partial class MainPage : Page
     private bool _backgroundWorkerStatusChangedSubscribed;
     private bool _suppressSelectionNavigation;
     private bool _initialized;
+    private object? _lastSelectedNavigationItem;
 
     public BackgroundWorkersStatusViewModel ViewModel { get; } = new(
         App.RetryFaultedBackgroundWorkersAsync);
@@ -34,7 +35,7 @@ public sealed partial class MainPage : Page
     public static Visibility BoolToVisibility(bool value) =>
         value ? Visibility.Visible : Visibility.Collapsed;
 
-    private void MainPage_Loaded(object sender, RoutedEventArgs e)
+    private async void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         SubscribeToNavigationRequests();
         SubscribeToBackgroundWorkerStatus();
@@ -48,16 +49,30 @@ public sealed partial class MainPage : Page
 
         if (ShellNavigation.MenuItems[0] is NavigationViewItem libraryItem)
         {
-            ShellNavigation.SelectedItem = libraryItem;
+            _suppressSelectionNavigation = true;
+            try
+            {
+                ShellNavigation.SelectedItem = libraryItem;
+            }
+            finally
+            {
+                _suppressSelectionNavigation = false;
+            }
+
+            _lastSelectedNavigationItem = libraryItem;
         }
 
         if (App.PendingNotificationImageItemId is Guid imageItemId)
         {
-            NavigateToLibraryItem(imageItemId);
+            await NavigateToLibraryItemAsync(imageItemId);
         }
         else if (App.PendingReminderCreationImageItemId is Guid reminderImageItemId)
         {
-            NavigateToReminderEditor(reminderImageItemId);
+            await NavigateToReminderEditorAsync(reminderImageItemId);
+        }
+        else if (ShellFrame.Content is null)
+        {
+            ShellFrame.Navigate(typeof(LibraryPage));
         }
     }
 
@@ -82,11 +97,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void App_NotificationImageRequested(Guid imageItemId) =>
-        NavigateToLibraryItem(imageItemId);
+    private async void App_NotificationImageRequested(Guid imageItemId) =>
+        await NavigateToLibraryItemAsync(imageItemId);
 
-    private void App_ReminderCreationRequested(Guid imageItemId) =>
-        NavigateToReminderEditor(imageItemId);
+    private async void App_ReminderCreationRequested(Guid imageItemId) =>
+        await NavigateToReminderEditorAsync(imageItemId);
 
     private void App_BackgroundWorkerStatusChanged(BackgroundWorkerStatus status)
     {
@@ -100,42 +115,95 @@ public sealed partial class MainPage : Page
             () => ViewModel.Update(App.GetBackgroundWorkerStatuses()));
     }
 
-    private void NavigateToLibraryItem(Guid imageItemId)
+    private async Task NavigateToLibraryItemAsync(Guid imageItemId)
     {
-        _suppressSelectionNavigation = true;
-        try
+        if (ShellFrame.Content is LibraryPage libraryPage)
         {
-            if (ShellNavigation.MenuItems[0] is NavigationViewItem libraryItem)
+            var selected = await libraryPage.NavigateToImageAsync(imageItemId);
+            if (!selected)
             {
-                ShellNavigation.SelectedItem = libraryItem;
+                if (libraryPage.LastLeaveWasExplicitlyCancelled)
+                {
+                    App.ClearPendingNotificationNavigation(imageItemId);
+                }
+
+                return;
             }
-        }
-        finally
-        {
-            _suppressSelectionNavigation = false;
+
+            SetSelectedNavigationItem(ShellNavigation.MenuItems[0]);
+            App.ClearPendingNotificationNavigation(imageItemId);
+            return;
         }
 
-        ShellFrame.Navigate(typeof(LibraryPage), imageItemId.ToString("D"));
-        App.ClearPendingNotificationNavigation(imageItemId);
+        if (!await TryLeaveCurrentPageAsync())
+        {
+            return;
+        }
+
+        SetSelectedNavigationItem(ShellNavigation.MenuItems[0]);
+        if (ShellFrame.Navigate(typeof(LibraryPage), imageItemId.ToString("D")))
+        {
+            // LibraryPage consumes a notification request only after it has
+            // actually selected the requested image.
+        }
     }
 
-    private void NavigateToReminderEditor(Guid imageItemId)
+    private async Task NavigateToReminderEditorAsync(Guid imageItemId)
+    {
+        if (!await TryLeaveCurrentPageAsync())
+        {
+            if (ShellFrame.Content is LibraryPage libraryPage
+                && libraryPage.LastLeaveWasExplicitlyCancelled)
+            {
+                App.ClearPendingReminderCreation(imageItemId);
+            }
+
+            return;
+        }
+
+        SetSelectedNavigationItem(ShellNavigation.MenuItems[1]);
+        if (ShellFrame.Navigate(typeof(RemindersPage), imageItemId.ToString("D")))
+        {
+            App.ClearPendingReminderCreation(imageItemId);
+        }
+    }
+
+    internal async Task<bool> TryLeaveCurrentPageAsync()
+    {
+        if (ShellFrame.Content is LibraryPage libraryPage)
+        {
+            return await libraryPage.ConfirmLeaveAsync();
+        }
+
+        return true;
+    }
+
+    private void SetSelectedNavigationItem(object? item)
     {
         _suppressSelectionNavigation = true;
         try
         {
-            if (ShellNavigation.MenuItems[1] is NavigationViewItem remindersItem)
-            {
-                ShellNavigation.SelectedItem = remindersItem;
-            }
+            ShellNavigation.SelectedItem = item;
         }
         finally
         {
             _suppressSelectionNavigation = false;
         }
 
-        ShellFrame.Navigate(typeof(RemindersPage), imageItemId.ToString("D"));
-        App.ClearPendingReminderCreation(imageItemId);
+        _lastSelectedNavigationItem = item;
+    }
+
+    private void RestoreSelectedNavigationItem()
+    {
+        _suppressSelectionNavigation = true;
+        try
+        {
+            ShellNavigation.SelectedItem = _lastSelectedNavigationItem;
+        }
+        finally
+        {
+            _suppressSelectionNavigation = false;
+        }
     }
 
     private void SubscribeToNavigationRequests()
@@ -164,7 +232,7 @@ public sealed partial class MainPage : Page
         _backgroundWorkerStatusChangedSubscribed = true;
     }
 
-    private void ShellNavigation_SelectionChanged(
+    private async void ShellNavigation_SelectionChanged(
         NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
@@ -173,6 +241,14 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        var requestedItem = args.SelectedItemContainer ?? ShellNavigation.SelectedItem;
+        if (!await TryLeaveCurrentPageAsync())
+        {
+            RestoreSelectedNavigationItem();
+            return;
+        }
+
+        _lastSelectedNavigationItem = requestedItem;
         if (args.IsSettingsSelected)
         {
             if (ShellFrame.CurrentSourcePageType != typeof(SettingsPage))
