@@ -609,5 +609,12 @@ internal static class SqliteSchema
                 ADD COLUMN OutputLanguage INTEGER NOT NULL DEFAULT 0
                 CHECK (OutputLanguage IN (0, 1, 2, 3));
             """),
+        new SqliteMigration(
+            16,
+            "image-item-notes",
+            """
+            ALTER TABLE ImageItems
+                ADD COLUMN Notes TEXT NOT NULL DEFAULT '';
+            """),
     ];
 }
