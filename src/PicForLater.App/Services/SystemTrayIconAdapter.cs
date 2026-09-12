@@ -11,12 +11,10 @@ using Microsoft.Windows.ApplicationModel.Resources;
 namespace PicForLater.App.Services;
 
 /// <summary>
-/// Owns the process-lifetime tray icon and the stage-one menu used to validate
-/// H.NotifyIcon's native PopupMenu integration.
+/// Owns the process-lifetime tray icon and its native PopupMenu integration.
 ///
-/// Business state is deliberately not connected here yet. Later stages can
-/// update the exposed menu items without moving the tray object into a page or
-/// changing the window's native lifetime.
+/// Business state is still updated by the application coordinator rather than
+/// by a page, so hiding the window does not affect the tray object's lifetime.
 /// </summary>
 internal sealed class SystemTrayIconAdapter : IDisposable
 {
@@ -198,7 +196,7 @@ internal sealed class SystemTrayIconAdapter : IDisposable
 
     private void CloseApplication()
     {
-        UpdateMenuOnUiThread(App.Window.Close);
+        UpdateMenuOnUiThread(() => _ = App.RequestApplicationExitAsync());
     }
 
     private void UpdateMenuOnUiThread(Action update)

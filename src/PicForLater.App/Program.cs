@@ -19,6 +19,7 @@ public static class Program
     private const uint CoWaitDefault = 0;
     private const uint Infinite = uint.MaxValue;
     private const int ShowWindowRestore = 9;
+    private const int ShowWindowShow = 5;
     private static AppInstance? _currentInstance;
 
     [STAThread]
@@ -72,8 +73,13 @@ public static class Program
             return false;
         }
 
-        RedirectActivationTo(instance, activationArguments);
-        TryActivatePrimaryWindow(instance);
+        if (!RedirectActivationTo(instance, activationArguments))
+        {
+            // The primary process normally receives AppInstance.Activated and
+            // uses App's restore coordinator. Keep a native fallback only when
+            // redirection itself failed.
+            TryActivatePrimaryWindow(instance);
+        }
         return true;
     }
 
@@ -82,7 +88,7 @@ public static class Program
         App.RequestForegroundActivation();
     }
 
-    private static void RedirectActivationTo(
+    private static bool RedirectActivationTo(
         AppInstance instance,
         AppActivationArguments activationArguments)
     {
@@ -94,7 +100,7 @@ public static class Program
         if (redirectCompleted == 0)
         {
             Debug.WriteLine("Single-instance activation redirection could not create its wait event.");
-            return;
+            return false;
         }
 
         Exception? redirectException = null;
@@ -114,6 +120,7 @@ public static class Program
             }
         });
 
+        bool succeeded = false;
         try
         {
             nint[] handles = [redirectCompleted];
@@ -131,11 +138,17 @@ public static class Program
             {
                 Debug.WriteLine($"Single-instance activation redirection failed: {redirectException.GetType().Name}.");
             }
+            else
+            {
+                succeeded = true;
+            }
         }
         finally
         {
             _ = CloseHandle(redirectCompleted);
         }
+
+        return succeeded;
     }
 
     private static void TryActivatePrimaryWindow(AppInstance instance)
@@ -152,6 +165,13 @@ public static class Program
             if (IsIconic(windowHandle))
             {
                 _ = ShowWindow(windowHandle, ShowWindowRestore);
+            }
+            else
+            {
+                // AppWindow.Hide() leaves the HWND non-iconic. This fallback is
+                // only used when AppInstance redirection failed, so explicitly
+                // show it before trying to activate the process window.
+                _ = ShowWindow(windowHandle, ShowWindowShow);
             }
 
             _ = SetForegroundWindow(windowHandle);

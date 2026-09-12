@@ -61,6 +61,11 @@
   <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API analysis</value></data>
   <data name="TrayQuickScreenshotText" xml:space="preserve"><value>Quick screenshot</value></data>
   <data name="TrayCloseText" xml:space="preserve"><value>Close</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater cannot stay in the system tray</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>The system tray icon is unavailable. Retry creating it, exit completely, or keep the window open.</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>Retry tray</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>Exit completely</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>Background processing stopped</value></data>

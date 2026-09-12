@@ -61,6 +61,11 @@
   <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
   <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快速截圖</value></data>
   <data name="TrayCloseText" xml:space="preserve"><value>關閉</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater 無法常駐系統匣</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>系統匣圖示目前無法使用。您可以重試建立圖示、完全結束，或保持視窗開啟。</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>重試系統匣</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>完全結束</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主導覽</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>背景處理已停止</value></data>

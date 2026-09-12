@@ -61,6 +61,11 @@
   <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
   <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快捷截图</value></data>
   <data name="TrayCloseText" xml:space="preserve"><value>关闭</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater 无法常驻系统托盘</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>系统托盘图标当前不可用。你可以重试创建托盘图标、完全退出，或保持窗口打开。</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>重试托盘</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>完全退出</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主导航</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>后台处理已停止</value></data>

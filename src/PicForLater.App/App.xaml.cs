@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using CommunityToolkit.WinUI.Notifications;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using PicForLater.Analysis;
 using PicForLater.Analysis.PpOcr;
 using PicForLater.App.Models;
@@ -28,11 +28,22 @@ namespace PicForLater.App;
 /// </summary>
 public partial class App : Application
 {
-    private const int ShowWindowRestore = 9;
+    private static readonly TimeSpan ApplicationShutdownTimeout =
+        TimeSpan.FromSeconds(30);
+
+    private enum WindowLifecycleState
+    {
+        Running,
+        ExitConfirmation,
+        CleaningUp,
+        Closed,
+    }
+
     private static readonly CancellationTokenSource AnalysisCancellation = new();
     private static readonly object ForegroundActivationLock = new();
     private static readonly object NotificationActivationLock = new();
     private static readonly object ScreenshotCaptureLifecycleLock = new();
+    private static readonly object WindowLifecycleLock = new();
     private static AnalysisQueueWakeSignal? _analysisWakeSignal;
     private static HttpClient? _modelDownloadHttpClient;
     private static HttpClient? _componentDownloadHttpClient;
@@ -56,6 +67,11 @@ public partial class App : Application
     private static bool _isMainWindowReady;
     private static bool _isForegroundActivationPending;
     private static SystemTrayIconAdapter? _systemTrayIcon;
+    private static WindowLifecycleState _windowLifecycleState = WindowLifecycleState.Running;
+    private static Task? _applicationExitTask;
+    private static Task? _windowCloseTask;
+    private static bool _windowClosed;
+    private static bool _skipExitConfirmation;
 #if !PICFORLATER_UI_TESTING
     private static bool _toastNotificationsRegistered;
 #endif
@@ -96,6 +112,22 @@ public partial class App : Application
 
     public static ILocalSendReceivePreferenceService LocalSendReceivePreference { get; } =
         LocalSendReceivePreferenceService.Instance;
+
+    internal static CloseBehaviorPreferenceService CloseBehaviorPreference { get; } =
+        CloseBehaviorPreferenceService.Instance;
+
+    internal static bool IsShuttingDown
+    {
+        get
+        {
+            lock (WindowLifecycleLock)
+            {
+                return _windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed;
+            }
+        }
+    }
 
     public static IReminderService? Reminders { get; private set; }
 
@@ -237,6 +269,15 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        lock (WindowLifecycleLock)
+        {
+            _windowLifecycleState = WindowLifecycleState.Running;
+            _applicationExitTask = null;
+            _windowCloseTask = null;
+            _windowClosed = false;
+            _skipExitConfirmation = false;
+        }
+
         StorageReadiness = new StorageReadinessService(StartStorageInitialization);
         StorageReadiness.ReadinessChanged += StorageReadiness_ReadinessChanged;
         var mainWindow = new MainWindow();
@@ -247,9 +288,9 @@ public partial class App : Application
         }
         catch (Exception exception)
         {
-            // Tray registration is optional during this validation stage. A
-            // Shell/Explorer failure must not prevent the main window from
-            // starting or make the app silently change its runtime policy.
+            // Tray registration is optional until a close-to-tray request is
+            // made. A Shell/Explorer failure must not prevent the main window
+            // from starting or silently change the user's close policy.
             Debug.WriteLine($"System tray registration failed: {exception.GetType().Name}.");
         }
         mainWindow.Activated += MainWindow_ActivatedForTray;
@@ -411,6 +452,473 @@ public partial class App : Application
         BeginScreenshotCaptureShutdown();
     }
 
+    internal static void RequestWindowClose()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.TryEnqueue(RequestWindowClose);
+            return;
+        }
+
+        if (Window is not MainWindow mainWindow)
+        {
+            return;
+        }
+
+        if (!CloseBehaviorPreference.IsKeepInSystemTrayEnabled)
+        {
+            _ = RequestApplicationExitAsync();
+            return;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed ||
+                _windowCloseTask is not null ||
+                _applicationExitTask is not null)
+            {
+                return;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _windowCloseTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.ExitConfirmation;
+        }
+
+        _ = HandleWindowCloseAsync(mainWindow, completionSource);
+    }
+
+    internal static void RequestSystemSessionShutdown()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.TryEnqueue(RequestSystemSessionShutdown);
+            return;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return;
+            }
+
+            _skipExitConfirmation = true;
+        }
+
+        _ = RequestApplicationExitAsync(skipPageConfirmation: true);
+    }
+
+    internal static Task RequestApplicationExitAsync(
+        bool skipPageConfirmation = false)
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            var marshalledCompletion = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!DispatcherQueue.TryEnqueue(() =>
+            {
+                _ = RequestApplicationExitAsync(skipPageConfirmation).ContinueWith(
+                    completedTask =>
+                    {
+                        if (completedTask.IsFaulted)
+                        {
+                            marshalledCompletion.TrySetException(
+                                completedTask.Exception!.InnerExceptions);
+                        }
+                        else if (completedTask.IsCanceled)
+                        {
+                            marshalledCompletion.TrySetCanceled();
+                        }
+                        else
+                        {
+                            marshalledCompletion.TrySetResult();
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }))
+            {
+                marshalledCompletion.TrySetResult();
+            }
+
+            return marshalledCompletion.Task;
+        }
+
+        if (Window is not MainWindow mainWindow)
+        {
+            return Task.CompletedTask;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState == WindowLifecycleState.Closed)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (skipPageConfirmation)
+            {
+                _skipExitConfirmation = true;
+            }
+
+            if (_applicationExitTask is not null)
+            {
+                return _applicationExitTask;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _applicationExitTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.ExitConfirmation;
+        }
+
+        _ = CompleteApplicationExitAsync(mainWindow, completionSource);
+        return completionSource.Task;
+    }
+
+    internal static bool TryEnsureSystemTrayIcon()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            return false;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return false;
+            }
+        }
+
+        var trayIcon = _systemTrayIcon;
+        if (trayIcon is null)
+        {
+            try
+            {
+                var newTrayIcon = new SystemTrayIconAdapter();
+                var existingTrayIcon = Interlocked.CompareExchange(
+                    ref _systemTrayIcon,
+                    newTrayIcon,
+                    comparand: null);
+                if (existingTrayIcon is not null)
+                {
+                    newTrayIcon.Dispose();
+                    trayIcon = existingTrayIcon;
+                }
+                else
+                {
+                    trayIcon = newTrayIcon;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"System tray registration retry could not create an adapter: {exception.GetType().Name}.");
+                return false;
+            }
+        }
+
+        return trayIcon.TryEnsureCreated();
+    }
+
+    private static async Task HandleWindowCloseAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        try
+        {
+            while (true)
+            {
+                bool hidden;
+                if (TryEnsureSystemTrayIcon())
+                {
+                    try
+                    {
+                        mainWindow.HideToTray();
+                        hidden = true;
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.WriteLine(
+                            $"System tray hide failed: {exception.GetType().Name}.");
+                        hidden = false;
+                    }
+                }
+                else
+                {
+                    hidden = false;
+                }
+
+                if (hidden)
+                {
+                    return;
+                }
+
+                var decision = await ShowTrayUnavailableDialogAsync(mainWindow);
+                if (decision == ContentDialogResult.Primary)
+                {
+                    continue;
+                }
+
+                if (decision == ContentDialogResult.Secondary)
+                {
+                    await RequestApplicationExitAsync();
+                }
+
+                return;
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"System tray close decision failed: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            lock (WindowLifecycleLock)
+            {
+                if (ReferenceEquals(_windowCloseTask, completionSource.Task))
+                {
+                    _windowCloseTask = null;
+                }
+
+                if (_windowLifecycleState == WindowLifecycleState.ExitConfirmation)
+                {
+                    _windowLifecycleState = WindowLifecycleState.Running;
+                }
+            }
+
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static async Task<ContentDialogResult> ShowTrayUnavailableDialogAsync(
+        MainWindow mainWindow)
+    {
+        if (mainWindow.Content is not FrameworkElement root
+            || root.XamlRoot is null)
+        {
+            return ContentDialogResult.None;
+        }
+
+        var resources = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader();
+        var dialog = new ContentDialog
+        {
+            XamlRoot = root.XamlRoot,
+            Title = resources.GetString("TrayUnavailableDialogTitle"),
+            Content = resources.GetString("TrayUnavailableDialogContent"),
+            PrimaryButtonText = resources.GetString("TrayUnavailableDialogRetryButtonText"),
+            SecondaryButtonText = resources.GetString("TrayUnavailableDialogExitButtonText"),
+            CloseButtonText = resources.GetString("TrayUnavailableDialogCancelButtonText"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        try
+        {
+            return await dialog.ShowAsync();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"System tray recovery dialog failed: {exception.GetType().Name}.");
+            return ContentDialogResult.None;
+        }
+    }
+
+    private static async Task CompleteApplicationExitAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        bool windowClosed = IsWindowClosed();
+        bool skipExitConfirmation = ShouldSkipExitConfirmation();
+        bool restored = windowClosed || skipExitConfirmation;
+        if (!restored)
+        {
+            try
+            {
+                // A hidden window cannot host an edit-confirmation dialog. Showing it
+                // here also makes tray-initiated exit observable while the decision is
+                // pending; the window is disabled again once cleanup starts.
+                mainWindow.RestoreAndActivate();
+                restored = true;
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Window restore before exit confirmation failed: {exception.GetType().Name}.");
+            }
+        }
+
+        // Window.Closed may race with the restore or confirmation task. Once the
+        // HWND is gone, cleanup takes precedence over a failed/ cancelled dialog.
+        if (!restored && !IsWindowClosed())
+        {
+            if (CancelApplicationExit(completionSource))
+            {
+                return;
+            }
+        }
+
+        bool canLeave = skipExitConfirmation || IsWindowClosed();
+        if (!canLeave)
+        {
+            try
+            {
+                canLeave = mainWindow.CurrentMainPage is not MainPage mainPage
+                    || await mainPage.TryLeaveCurrentPageAsync();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Exit confirmation failed: {exception.GetType().Name}.");
+                canLeave = false;
+            }
+
+            // A system-session request or an unexpected native close supersedes
+            // an ordinary page-confirmation result.
+            canLeave |= ShouldSkipExitConfirmation() || IsWindowClosed();
+        }
+
+        if (!canLeave)
+        {
+            if (CancelApplicationExit(completionSource))
+            {
+                return;
+            }
+
+            // The window closed while the confirmation result was being
+            // processed. Continue into cleanup rather than reviving a dead app.
+            canLeave = true;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState != WindowLifecycleState.ExitConfirmation)
+            {
+                completionSource.TrySetResult();
+                return;
+            }
+
+            _windowLifecycleState = WindowLifecycleState.CleaningUp;
+        }
+
+        bool cleanupCompleted = false;
+        try
+        {
+            if (!IsWindowClosed())
+            {
+                mainWindow.DisableInteractionForShutdown();
+            }
+
+            BeginScreenshotCaptureShutdown();
+            mainWindow.PrepareForFinalClose();
+            cleanupCompleted = await PerformApplicationCleanupAsync();
+        }
+        catch (Exception exception)
+        {
+            // Cleanup is best effort. The process must still leave the normal
+            // running state even when an optional service fails to stop.
+            Debug.WriteLine(
+                $"Application shutdown encountered an unexpected error: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            FinalizeApplicationExit(mainWindow, cleanupCompleted);
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static bool IsWindowClosed()
+    {
+        lock (WindowLifecycleLock)
+        {
+            return _windowClosed;
+        }
+    }
+
+    private static bool ShouldSkipExitConfirmation()
+    {
+        lock (WindowLifecycleLock)
+        {
+            return _skipExitConfirmation;
+        }
+    }
+
+    private static bool CancelApplicationExit(TaskCompletionSource completionSource)
+    {
+        lock (WindowLifecycleLock)
+        {
+            if (_windowClosed)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(_applicationExitTask, completionSource.Task))
+            {
+                _applicationExitTask = null;
+            }
+
+            if (_windowLifecycleState == WindowLifecycleState.ExitConfirmation)
+            {
+                _windowLifecycleState = WindowLifecycleState.Running;
+            }
+
+            _skipExitConfirmation = false;
+        }
+
+        completionSource.TrySetResult();
+        return true;
+    }
+
+    private static void FinalizeApplicationExit(
+        MainWindow mainWindow,
+        bool cleanupCompleted)
+    {
+        DisposeSystemTrayIcon();
+        UnregisterInstanceKeySafely();
+
+        bool windowClosed;
+        lock (WindowLifecycleLock)
+        {
+            windowClosed = _windowClosed;
+            _windowLifecycleState = WindowLifecycleState.Closed;
+        }
+
+        bool finalCloseFailed = false;
+        if (!windowClosed)
+        {
+            try
+            {
+                mainWindow.CloseAfterFinalCleanup();
+            }
+            catch (Exception exception)
+            {
+                finalCloseFailed = true;
+                Debug.WriteLine(
+                    $"Final window close failed: {exception.GetType().Name}.");
+            }
+        }
+
+        if (!cleanupCompleted || finalCloseFailed)
+        {
+            Debug.WriteLine(
+                "Application shutdown exceeded its safe completion path; terminating the process.");
+            Environment.Exit(1);
+        }
+    }
+
     private static void BeginScreenshotCaptureShutdown()
     {
         IScreenshotCaptureService? service;
@@ -427,7 +935,13 @@ public partial class App : Application
         }
 
         StorageReadiness.ReadinessChanged -= StorageReadiness_ReadinessChanged;
-        AnalysisCancellation.Cancel();
+        try
+        {
+            AnalysisCancellation.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
         Task stopTask = service is null
             ? Task.CompletedTask
             : StopScreenshotCaptureAsync(service);
@@ -470,6 +984,16 @@ public partial class App : Application
 
     internal static void RequestForegroundActivation()
     {
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return;
+            }
+        }
+
         lock (ForegroundActivationLock)
         {
             if (!_isMainWindowReady)
@@ -479,19 +1003,49 @@ public partial class App : Application
             }
         }
 
-        _ = DispatcherQueue.TryEnqueue(BringMainWindowToForeground);
+        _ = DispatcherQueue.TryEnqueue(() => _ = BringMainWindowToForeground());
     }
 
-    private static void BringMainWindowToForeground()
+    private static bool BringMainWindowToForeground()
     {
-        nint windowHandle = WindowHandle;
-        if (IsIconic(windowHandle))
+        if (!IsMainWindowReady())
         {
-            _ = ShowWindow(windowHandle, ShowWindowRestore);
+            return false;
         }
 
-        Window.Activate();
-        _ = SetForegroundWindow(windowHandle);
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return false;
+            }
+        }
+
+        if (Window is MainWindow mainWindow)
+        {
+            try
+            {
+                mainWindow.RestoreAndActivate();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Window restore failed: {exception.GetType().Name}.");
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsMainWindowReady()
+    {
+        lock (ForegroundActivationLock)
+        {
+            return _isMainWindowReady;
+        }
     }
 
     private static Task<DatabaseInitializationResult> StartStorageInitialization()
@@ -729,18 +1283,76 @@ public partial class App : Application
         }
     }
 
-    private static async void OnWindowClosed(object sender, WindowEventArgs args)
+    private static void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        DisposeSystemTrayIcon();
-        BeginScreenshotCaptureShutdown();
+        _ = args;
+        if (sender is not MainWindow mainWindow)
+        {
+            return;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            _windowClosed = true;
+            if (_windowLifecycleState == WindowLifecycleState.Closed
+                || _applicationExitTask is not null)
+            {
+                return;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _applicationExitTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.CleaningUp;
+        }
+
+        _ = CompleteCleanupAfterWindowClosedAsync(mainWindow, completionSource);
+    }
+
+    private static async Task CompleteCleanupAfterWindowClosedAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        bool cleanupCompleted = false;
+        try
+        {
+            BeginScreenshotCaptureShutdown();
+            mainWindow.PrepareForFinalClose();
+            cleanupCompleted = await PerformApplicationCleanupAsync();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Fallback application shutdown encountered an unexpected error: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            FinalizeApplicationExit(mainWindow, cleanupCompleted);
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static async Task<bool> PerformApplicationCleanupAsync()
+    {
+        using var shutdownDeadline = new CancellationTokenSource(
+            ApplicationShutdownTimeout);
+        CancellationToken deadlineToken = shutdownDeadline.Token;
+
         lock (ForegroundActivationLock)
         {
             _isMainWindowReady = false;
             _isForegroundActivationPending = false;
         }
 
-        Program.UnregisterInstanceKey();
-        AnalysisCancellation.Cancel();
+        try
+        {
+            AnalysisCancellation.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
         Task screenshotStartupTask;
         Task screenshotStopTask;
         lock (ScreenshotCaptureLifecycleLock)
@@ -749,44 +1361,24 @@ public partial class App : Application
             screenshotStopTask = _screenshotCaptureStopTask;
         }
 
-        try
+        if (!await TryAwaitShutdownTaskAsync(screenshotStartupTask, deadlineToken)
+            || !await TryAwaitShutdownTaskAsync(screenshotStopTask, deadlineToken))
         {
-            await screenshotStartupTask.ConfigureAwait(false);
-        }
-        catch
-        {
-            // The shutdown generation gate rejects a startup that completed late.
+            return false;
         }
 
-        try
+        if (!await TryAwaitShutdownTaskAsync(
+                StorageReadiness.EnsureReadyAsync(forceRetry: false),
+                deadlineToken))
         {
-            await screenshotStopTask.ConfigureAwait(false);
-        }
-        catch
-        {
-            // StopScreenshotCaptureAsync is best effort and normally absorbs this.
-        }
-
-        try
-        {
-            await StorageReadiness.EnsureReadyAsync(forceRetry: false).ConfigureAwait(false);
-        }
-        catch
-        {
-            // Cancellation or a storage failure still completes the initialization
-            // task, preventing it from publishing a receiver after shutdown proceeds.
+            return false;
         }
 
         if (_localSendStartupTask is { } localSendStartupTask)
         {
-            try
+            if (!await TryAwaitShutdownTaskAsync(localSendStartupTask, deadlineToken))
             {
-                await localSendStartupTask.ConfigureAwait(false);
-            }
-            catch
-            {
-                // Startup is best-effort and reports failures through the receiver
-                // snapshot. Shutdown must still release any partially started node.
+                return false;
             }
         }
 
@@ -796,7 +1388,12 @@ public partial class App : Application
         {
             try
             {
-                await localSendReceiver.StopAsync().ConfigureAwait(false);
+                if (!await TryAwaitShutdownTaskAsync(
+                        localSendReceiver.StopAsync(deadlineToken),
+                        deadlineToken))
+                {
+                    return false;
+                }
             }
             catch
             {
@@ -806,7 +1403,12 @@ public partial class App : Application
 
             try
             {
-                await localSendReceiver.DisposeAsync().ConfigureAwait(false);
+                if (!await TryAwaitShutdownTaskAsync(
+                        localSendReceiver.DisposeAsync().AsTask(),
+                        deadlineToken))
+                {
+                    return false;
+                }
             }
             catch
             {
@@ -815,14 +1417,25 @@ public partial class App : Application
             }
         }
 
-        var supervisedTasks = new[]
+        var analysisWorkerSupervisor = _analysisWorkerSupervisor;
+        var reminderWorkerSupervisor = _reminderWorkerSupervisor;
+        if (!await TryAwaitShutdownTaskAsync(
+                analysisWorkerSupervisor?.Completion,
+                deadlineToken)
+            || !await TryAwaitShutdownTaskAsync(
+                reminderWorkerSupervisor?.Completion,
+                deadlineToken))
         {
-            _analysisWorkerSupervisor?.Completion,
-            _reminderWorkerSupervisor?.Completion,
-        }.OfType<Task>().ToArray();
-        if (supervisedTasks.Length > 0)
+            return false;
+        }
+        if (analysisWorkerSupervisor is not null)
         {
-            await Task.WhenAll(supervisedTasks).ConfigureAwait(false);
+            analysisWorkerSupervisor.StatusChanged -= OnBackgroundWorkerStatusChanged;
+        }
+
+        if (reminderWorkerSupervisor is not null)
+        {
+            reminderWorkerSupervisor.StatusChanged -= OnBackgroundWorkerStatusChanged;
         }
 
 #if !PICFORLATER_UI_TESTING
@@ -841,30 +1454,133 @@ public partial class App : Application
             _toastNotificationsRegistered = false;
         }
 #endif
+        if (deadlineToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
         lock (ScreenshotCaptureLifecycleLock)
         {
             _screenshotCapture = null;
             _screenshotCaptureWindow = null;
         }
 
-        (ImageImporter as IDisposable)?.Dispose();
-        (Reminders as IDisposable)?.Dispose();
-        (RemoteApiProfiles as IDisposable)?.Dispose();
-        _remoteAnalysisHttpClient?.Dispose();
-        _modelDownloadHttpClient?.Dispose();
-        _componentDownloadHttpClient?.Dispose();
-        _updateCheckHttpClient?.Dispose();
+        DisposeResource(ImageImporter);
+        ImageImporter = null;
+        DisposeResource(Reminders);
+        Reminders = null;
+        DisposeResource(RemoteApiProfiles);
+        RemoteApiProfiles = null;
+        DisposeResource(_remoteAnalysisHttpClient);
+        _remoteAnalysisHttpClient = null;
+        DisposeResource(_modelDownloadHttpClient);
+        _modelDownloadHttpClient = null;
+        DisposeResource(_componentDownloadHttpClient);
+        _componentDownloadHttpClient = null;
+        DisposeResource(_updateCheckHttpClient);
+        _updateCheckHttpClient = null;
 #if PICFORLATER_UI_TESTING
-        _uiTestInferenceRuntime?.Dispose();
+        DisposeResource(_uiTestInferenceRuntime);
+        _uiTestInferenceRuntime = null;
 #else
-        if (_localInferenceWorker is not null)
+        var localInferenceWorker = _localInferenceWorker;
+        _localInferenceWorker = null;
+        if (localInferenceWorker is not null)
         {
-            await _localInferenceWorker.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                if (!await TryAwaitShutdownTaskAsync(
+                        localInferenceWorker.DisposeAsync().AsTask(),
+                        deadlineToken))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                // LocalInferenceWorkerClient bounds its graceful shutdown and
+                // terminates the worker process when needed.
+            }
         }
-        _localInferenceFailureCircuit?.Stop();
+
+        try
+        {
+            _localInferenceFailureCircuit?.Stop();
+        }
+        catch
+        {
+            // The circuit is diagnostic state; it must not prevent the remaining
+            // process resources from reaching their final disposal.
+        }
+        _localInferenceFailureCircuit = null;
 #endif
-        _analysisWakeSignal?.Dispose();
-        AnalysisCancellation.Dispose();
+        DisposeResource(_analysisWakeSignal);
+        _analysisWakeSignal = null;
+        try
+        {
+            AnalysisCancellation.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        return !deadlineToken.IsCancellationRequested;
+    }
+
+    private static async Task<bool> TryAwaitShutdownTaskAsync(
+        Task? task,
+        CancellationToken deadlineToken)
+    {
+        if (task is null)
+        {
+            return true;
+        }
+
+        try
+        {
+            Task completedTask = await Task.WhenAny(
+                    task,
+                    Task.Delay(Timeout.InfiniteTimeSpan, deadlineToken))
+                .ConfigureAwait(false);
+            if (!ReferenceEquals(completedTask, task))
+            {
+                Debug.WriteLine("Application shutdown deadline expired while awaiting a task.");
+                return false;
+            }
+
+            await task.ConfigureAwait(false);
+        }
+        catch
+        {
+            // Independent shutdown steps must continue even when one task fails.
+        }
+
+        return true;
+    }
+
+    private static void DisposeResource(object? resource)
+    {
+        try
+        {
+            (resource as IDisposable)?.Dispose();
+        }
+        catch
+        {
+            // Resource disposal is best effort during process shutdown.
+        }
+    }
+
+    private static void UnregisterInstanceKeySafely()
+    {
+        try
+        {
+            Program.UnregisterInstanceKey();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Single-instance registration cleanup failed: {exception.GetType().Name}.");
+        }
     }
 
     private static void DisposeSystemTrayIcon()
@@ -900,13 +1616,7 @@ public partial class App : Application
             return;
         }
 
-        var trayIcon = _systemTrayIcon;
-        if (trayIcon is null || trayIcon.IsCreated)
-        {
-            return;
-        }
-
-        trayIcon.TryEnsureCreated();
+        _ = TryEnsureSystemTrayIcon();
     }
 
     private static async Task InitializeLocalSendAsync(
@@ -1056,18 +1766,6 @@ public partial class App : Application
         }
     }
 
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsIconic(nint hWnd);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetForegroundWindow(nint hWnd);
-
 #if !PICFORLATER_UI_TESTING
     private static void RegisterToastNotifications()
     {
@@ -1167,7 +1865,15 @@ public partial class App : Application
         PendingNotificationImageItemId = imageItemId;
         DispatcherQueue.TryEnqueue(() =>
         {
-            Window.Activate();
+            if (!IsMainWindowReady())
+            {
+                return;
+            }
+
+            if (!BringMainWindowToForeground())
+            {
+                return;
+            }
             NotificationImageRequested?.Invoke(imageItemId);
         });
     }
@@ -1185,7 +1891,15 @@ public partial class App : Application
         PendingReminderCreationImageItemId = imageItemId;
         DispatcherQueue.TryEnqueue(() =>
         {
-            Window.Activate();
+            if (!IsMainWindowReady())
+            {
+                return;
+            }
+
+            if (!BringMainWindowToForeground())
+            {
+                return;
+            }
             ReminderCreationRequested?.Invoke(imageItemId);
         });
     }
