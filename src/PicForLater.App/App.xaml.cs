@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using CommunityToolkit.WinUI.Notifications;
@@ -54,6 +55,7 @@ public partial class App : Application
     private static BackgroundWorkerSupervisor? _reminderWorkerSupervisor;
     private static bool _isMainWindowReady;
     private static bool _isForegroundActivationPending;
+    private static SystemTrayIconAdapter? _systemTrayIcon;
 #if !PICFORLATER_UI_TESTING
     private static bool _toastNotificationsRegistered;
 #endif
@@ -239,6 +241,19 @@ public partial class App : Application
         StorageReadiness.ReadinessChanged += StorageReadiness_ReadinessChanged;
         var mainWindow = new MainWindow();
         Window = mainWindow;
+        try
+        {
+            _systemTrayIcon = new SystemTrayIconAdapter();
+        }
+        catch (Exception exception)
+        {
+            // Tray registration is optional during this validation stage. A
+            // Shell/Explorer failure must not prevent the main window from
+            // starting or make the app silently change its runtime policy.
+            Debug.WriteLine($"System tray registration failed: {exception.GetType().Name}.");
+        }
+        mainWindow.Activated += MainWindow_ActivatedForTray;
+
         long windowGeneration;
         lock (ScreenshotCaptureLifecycleLock)
         {
@@ -716,6 +731,7 @@ public partial class App : Application
 
     private static async void OnWindowClosed(object sender, WindowEventArgs args)
     {
+        DisposeSystemTrayIcon();
         BeginScreenshotCaptureShutdown();
         lock (ForegroundActivationLock)
         {
@@ -849,6 +865,48 @@ public partial class App : Application
 #endif
         _analysisWakeSignal?.Dispose();
         AnalysisCancellation.Dispose();
+    }
+
+    private static void DisposeSystemTrayIcon()
+    {
+        if (Window is MainWindow mainWindow)
+        {
+            mainWindow.Activated -= MainWindow_ActivatedForTray;
+        }
+
+        var trayIcon = Interlocked.Exchange(ref _systemTrayIcon, null);
+        if (trayIcon is null)
+        {
+            return;
+        }
+
+        try
+        {
+            trayIcon.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"System tray disposal failed: {exception.GetType().Name}.");
+        }
+    }
+
+    private static void MainWindow_ActivatedForTray(
+        object sender,
+        WindowActivatedEventArgs args)
+    {
+        _ = sender;
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        var trayIcon = _systemTrayIcon;
+        if (trayIcon is null || trayIcon.IsCreated)
+        {
+            return;
+        }
+
+        trayIcon.TryEnsureCreated();
     }
 
     private static async Task InitializeLocalSendAsync(

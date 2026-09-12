@@ -55,6 +55,12 @@
   <data name="AppDescription" xml:space="preserve"><value>在本機儲存、整理並稍後回顧圖片。</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>手機接收</value></data>
+  <data name="TrayAnalysisModeText" xml:space="preserve"><value>分析模式</value></data>
+  <data name="TrayLocalAnalysisText" xml:space="preserve"><value>本機分析</value></data>
+  <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
+  <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快速截圖</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>關閉</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主導覽</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>背景處理已停止</value></data>

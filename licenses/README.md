@@ -11,6 +11,7 @@
 | `webview2/` | `Microsoft.Web.WebView2` 1.0.3719.77 | Windows App SDK 的传递依赖条款与 notices；应用不直接托管 WebView |
 | `communitytoolkit-mvvm/` | `CommunityToolkit.Mvvm` 8.4.2 | MVVM 运行库许可证及 notices |
 | `communitytoolkit-winui-notifications/` | `CommunityToolkit.WinUI.Notifications` 7.1.2 | unpackaged 通知兼容层许可证 |
+| `h-notifyicon/` | `H.NotifyIcon.WinUI` 2.4.1 及其 `H.NotifyIcon` / `H.GeneratedIcons.System.Drawing` 传递依赖 | 系统托盘图标和原生 PopupMenu 适配层许可证 |
 | `localsenddotnet-core/` | `LocalSendDotNet.Core` 0.2.0-preview.5 NuGet 包 | Apache-2.0 LICENSE 与上游 NOTICE；独立的 LocalSend 协议兼容实现 |
 | `fluent-ui-system-icons/` | Microsoft Fluent UI System Icons | 应用图标 SVG 组合及其 PNG/ICO 派生文件的 MIT 许可证 |
 | `managed-dependencies/` | Microsoft MIT license text | Microsoft.Data.Sqlite、Recognizers Text、System.Drawing.Common 等 MIT managed dependencies |

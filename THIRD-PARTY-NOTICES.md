@@ -58,6 +58,17 @@ The umbrella package declares these top-level transitive components: `Microsoft.
 - License: MIT.
 - Source: https://github.com/CommunityToolkit/WindowsCommunityToolkit
 
+## H.NotifyIcon 2.4.1
+
+- Packages: `H.NotifyIcon.WinUI`, `H.NotifyIcon`, and the transitive `H.GeneratedIcons.System.Drawing` package.
+- Purpose: native system-tray icon registration, Explorer taskbar recreation, and PopupMenu integration.
+- License: MIT; the fixed upstream license text is distributed at `licenses/h-notifyicon/LICENSE.txt`.
+- Source: https://github.com/HavenDV/H.NotifyIcon and
+  https://www.nuget.org/packages/H.NotifyIcon.WinUI/2.4.1
+
+The app calls `TaskbarIcon.ForceCreate(enablesEfficiencyMode: false)` so creating
+the tray icon does not change Windows efficiency mode or background scheduling.
+
 ## LocalSendDotNet.Core 0.2.0-preview.5
 
 - Purpose: independent, UI-free implementation of LocalSend v2.2-compatible LAN

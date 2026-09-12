@@ -275,6 +275,7 @@ $requiredDistributionFiles = @(
     'licenses\communitytoolkit-mvvm\LICENSE.md',
     'licenses\communitytoolkit-mvvm\ThirdPartyNotices.txt',
     'licenses\communitytoolkit-winui-notifications\LICENSE.md',
+    'licenses\h-notifyicon\LICENSE.txt',
     'licenses\localsenddotnet-core\LICENSE',
     'licenses\localsenddotnet-core\NOTICE',
     'licenses\fluent-ui-system-icons\LICENSE.txt',
