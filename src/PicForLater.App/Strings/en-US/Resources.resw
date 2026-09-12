@@ -55,6 +55,12 @@
   <data name="AppDescription" xml:space="preserve"><value>Save, organize, and revisit images on this device.</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>Phone receive</value></data>
+  <data name="TrayAnalysisModeText" xml:space="preserve"><value>Analysis mode</value></data>
+  <data name="TrayLocalAnalysisText" xml:space="preserve"><value>Local analysis</value></data>
+  <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API analysis</value></data>
+  <data name="TrayQuickScreenshotText" xml:space="preserve"><value>Quick screenshot</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>Close</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>Background processing stopped</value></data>
