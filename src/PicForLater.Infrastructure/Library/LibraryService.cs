@@ -11,6 +11,7 @@ public sealed class LibraryService : ILibraryService
     private const int MaximumCategoryNameLength = 80;
     private const int MaximumTitleLength = 300;
     private const int MaximumSummaryLength = 4_000;
+    private const int MaximumNotesLength = 10_000;
 
     private readonly SqliteLibraryStore _store;
     private readonly IManagedImageStorage _storage;
@@ -103,26 +104,35 @@ public sealed class LibraryService : ILibraryService
     public Task UpdateUserFieldsAsync(
         Guid imageItemId,
         string title,
-        string summary,
+        string? summary,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        title = title.Trim();
-        summary = (summary ?? string.Empty).Trim();
-        if (title.Length > MaximumTitleLength)
-        {
-            throw new ArgumentException("The title is too long.", nameof(title));
-        }
-
-        if (summary.Length > MaximumSummaryLength)
-        {
-            throw new ArgumentException("The summary is too long.", nameof(summary));
-        }
-
-        return _store.UpdateUserFieldsAsync(
+        return UpdateDetailFieldsAsync(
             imageItemId,
-            title,
-            summary,
+            new ImageDetailUpdate(title, summary ?? string.Empty),
+            cancellationToken);
+    }
+
+    public Task UpdateDetailFieldsAsync(
+        Guid imageItemId,
+        ImageDetailUpdate update,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+
+        var normalizedTitle = update.Title is null
+            ? null
+            : NormalizeTitle(update.Title);
+        var normalizedSummary = update.Summary is null
+            ? null
+            : NormalizeSummary(update.Summary);
+        var normalizedNotes = update.Notes is null
+            ? null
+            : NormalizeNotes(update.Notes);
+
+        return _store.UpdateDetailFieldsAsync(
+            imageItemId,
+            new ImageDetailUpdate(normalizedTitle, normalizedSummary, normalizedNotes),
             DateTimeOffset.UtcNow,
             cancellationToken);
     }
@@ -221,6 +231,39 @@ public sealed class LibraryService : ILibraryService
         }
 
         return normalized;
+    }
+
+    private static string NormalizeTitle(string title)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        var normalized = title.Trim();
+        if (normalized.Length > MaximumTitleLength)
+        {
+            throw new ArgumentException("The title is too long.", nameof(title));
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeSummary(string summary)
+    {
+        var normalized = summary.Trim();
+        if (normalized.Length > MaximumSummaryLength)
+        {
+            throw new ArgumentException("The summary is too long.", nameof(summary));
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeNotes(string notes)
+    {
+        if (notes.Length > MaximumNotesLength)
+        {
+            throw new ArgumentException("The notes are too long.", nameof(notes));
+        }
+
+        return string.IsNullOrWhiteSpace(notes) ? string.Empty : notes;
     }
 
     private void TryNotifyReminderOutbox()

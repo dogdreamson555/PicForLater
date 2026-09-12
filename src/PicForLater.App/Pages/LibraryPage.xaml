@@ -672,7 +672,8 @@
                             Style="{StaticResource AppBackButtonStyle}"
                             VerticalAlignment="Center"
                             AutomationProperties.AutomationId="DetailBackButton"
-                            Click="DetailBackButton_Click">
+                            Click="DetailBackButton_Click"
+                            IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsDetailSaving), Mode=OneWay}">
                             <Button.KeyboardAccelerators>
                                 <KeyboardAccelerator Key="Left" Modifiers="Menu" />
                             </Button.KeyboardAccelerators>
@@ -690,7 +691,8 @@
                             x:Uid="DeleteImageButton"
                             Grid.Column="2"
                             AutomationProperties.AutomationId="DeleteImageButton"
-                            Click="DeleteImageButton_Click">
+                            Click="DeleteImageButton_Click"
+                            IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsDetailSaving), Mode=OneWay}">
                             <FontIcon Glyph="{StaticResource AppDeleteIconGlyph}" />
                         </Button>
                     </Grid>
@@ -727,15 +729,6 @@
                                     Style="{StaticResource CaptionTextBlockStyle}"
                                     Text="{x:Bind ViewModel.DetailMetadata, Mode=OneWay}" />
                             </StackPanel>
-                            <InfoBar
-                                x:Uid="DetailContentSourceInfoBar"
-                                AutomationProperties.AccessibilityView="Content"
-                                AutomationProperties.AutomationId="DetailContentSourceInfoBar"
-                                AutomationProperties.Name="{x:Bind ViewModel.DetailContentSourceMessage, Mode=OneWay}"
-                                IsClosable="False"
-                                IsOpen="True"
-                                Message="{x:Bind ViewModel.DetailContentSourceMessage, Mode=OneWay}"
-                                Severity="Informational" />
                             <StackPanel Spacing="4">
                                 <TextBlock x:Uid="DetailTitleLabel" />
                                 <TextBox
@@ -747,7 +740,8 @@
                                     Loaded="DetailTitleTextBox_Loaded"
                                     MaxLength="300"
                                     TextChanging="DetailTitleTextBox_TextChanging"
-                                    Text="{x:Bind ViewModel.DetailTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    Text="{x:Bind ViewModel.DetailTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsDetailSaving), Mode=OneWay}" />
                             </StackPanel>
                             <TextBox
                                 x:Name="DetailSummaryTextBox"
@@ -757,7 +751,20 @@
                                 AutomationProperties.AutomationId="DetailSummaryTextBox"
                                 MaxLength="4000"
                                 Text="{x:Bind ViewModel.DetailSummary, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                TextWrapping="Wrap" />
+                                TextWrapping="Wrap"
+                                IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsDetailSaving), Mode=OneWay}" />
+                            <TextBox
+                                x:Name="DetailNotesTextBox"
+                                x:Uid="DetailNotesTextBox"
+                                MinHeight="{x:Bind DetailSummaryTextBox.MinHeight, Mode=OneWay}"
+                                MaxHeight="200"
+                                AcceptsReturn="True"
+                                AutomationProperties.AutomationId="DetailNotesTextBox"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                Text="{x:Bind ViewModel.DetailNotes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap"
+                                IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsDetailSaving), Mode=OneWay}" />
                             <Grid ColumnSpacing="{StaticResource AppSpacingSm}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -823,21 +830,42 @@
                         Padding="16,0"
                         HorizontalAlignment="Center"
                         ColumnSpacing="{StaticResource AppSpacingSm}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Button
+                            x:Name="DetailAddReminderButton"
                             x:Uid="DetailAddReminderButton"
+                            Grid.Row="1"
                             HorizontalAlignment="Stretch"
                             AutomationProperties.AutomationId="DetailAddReminderButton"
                             Click="DetailAddReminderButton_Click"
-                            IsEnabled="{x:Bind local:LibraryPage.Not(ViewModel.IsWorking), Mode=OneWay}" />
+                            IsEnabled="{x:Bind ViewModel.CanUseDetailActions, Mode=OneWay}" />
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            Margin="0,0,0,8"
+                            AutomationProperties.LiveSetting="Polite"
+                            Visibility="{x:Bind local:LibraryPage.BoolToVisibility(ViewModel.HasDetailSaveStatus), Mode=OneWay}">
+                            <TextBlock
+                                x:Name="DetailSaveStatusTextBlock"
+                                x:Uid="DetailSaveStatusTextBlock"
+                                AutomationProperties.AutomationId="DetailSaveStatusTextBlock"
+                                Text="{x:Bind ViewModel.DetailSaveStatusMessage, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
                         <Button
                             x:Uid="SaveDetailsButton"
+                            Grid.Row="1"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             AutomationProperties.AutomationId="SaveDetailsButton"
+                            IsEnabled="{x:Bind ViewModel.CanSaveDetail, Mode=OneWay}"
                             Command="{x:Bind ViewModel.SaveDetailCommand, Mode=OneTime}"
                             Style="{StaticResource AccentButtonStyle}" />
                     </Grid>

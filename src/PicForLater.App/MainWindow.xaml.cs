@@ -28,6 +28,9 @@ public sealed partial class MainWindow : Window
     private uint _minimumSizeDpi;
     private nint _windowHandle;
     private bool _minimumSizeConfiguredAfterActivation;
+    private bool _closeDecisionInProgress;
+    private bool _allowClosing;
+    private bool _nativeClosingRaised;
     private readonly IScreenshotCapturePlatform _screenshotCapturePlatform;
 
     [DllImport("user32.dll")]
@@ -73,7 +76,7 @@ public sealed partial class MainWindow : Window
 
     internal event EventHandler? NativeClosing;
 
-    private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
     {
         _ = sender;
         if (args.Cancel)
@@ -81,12 +84,55 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        if (_allowClosing)
+        {
+            return;
+        }
+
+        args.Cancel = true;
+        if (_closeDecisionInProgress)
+        {
+            return;
+        }
+
+        _closeDecisionInProgress = true;
+        try
+        {
+            if (RootFrame.Content is MainPage mainPage
+                && !await mainPage.TryLeaveCurrentPageAsync())
+            {
+                return;
+            }
+
+            _allowClosing = true;
+            PrepareForFinalClose();
+            Close();
+        }
+        finally
+        {
+            _closeDecisionInProgress = false;
+        }
+    }
+
+    private void PrepareForFinalClose()
+    {
         AppWindow.Changed -= AppWindow_Changed;
         AppWindow.Closing -= AppWindow_Closing;
         Activated -= MainWindow_Activated;
+        if (_nativeClosingRaised)
+        {
+            return;
+        }
+
+        _nativeClosingRaised = true;
         try
         {
             NativeClosing?.Invoke(this, EventArgs.Empty);
+        }
+        catch
+        {
+            // Shutdown must still reach the final Window.Close call if an optional
+            // cleanup subscriber fails.
         }
         finally
         {

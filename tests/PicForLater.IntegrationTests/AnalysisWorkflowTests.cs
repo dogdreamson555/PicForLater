@@ -852,6 +852,108 @@ public sealed class AnalysisWorkflowTests
         Assert.Equal(AnalysisState.Completed, entry.Item.AnalysisState);
     }
 
+    [Fact]
+    public async Task NotesRemainIndependentOfAnalysisCompletionInEitherOrder()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var savedBeforeAnalysis = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "notes-before-analysis.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var savedAfterAnalysis = await importer.ImportAsync(
+            new MemoryStream(TinyPng.Concat([(byte)0x01]).ToArray(), writable: false),
+            "notes-after-analysis.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var library = new LibraryService(root.Paths, storage);
+        var store = new SqliteAnalysisJobStore(root.Paths);
+        var now = DateTimeOffset.UtcNow;
+
+        var beforeAnalysisLease = (await store.TryLeaseNextAsync(
+            "notes-before-analysis-worker",
+            now,
+            TimeSpan.FromMinutes(1),
+            maximumAttempts: 3)).Lease!;
+        await library.UpdateDetailFieldsAsync(
+            savedBeforeAnalysis.ImageItemId,
+            new ImageDetailUpdate(Notes: "备注先保存"));
+        await CompleteControlledDraftAsync(
+            store,
+            "notes-before-analysis-worker",
+            beforeAnalysisLease,
+            now);
+
+        var afterAnalysisLease = (await store.TryLeaseNextAsync(
+            "notes-after-analysis-worker",
+            now.AddSeconds(1),
+            TimeSpan.FromMinutes(1),
+            maximumAttempts: 3)).Lease!;
+        await CompleteControlledDraftAsync(
+            store,
+            "notes-after-analysis-worker",
+            afterAnalysisLease,
+            now.AddSeconds(1));
+        await library.UpdateDetailFieldsAsync(
+            savedAfterAnalysis.ImageItemId,
+            new ImageDetailUpdate(Notes: "AI先完成"));
+
+        var beforeEntry = (await library.GetAsync(savedBeforeAnalysis.ImageItemId))!.Item;
+        var afterEntry = (await library.GetAsync(savedAfterAnalysis.ImageItemId))!.Item;
+        Assert.Equal("备注先保存", beforeEntry.Notes);
+        Assert.Equal("AI先完成", afterEntry.Notes);
+        Assert.Equal("模型标题", beforeEntry.Title);
+        Assert.Equal("模型简介", beforeEntry.Summary);
+        Assert.Equal("模型标题", afterEntry.Title);
+        Assert.Equal("模型简介", afterEntry.Summary);
+        Assert.Equal(1, beforeEntry.Revision);
+        Assert.Equal(1, afterEntry.Revision);
+    }
+
+    private static async Task CompleteControlledDraftAsync(
+        SqliteAnalysisJobStore store,
+        string workerId,
+        AnalysisJobLease lease,
+        DateTimeOffset completedAtUtc)
+    {
+        var provenance = new AnalysisProvenance(
+            "local.extractive-text",
+            null,
+            null,
+            new Dictionary<string, string>(),
+            "extractive-text.v1",
+            AnalysisExecutionLocation.Local,
+            AnalysisOutputKind.ExtractiveDraft);
+        var draft = new ExtractiveContentDraft(
+            "模型标题",
+            "模型简介",
+            ["zh-Hans"],
+            [],
+            provenance);
+        var checkpoint = new AnalysisStageCheckpoint(
+            Guid.NewGuid(),
+            lease.JobId,
+            lease.ImageItemId,
+            AnalysisStage.TextComposition,
+            lease.InputRevision,
+            provenance,
+            ["zh-Hans"],
+            JsonSerializer.Serialize(draft, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            "模型标题\n模型简介",
+            [],
+            completedAtUtc);
+
+        await store.CompleteAsync(
+            workerId,
+            lease,
+            checkpoint,
+            draft,
+            completedAtUtc);
+    }
+
     private static async Task<SqliteConnection> OpenAsync(string databasePath)
     {
         var connection = new SqliteConnection(
