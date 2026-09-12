@@ -160,7 +160,7 @@
   <data name="PasteButton.Label" xml:space="preserve"><value>粘贴</value></data>
   <data name="PasteButton.AutomationProperties.Name" xml:space="preserve"><value>粘贴剪贴板图片</value></data>
   <data name="PasteButton.ToolTipService.ToolTip" xml:space="preserve"><value>粘贴剪贴板图片 (Ctrl+V)</value></data>
-  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜索标题、简介、文字、分类或地点</value></data>
+  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜索标题、简介、备注、文字、分类或地点</value></data>
   <data name="LibrarySearchBox.AutomationProperties.Name" xml:space="preserve"><value>搜索资料库</value></data>
   <data name="CategoryFilterComboBox.AutomationProperties.Name" xml:space="preserve"><value>按分类筛选</value></data>
   <data name="ClearFiltersButton.AutomationProperties.Name" xml:space="preserve"><value>清空搜索和筛选</value></data>

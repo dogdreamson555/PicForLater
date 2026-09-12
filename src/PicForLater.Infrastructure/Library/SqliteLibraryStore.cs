@@ -62,6 +62,7 @@ internal sealed class SqliteLibraryStore
               AND (@search = ''
                    OR i.Title LIKE @pattern ESCAPE '\' COLLATE NOCASE
                    OR i.Summary LIKE @pattern ESCAPE '\' COLLATE NOCASE
+                   OR i.Notes LIKE @pattern ESCAPE '\' COLLATE NOCASE
                    OR EXISTS (
                         SELECT 1 FROM AnalysisStageResults ar
                         WHERE ar.ImageItemId = i.Id

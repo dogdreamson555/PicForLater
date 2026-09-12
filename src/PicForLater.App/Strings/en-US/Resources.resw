@@ -160,7 +160,7 @@
   <data name="PasteButton.Label" xml:space="preserve"><value>Paste</value></data>
   <data name="PasteButton.AutomationProperties.Name" xml:space="preserve"><value>Paste clipboard image</value></data>
   <data name="PasteButton.ToolTipService.ToolTip" xml:space="preserve"><value>Paste clipboard image (Ctrl+V)</value></data>
-  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>Search titles, summaries, text, categories, or places</value></data>
+  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>Search titles, summaries, notes, text, categories, or places</value></data>
   <data name="LibrarySearchBox.AutomationProperties.Name" xml:space="preserve"><value>Search library</value></data>
   <data name="CategoryFilterComboBox.AutomationProperties.Name" xml:space="preserve"><value>Filter by category</value></data>
   <data name="ClearFiltersButton.AutomationProperties.Name" xml:space="preserve"><value>Clear search and filters</value></data>
