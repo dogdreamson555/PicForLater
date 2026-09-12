@@ -204,7 +204,7 @@
   <data name="ContextReanalyzeMenuItem.AutomationProperties.Name" xml:space="preserve"><value>Reanalyze image with the current analysis settings</value></data>
   <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>Add reminder</value></data>
   <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>Add a reminder for the current image</value></data>
-  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>Save unsaved details, then open reminder confirmation</value></data>
+  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>Save details, then open reminder confirmation</value></data>
   <data name="DropOverlayTitle.Text" xml:space="preserve"><value>Release to import</value></data>
   <data name="DropOverlayMessage.Text" xml:space="preserve"><value>Each image is saved independently; a damaged file will not affect the others.</value></data>
   <data name="RestoreButton.Label" xml:space="preserve"><value>Restore</value></data>
@@ -243,15 +243,9 @@
   <data name="Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
   <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}, {2}</value></data>
   <data name="DetailsSavedStatus" xml:space="preserve"><value>Image details saved.</value></data>
-  <data name="DetailsUnsavedStatus" xml:space="preserve"><value>Unsaved changes</value></data>
   <data name="DetailsSavingStatus" xml:space="preserve"><value>Saving changes…</value></data>
   <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>Could not save changes. Your edits are still here.</value></data>
   <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>Changes were saved, but the latest details could not be loaded.</value></data>
-  <data name="DetailsDiscardFailedStatus" xml:space="preserve"><value>The latest details could not be loaded, so your edits were kept.</value></data>
-  <data name="UnsavedChangesDialogTitle" xml:space="preserve"><value>Save changes before leaving?</value></data>
-  <data name="UnsavedChangesDialogMessage" xml:space="preserve"><value>This image has unsaved changes.</value></data>
-  <data name="UnsavedChangesDialogSave" xml:space="preserve"><value>Save and leave</value></data>
-  <data name="UnsavedChangesDialogDiscard" xml:space="preserve"><value>Discard changes</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>Image restored. Future reminders must be confirmed before they are scheduled again.</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>Restored {0} of {1} images. Future reminders must be confirmed before they are scheduled again.</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>The image and unreferenced managed files were permanently deleted.</value></data>
@@ -281,7 +275,6 @@
   <data name="DeleteCategoryDialogPrimary" xml:space="preserve"><value>Delete category</value></data>
   <data name="SoftDeleteDialogTitle" xml:space="preserve"><value>Move to recycle bin?</value></data>
   <data name="SoftDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}” will move to the in-app recycle bin and can be restored.</value></data>
-  <data name="SoftDeleteDialogMessageWithUnsavedFormat" xml:space="preserve"><value>“{0}” will move to the in-app recycle bin and can be restored. Unsaved changes to this image will be discarded.</value></data>
   <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>Move to recycle bin</value></data>
   <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>Image moved to the recycle bin.</value></data>
   <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>Permanently delete image?</value></data>
@@ -342,7 +335,6 @@
   <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z to A</value></data>
   <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>Move selected images to the recycle bin?</value></data>
   <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The {0} selected images will move to the in-app recycle bin and can be restored individually.</value></data>
-  <data name="SoftDeleteBatchDialogMessageWithUnsavedFormat" xml:space="preserve"><value>The {0} selected images will move to the in-app recycle bin and can be restored individually. Unsaved changes to the current image will be discarded if it is included.</value></data>
   <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>Moved {0} of {1} images to the recycle bin.</value></data>
   <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>The image could not be moved to the recycle bin. Existing data was kept.</value></data>
   <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>Analysis mode</value></data>

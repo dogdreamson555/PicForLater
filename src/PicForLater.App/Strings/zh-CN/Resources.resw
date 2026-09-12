@@ -204,7 +204,7 @@
   <data name="ContextReanalyzeMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用当前分析设置重新分析图片</value></data>
   <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>添加提醒</value></data>
   <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>为当前图片添加提醒</value></data>
-  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>保存未保存的详情后打开提醒确认</value></data>
+  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>保存详情后打开提醒确认</value></data>
   <data name="DropOverlayTitle.Text" xml:space="preserve"><value>松开即可导入</value></data>
   <data name="DropOverlayMessage.Text" xml:space="preserve"><value>每张图片将独立保存；损坏文件不会影响其他图片。</value></data>
   <data name="RestoreButton.Label" xml:space="preserve"><value>恢复</value></data>
@@ -243,15 +243,9 @@
   <data name="Uncategorized" xml:space="preserve"><value>未分类</value></data>
   <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}，{2}</value></data>
   <data name="DetailsSavedStatus" xml:space="preserve"><value>图片详情已保存。</value></data>
-  <data name="DetailsUnsavedStatus" xml:space="preserve"><value>有未保存的修改</value></data>
   <data name="DetailsSavingStatus" xml:space="preserve"><value>正在保存修改…</value></data>
   <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>无法保存修改，当前输入仍已保留。</value></data>
   <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>修改已保存，但无法读取最新详情。</value></data>
-  <data name="DetailsDiscardFailedStatus" xml:space="preserve"><value>无法读取最新详情，因此保留了当前修改。</value></data>
-  <data name="UnsavedChangesDialogTitle" xml:space="preserve"><value>离开前保存修改？</value></data>
-  <data name="UnsavedChangesDialogMessage" xml:space="preserve"><value>这张图片有尚未保存的修改。</value></data>
-  <data name="UnsavedChangesDialogSave" xml:space="preserve"><value>保存并离开</value></data>
-  <data name="UnsavedChangesDialogDiscard" xml:space="preserve"><value>放弃修改</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>图片已恢复；未来提醒需要重新确认后才会安排。</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已恢复 {0}/{1} 张图片；未来提醒需要重新确认后才会安排。</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>图片及无其他引用的受管文件已永久删除。</value></data>
@@ -281,7 +275,6 @@
   <data name="DeleteCategoryDialogPrimary" xml:space="preserve"><value>删除分类</value></data>
   <data name="SoftDeleteDialogTitle" xml:space="preserve"><value>移到回收站？</value></data>
   <data name="SoftDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}”将进入应用内回收站，并可恢复。</value></data>
-  <data name="SoftDeleteDialogMessageWithUnsavedFormat" xml:space="preserve"><value>“{0}”将进入应用内回收站，并可恢复。这张图片尚未保存的修改也会被放弃。</value></data>
   <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>移到回收站</value></data>
   <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>图片已移到回收站。</value></data>
   <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>永久删除图片？</value></data>
@@ -342,7 +335,6 @@
   <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z 到 A</value></data>
   <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>把所选图片移到回收站？</value></data>
   <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>将把所选的 {0} 张图片移到应用内回收站，并可分别恢复。</value></data>
-  <data name="SoftDeleteBatchDialogMessageWithUnsavedFormat" xml:space="preserve"><value>将把所选的 {0} 张图片移到应用内回收站，并可分别恢复；如果包含当前图片，其未保存的修改也会被放弃。</value></data>
   <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>已将 {0}/{1} 张图片移到回收站。</value></data>
   <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>图片未能移到回收站，现有数据保持不变。</value></data>
   <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>分析方式</value></data>
