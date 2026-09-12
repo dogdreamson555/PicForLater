@@ -86,6 +86,7 @@ public sealed record ImageItem(
     ImageSourceKind SourceKind,
     string Title,
     string Summary,
+    string Notes,
     ContentFieldSource TitleSource,
     ContentFieldSource SummarySource,
     AnalysisState AnalysisState,

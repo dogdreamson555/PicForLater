@@ -30,6 +30,7 @@ public sealed class LibraryWorkflowTests
         var entry = await library.GetAsync(result.ImageItemId);
         Assert.NotNull(entry);
         Assert.Equal("poster", entry.Item.Title);
+        Assert.Equal(string.Empty, entry.Item.Notes);
         Assert.Equal(AnalysisState.Pending, entry.Item.AnalysisState);
         Assert.True(File.Exists(root.Paths.Resolve(entry.Asset.OriginalRelativePath)));
         Assert.NotNull(entry.Asset.ThumbnailRelativePath);
@@ -48,12 +49,16 @@ public sealed class LibraryWorkflowTests
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
         var storage = new ManagedImageStorage(root.Paths);
         using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
 
         var first = await importer.ImportAsync(
             new MemoryStream(TinyPng, writable: false),
             "first.png",
             ImageSourceKind.File,
             ManagedImageFormat.Png);
+        await library.UpdateDetailFieldsAsync(
+            first.ImageItemId,
+            new ImageDetailUpdate(Notes: "保留这份备注"));
         var duplicate = await importer.ImportAsync(
             new MemoryStream(TinyPng, writable: false),
             "second.png",
@@ -62,10 +67,178 @@ public sealed class LibraryWorkflowTests
 
         Assert.Equal(ImageImportStatus.Duplicate, duplicate.Status);
         Assert.Equal(first.ImageItemId, duplicate.ImageItemId);
+        Assert.Equal("保留这份备注", (await library.GetAsync(first.ImageItemId))!.Item.Notes);
         await using var connection = await OpenAsync(root.Paths.DatabasePath);
         Assert.Equal(1L, await ScalarAsync(connection, "SELECT COUNT(*) FROM ImageItems;"));
         Assert.Equal(1L, await ScalarAsync(connection, "SELECT COUNT(*) FROM ImageAssets;"));
         Assert.Equal(1L, await ScalarAsync(connection, "SELECT COUNT(*) FROM ImportJobs WHERE State = 4;"));
+    }
+
+    [Fact]
+    public async Task Library_UpdateDetailFields_TracksOnlySubmittedContentFields()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
+        var imported = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "details.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Notes: "  first line\n😀  "));
+        var notesOnly = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal("  first line\n😀  ", notesOnly.Notes);
+        Assert.Equal("details", notesOnly.Title);
+        Assert.Equal(string.Empty, notesOnly.Summary);
+        Assert.Equal(ContentFieldSource.Fallback, notesOnly.TitleSource);
+        Assert.Equal(ContentFieldSource.Fallback, notesOnly.SummarySource);
+        Assert.Equal(0, notesOnly.Revision);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Summary: "  a summary  ", Notes: " \t\r\n"));
+        var summaryUpdate = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal("a summary", summaryUpdate.Summary);
+        Assert.Equal(string.Empty, summaryUpdate.Notes);
+        Assert.Equal(ContentFieldSource.Fallback, summaryUpdate.TitleSource);
+        Assert.Equal(ContentFieldSource.User, summaryUpdate.SummarySource);
+        Assert.Equal(1, summaryUpdate.Revision);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Title: "  revised title  ", Notes: " note "));
+        var titleUpdate = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal("revised title", titleUpdate.Title);
+        Assert.Equal("a summary", titleUpdate.Summary);
+        Assert.Equal(" note ", titleUpdate.Notes);
+        Assert.Equal(ContentFieldSource.User, titleUpdate.TitleSource);
+        Assert.Equal(ContentFieldSource.User, titleUpdate.SummarySource);
+        Assert.Equal(2, titleUpdate.Revision);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(
+                Title: "final title",
+                Summary: "final summary",
+                Notes: "final notes"));
+        var allFields = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal("final title", allFields.Title);
+        Assert.Equal("final summary", allFields.Summary);
+        Assert.Equal("final notes", allFields.Notes);
+        Assert.Equal(3, allFields.Revision);
+    }
+
+    [Fact]
+    public async Task Library_UpdateDetailFields_ValidatesBeforeWritingAndHonorsLegacyNullSummary()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
+        var imported = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "validation.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(
+                Title: "original title",
+                Summary: "original summary",
+                Notes: "original notes"));
+
+        var maximumNotes = string.Concat(Enumerable.Repeat("😀", 5_000));
+        Assert.Equal(10_000, maximumNotes.Length);
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Notes: maximumNotes));
+        Assert.Equal(maximumNotes, (await library.GetAsync(imported.ImageItemId))!.Item.Notes);
+
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(
+                Title: "original title",
+                Summary: "original summary",
+                Notes: "original notes"));
+        var beforeInvalidUpdate = (await library.GetAsync(imported.ImageItemId))!.Item;
+
+        await Assert.ThrowsAsync<ArgumentException>(() => library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(
+                Title: "should not be written",
+                Notes: new string('n', 10_001))));
+
+        var afterInvalidUpdate = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal(beforeInvalidUpdate, afterInvalidUpdate);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Title: " \t\r\n")));
+
+        await library.UpdateUserFieldsAsync(imported.ImageItemId, "  legacy title  ", null);
+        var afterLegacyUpdate = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal("legacy title", afterLegacyUpdate.Title);
+        Assert.Equal(string.Empty, afterLegacyUpdate.Summary);
+        Assert.Equal("original notes", afterLegacyUpdate.Notes);
+        Assert.Equal(ContentFieldSource.User, afterLegacyUpdate.TitleSource);
+        Assert.Equal(ContentFieldSource.User, afterLegacyUpdate.SummarySource);
+        Assert.Equal(beforeInvalidUpdate.Revision + 1, afterLegacyUpdate.Revision);
+    }
+
+    [Fact]
+    public async Task Library_UpdateDetailFields_LeavesNoOpUntouchedAndRejectsInactiveOrAtomicFailures()
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        var storage = new ManagedImageStorage(root.Paths);
+        using var importer = new ImageImportService(root.Paths, storage, new FakeImageProcessor());
+        var library = new LibraryService(root.Paths, storage);
+        var imported = await importer.ImportAsync(
+            new MemoryStream(TinyPng, writable: false),
+            "failure.png",
+            ImageSourceKind.File,
+            ManagedImageFormat.Png);
+        var initial = (await library.GetAsync(imported.ImageItemId))!.Item;
+
+        await library.UpdateDetailFieldsAsync(imported.ImageItemId, new ImageDetailUpdate());
+        Assert.Equal(initial, (await library.GetAsync(imported.ImageItemId))!.Item);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => library.UpdateDetailFieldsAsync(
+            Guid.NewGuid(),
+            new ImageDetailUpdate(Notes: "missing")));
+
+        await ExecuteNonQueryAsync(
+            root.Paths.DatabasePath,
+            """
+            CREATE TRIGGER FailImageDetailUpdate
+            AFTER UPDATE OF Title, Summary, Notes ON ImageItems
+            BEGIN
+                SELECT RAISE(ABORT, 'forced detail update failure');
+            END;
+            """);
+        await Assert.ThrowsAsync<SqliteException>(() => library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(
+                Title: "must not persist",
+                Summary: "must not persist",
+                Notes: "must not persist")));
+        Assert.Equal(initial, (await library.GetAsync(imported.ImageItemId))!.Item);
+
+        await library.SoftDeleteAsync(imported.ImageItemId);
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Notes: "deleted")));
+        var deleted = (await library.GetAsync(imported.ImageItemId))!.Item;
+        Assert.Equal(initial.Title, deleted.Title);
+        Assert.Equal(initial.Summary, deleted.Summary);
+        Assert.Equal(initial.Notes, deleted.Notes);
     }
 
     [Fact]
@@ -115,6 +288,9 @@ public sealed class LibraryWorkflowTests
 
         await library.SetCategoryAssignmentAsync(imported.ImageItemId, category.Id, isAssigned: true);
         await library.UpdateUserFieldsAsync(imported.ImageItemId, "周末活动", "带上门票");
+        await library.UpdateDetailFieldsAsync(
+            imported.ImageItemId,
+            new ImageDetailUpdate(Notes: "删除恢复后仍保留"));
 
         var searched = await library.QueryAsync(new LibraryQuery("门票", category.Id));
         var found = Assert.Single(searched.Items);
@@ -125,9 +301,11 @@ public sealed class LibraryWorkflowTests
         Assert.Empty((await library.QueryAsync(new LibraryQuery())).Items);
         var recycled = Assert.Single((await library.QueryAsync(new LibraryQuery(IsDeleted: true))).Items);
         Assert.Equal(category.Id, Assert.Single(recycled.Categories).Category.Id);
+        Assert.Equal("删除恢复后仍保留", recycled.Item.Notes);
 
         await library.RestoreAsync(imported.ImageItemId);
-        Assert.Single((await library.QueryAsync(new LibraryQuery())).Items);
+        var restored = Assert.Single((await library.QueryAsync(new LibraryQuery())).Items);
+        Assert.Equal("删除恢复后仍保留", restored.Item.Notes);
         await library.SoftDeleteAsync(imported.ImageItemId);
         var originalPath = root.Paths.Resolve(recycled.Asset.OriginalRelativePath);
 
@@ -330,6 +508,14 @@ public sealed class LibraryWorkflowTests
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         return Convert.ToInt64(await command.ExecuteScalarAsync());
+    }
+
+    private static async Task ExecuteNonQueryAsync(string databasePath, string sql)
+    {
+        await using var connection = await OpenAsync(databasePath);
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync();
     }
 
     private sealed class FakeImageProcessor : IImageContentProcessor

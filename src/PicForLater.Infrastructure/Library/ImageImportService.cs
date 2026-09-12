@@ -161,6 +161,7 @@ public sealed class ImageImportService : IImageImportService, IDisposable
                 sourceKind,
                 CreateFallbackTitle(originalFileName),
                 string.Empty,
+                string.Empty,
                 ContentFieldSource.Fallback,
                 ContentFieldSource.Fallback,
                 AnalysisState.Pending,

@@ -41,7 +41,12 @@ public interface ILibraryService
     Task UpdateUserFieldsAsync(
         Guid imageItemId,
         string title,
-        string summary,
+        string? summary,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateDetailFieldsAsync(
+        Guid imageItemId,
+        ImageDetailUpdate update,
         CancellationToken cancellationToken = default);
 
     Task SoftDeleteAsync(

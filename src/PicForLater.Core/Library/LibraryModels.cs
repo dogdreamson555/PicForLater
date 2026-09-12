@@ -63,6 +63,15 @@ public sealed record LibraryQueryResult(
     IReadOnlyList<LibraryEntry> Items,
     bool HasMore);
 
+/// <summary>
+/// Describes a partial image-detail update. A null field is omitted from the
+/// update; an empty string clears the corresponding value.
+/// </summary>
+public sealed record ImageDetailUpdate(
+    string? Title = null,
+    string? Summary = null,
+    string? Notes = null);
+
 public sealed record ImageInspection(
     ManagedImageFormat Format,
     string MediaType,
