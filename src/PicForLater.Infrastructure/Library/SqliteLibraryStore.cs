@@ -19,7 +19,7 @@ internal sealed class SqliteLibraryStore
 {
     private const string EntryColumns =
         """
-        i.Id, i.AssetId, i.OriginalFileName, i.SourceKind, i.Title, i.Summary,
+        i.Id, i.AssetId, i.OriginalFileName, i.SourceKind, i.Title, i.Summary, i.Notes,
         i.TitleSource, i.SummarySource, i.AnalysisState, i.Revision,
         i.CreatedAtUtc, i.UpdatedAtUtc, i.DeletedAtUtc,
         a.Id, a.ContentHash, a.OriginalRelativePath, a.ThumbnailRelativePath,
@@ -62,6 +62,7 @@ internal sealed class SqliteLibraryStore
               AND (@search = ''
                    OR i.Title LIKE @pattern ESCAPE '\' COLLATE NOCASE
                    OR i.Summary LIKE @pattern ESCAPE '\' COLLATE NOCASE
+                   OR i.Notes LIKE @pattern ESCAPE '\' COLLATE NOCASE
                    OR EXISTS (
                         SELECT 1 FROM AnalysisStageResults ar
                         WHERE ar.ImageItemId = i.Id
@@ -271,10 +272,10 @@ internal sealed class SqliteLibraryStore
             transaction,
             """
             INSERT INTO ImageItems (
-                Id, AssetId, OriginalFileName, SourceKind, Title, Summary,
+                Id, AssetId, OriginalFileName, SourceKind, Title, Summary, Notes,
                 TitleSource, SummarySource, AnalysisState, Revision,
                 CreatedAtUtc, UpdatedAtUtc, DeletedAtUtc)
-            VALUES (@id, @assetId, @fileName, @sourceKind, @title, @summary,
+            VALUES (@id, @assetId, @fileName, @sourceKind, @title, @summary, @notes,
                     @titleSource, @summarySource, @analysisState, @revision,
                     @created, @updated, NULL);
             """,
@@ -285,6 +286,7 @@ internal sealed class SqliteLibraryStore
             ("@sourceKind", (int)item.SourceKind),
             ("@title", item.Title),
             ("@summary", item.Summary),
+            ("@notes", item.Notes),
             ("@titleSource", (int)item.TitleSource),
             ("@summarySource", (int)item.SummarySource),
             ("@analysisState", (int)item.AnalysisState),
@@ -503,27 +505,41 @@ internal sealed class SqliteLibraryStore
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task UpdateUserFieldsAsync(
+    public async Task UpdateDetailFieldsAsync(
         Guid imageItemId,
-        string title,
-        string summary,
+        ImageDetailUpdate update,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(update);
+        if (update.Title is null && update.Summary is null && update.Notes is null)
+        {
+            return;
+        }
+
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         var affected = await ExecuteAsync(
             connection,
             transaction: null,
             """
             UPDATE ImageItems
-            SET Title = @title, Summary = @summary,
-                TitleSource = @source, SummarySource = @source,
-                Revision = Revision + 1, UpdatedAtUtc = @updated
-            WHERE Id = @id;
+            SET Title = CASE WHEN @hasTitle = 1 THEN @title ELSE Title END,
+                Summary = CASE WHEN @hasSummary = 1 THEN @summary ELSE Summary END,
+                Notes = CASE WHEN @hasNotes = 1 THEN @notes ELSE Notes END,
+                TitleSource = CASE WHEN @hasTitle = 1 THEN @source ELSE TitleSource END,
+                SummarySource = CASE WHEN @hasSummary = 1 THEN @source ELSE SummarySource END,
+                Revision = Revision + CASE
+                    WHEN @hasTitle = 1 OR @hasSummary = 1 THEN 1 ELSE 0 END,
+                UpdatedAtUtc = @updated
+            WHERE Id = @id AND DeletedAtUtc IS NULL;
             """,
             cancellationToken,
-            ("@title", title),
-            ("@summary", summary),
+            ("@hasTitle", update.Title is null ? 0 : 1),
+            ("@hasSummary", update.Summary is null ? 0 : 1),
+            ("@hasNotes", update.Notes is null ? 0 : 1),
+            ("@title", update.Title),
+            ("@summary", update.Summary),
+            ("@notes", update.Notes),
             ("@source", (int)ContentFieldSource.User),
             ("@updated", ToDb(now)),
             ("@id", ToDb(imageItemId))).ConfigureAwait(false);
@@ -900,23 +916,24 @@ internal sealed class SqliteLibraryStore
             (ImageSourceKind)reader.GetInt32(3),
             reader.GetString(4),
             reader.GetString(5),
-            (ContentFieldSource)reader.GetInt32(6),
+            reader.GetString(6),
             (ContentFieldSource)reader.GetInt32(7),
-            (AnalysisState)reader.GetInt32(8),
-            reader.GetInt64(9),
-            ParseDate(reader.GetString(10)),
+            (ContentFieldSource)reader.GetInt32(8),
+            (AnalysisState)reader.GetInt32(9),
+            reader.GetInt64(10),
             ParseDate(reader.GetString(11)),
-            reader.IsDBNull(12) ? null : ParseDate(reader.GetString(12)));
+            ParseDate(reader.GetString(12)),
+            reader.IsDBNull(13) ? null : ParseDate(reader.GetString(13)));
         var asset = new ImageAsset(
-            Guid.Parse(reader.GetString(13)),
-            Sha256Hash.Parse(reader.GetString(14)),
-            ManagedRelativePath.Parse(reader.GetString(15)),
-            reader.IsDBNull(16) ? null : ManagedRelativePath.Parse(reader.GetString(16)),
-            reader.GetString(17),
-            reader.GetInt64(18),
-            reader.GetInt32(19),
+            Guid.Parse(reader.GetString(14)),
+            Sha256Hash.Parse(reader.GetString(15)),
+            ManagedRelativePath.Parse(reader.GetString(16)),
+            reader.IsDBNull(17) ? null : ManagedRelativePath.Parse(reader.GetString(17)),
+            reader.GetString(18),
+            reader.GetInt64(19),
             reader.GetInt32(20),
-            ParseDate(reader.GetString(21)));
+            reader.GetInt32(21),
+            ParseDate(reader.GetString(22)));
         return new LibraryEntry(item, asset, []);
     }
 

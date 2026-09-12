@@ -23,16 +23,42 @@ public sealed class RemoteAnalysisProfileTests
             root.Paths,
             SqliteSchema.Migrations.Take(7).ToArray());
         await v7Initializer.InitializeAsync();
-        var storage = new ManagedImageStorage(root.Paths);
-        using var importer = new ImageImportService(
-            root.Paths,
-            storage,
-            new FakeImageProcessor());
-        var imported = await importer.ImportAsync(
-            new MemoryStream(TinyPng, writable: false),
-            "legacy-profile.png",
-            ImageSourceKind.File,
-            ManagedImageFormat.Png);
+        var assetId = Guid.NewGuid();
+        var imageItemId = Guid.NewGuid();
+        var analysisJobId = Guid.NewGuid();
+        const string createdAtUtc = "2026-09-12T00:00:00.0000000+00:00";
+        await ExecuteAsync(
+            root.Paths.DatabasePath,
+            """
+            INSERT INTO ImageAssets (
+                Id, ContentHash, OriginalRelativePath, ThumbnailRelativePath,
+                MediaType, ByteLength, PixelWidth, PixelHeight, CreatedAtUtc)
+            VALUES (
+                @assetId, @contentHash, 'assets/originals/legacy-profile.png', NULL,
+                'image/png', 1, 1, 1, @createdAtUtc);
+            INSERT INTO ImageItems (
+                Id, AssetId, OriginalFileName, SourceKind, Title, Summary,
+                TitleSource, SummarySource, AnalysisState, Revision,
+                CreatedAtUtc, UpdatedAtUtc, DeletedAtUtc)
+            VALUES (
+                @imageItemId, @assetId, 'legacy-profile.png', 1, 'Legacy profile', '',
+                1, 1, 1, 0, @createdAtUtc, @createdAtUtc, NULL);
+            INSERT INTO AnalysisJobs (
+                Id, ImageItemId, Kind, InputRevision, State, AttemptCount,
+                NotBeforeUtc, LeaseExpiresAtUtc, LastErrorCode,
+                CreatedAtUtc, UpdatedAtUtc, CompletedAtUtc,
+                CurrentStage, LeaseOwner, AnalysisMode, ProfileRevision,
+                ModelProfileSnapshotJson)
+            VALUES (
+                @analysisJobId, @imageItemId, 1, 0, 1, 0,
+                @createdAtUtc, NULL, NULL, @createdAtUtc, @createdAtUtc, NULL,
+                0, NULL, 2, 1, '{}');
+            """,
+            ("@assetId", assetId.ToString("D")),
+            ("@contentHash", new string('d', 64)),
+            ("@imageItemId", imageItemId.ToString("D")),
+            ("@analysisJobId", analysisJobId.ToString("D")),
+            ("@createdAtUtc", createdAtUtc));
         const string legacySnapshotJson =
             """
             {
@@ -49,12 +75,12 @@ public sealed class RemoteAnalysisProfileTests
             WHERE ImageItemId = @itemId;
             """,
             ("@snapshot", legacySnapshotJson),
-            ("@itemId", imported.ImageItemId.ToString("D")));
+            ("@itemId", imageItemId.ToString("D")));
 
         var upgraded = await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
 
         Assert.Equal(7, upgraded.PreviousVersion);
-        Assert.Equal(15, upgraded.CurrentVersion);
+        Assert.Equal(16, upgraded.CurrentVersion);
         Assert.NotNull(upgraded.BackupFilePath);
         using var remoteProfiles = new SqliteRemoteApiProfileService(root.Paths);
         var execution = await remoteProfiles.GetExecutionStateAsync();

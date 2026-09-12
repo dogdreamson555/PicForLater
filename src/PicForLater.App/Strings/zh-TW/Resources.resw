@@ -160,7 +160,7 @@
   <data name="PasteButton.Label" xml:space="preserve"><value>貼上</value></data>
   <data name="PasteButton.AutomationProperties.Name" xml:space="preserve"><value>貼上剪貼簿圖片</value></data>
   <data name="PasteButton.ToolTipService.ToolTip" xml:space="preserve"><value>貼上剪貼簿圖片 (Ctrl+V)</value></data>
-  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜尋標題、簡介、文字、分類或地點</value></data>
+  <data name="LibrarySearchBox.PlaceholderText" xml:space="preserve"><value>搜尋標題、簡介、備註、文字、分類或地點</value></data>
   <data name="LibrarySearchBox.AutomationProperties.Name" xml:space="preserve"><value>搜尋資料庫</value></data>
   <data name="CategoryFilterComboBox.AutomationProperties.Name" xml:space="preserve"><value>按分類篩選</value></data>
   <data name="ClearFiltersButton.AutomationProperties.Name" xml:space="preserve"><value>清除搜尋和篩選</value></data>
@@ -184,13 +184,10 @@
   <data name="DetailSummaryTextBox.Header" xml:space="preserve"><value>簡介</value></data>
   <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>新增便於回顧的說明</value></data>
   <data name="DetailSummaryTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片簡介</value></data>
-  <data name="DetailContentSourceInfoBar.Title" xml:space="preserve"><value>內容來源</value></data>
-  <data name="DetailContentSourcePending" xml:space="preserve"><value>本機分析完成後會在這裡填入可編輯的標題和簡介。</value></data>
-  <data name="DetailContentSourceOcr" xml:space="preserve"><value>已根據本機 OCR 事實產生可編輯草稿；視覺增強失敗也不會遺失此結果。</value></data>
-  <data name="DetailContentSourceModel" xml:space="preserve"><value>標題和簡介由 AI 模型產生，屬於可編輯候選。</value></data>
-  <data name="DetailContentSourceUser" xml:space="preserve"><value>標題或簡介已由你儲存，重新分析不會在未提示的情況下覆寫。</value></data>
-  <data name="DetailContentSourceUnsaved" xml:space="preserve"><value>有尚未儲存的手動修改；背景分析重新整理不會覆寫目前輸入。</value></data>
-  <data name="DetailContentSourceNeedsAttention" xml:space="preserve"><value>本機分析未完成。原圖和已有內容已保留，可以選擇重新分析。</value></data>
+  <data name="DetailNotesTextBox.Header" xml:space="preserve"><value>備註</value></data>
+  <data name="DetailNotesTextBox.PlaceholderText" xml:space="preserve"><value>新增供日後回顧的個人備註</value></data>
+  <data name="DetailNotesTextBox.AutomationProperties.Name" xml:space="preserve"><value>圖片備註</value></data>
+  <data name="DetailSaveStatusTextBlock.AutomationProperties.Name" xml:space="preserve"><value>詳細資料儲存狀態</value></data>
   <data name="CategoriesSectionTitle.Text" xml:space="preserve"><value>分類</value></data>
   <data name="AddCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>新增分類</value></data>
   <data name="AddCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>新增自訂分類</value></data>
@@ -207,7 +204,7 @@
   <data name="ContextReanalyzeMenuItem.AutomationProperties.Name" xml:space="preserve"><value>使用目前分析設定重新分析圖片</value></data>
   <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>新增提醒</value></data>
   <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>為目前圖片新增提醒</value></data>
-  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>儲存尚未儲存的詳細資料後開啟提醒確認</value></data>
+  <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>儲存詳細資料後開啟提醒確認</value></data>
   <data name="DropOverlayTitle.Text" xml:space="preserve"><value>放開即可匯入</value></data>
   <data name="DropOverlayMessage.Text" xml:space="preserve"><value>每張圖片將獨立儲存；損壞檔案不會影響其他圖片。</value></data>
   <data name="RestoreButton.Label" xml:space="preserve"><value>還原</value></data>
@@ -246,6 +243,9 @@
   <data name="Uncategorized" xml:space="preserve"><value>未分類</value></data>
   <data name="ImageMetadataFormat" xml:space="preserve"><value>{0} × {1}，{2}</value></data>
   <data name="DetailsSavedStatus" xml:space="preserve"><value>圖片詳細資料已儲存。</value></data>
+  <data name="DetailsSavingStatus" xml:space="preserve"><value>正在儲存變更…</value></data>
+  <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>無法儲存變更，目前輸入仍會保留。</value></data>
+  <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>變更已儲存，但無法載入最新詳細資料。</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>圖片已還原；未來提醒需要重新確認後才會排程。</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已還原 {0}/{1} 張圖片；未來提醒需要重新確認後才會排程。</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>圖片及無其他引用的受管檔案已永久刪除。</value></data>
