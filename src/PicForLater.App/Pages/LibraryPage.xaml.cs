@@ -164,7 +164,6 @@ public sealed partial class LibraryPage : Page
 
     public async Task<bool> NavigateToImageAsync(Guid imageItemId)
     {
-        LastLeaveWasExplicitlyCancelled = false;
         if (ViewModel.SelectedItemId != imageItemId
             && !await ConfirmLeaveAsync())
         {
@@ -188,8 +187,6 @@ public sealed partial class LibraryPage : Page
         UpdateResponsiveLayout();
         return true;
     }
-
-    public bool LastLeaveWasExplicitlyCancelled { get; private set; }
 
     private void LibraryPage_Unloaded(object sender, RoutedEventArgs e)
     {
@@ -1160,22 +1157,17 @@ public sealed partial class LibraryPage : Page
 
     private async Task ConfirmSingleSoftDeleteAsync(Guid imageItemId, string title)
     {
-        if (ViewModel.SelectedItemId == imageItemId && ViewModel.IsDetailSaving
+        if (ViewModel.SelectedItemId == imageItemId
             && !await ViewModel.TrySaveDetailAsync())
         {
             return;
         }
 
-        var hasUnsavedChanges = ViewModel.SelectedItemId == imageItemId
-            && ViewModel.IsDetailDirty;
-        var messageResource = hasUnsavedChanges
-            ? "SoftDeleteDialogMessageWithUnsavedFormat"
-            : "SoftDeleteDialogMessageFormat";
         var dialog = CreateDialog(
             _resources.GetString("SoftDeleteDialogTitle"),
             string.Format(
                 System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString(messageResource),
+                _resources.GetString("SoftDeleteDialogMessageFormat"),
                 title),
             _resources.GetString("SoftDeleteDialogPrimary"));
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -1198,25 +1190,18 @@ public sealed partial class LibraryPage : Page
             return;
         }
 
-        if (ViewModel.IsDetailSaving
-            && ViewModel.SelectedItemId is Guid savingItemId
-            && items.Any(item => item.Id == savingItemId)
+        if (ViewModel.SelectedItemId is Guid currentItemId
+            && items.Any(item => item.Id == currentItemId)
             && !await ViewModel.TrySaveDetailAsync())
         {
             return;
         }
 
-        var hasUnsavedChanges = ViewModel.IsDetailDirty
-            && ViewModel.SelectedItemId is Guid currentItemId
-            && items.Any(item => item.Id == currentItemId);
-        var messageResource = hasUnsavedChanges
-            ? "SoftDeleteBatchDialogMessageWithUnsavedFormat"
-            : "SoftDeleteBatchDialogMessageFormat";
         var dialog = CreateDialog(
             _resources.GetString("SoftDeleteBatchDialogTitle"),
             string.Format(
                 System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString(messageResource),
+                _resources.GetString("SoftDeleteBatchDialogMessageFormat"),
                 items.Count),
             _resources.GetString("SoftDeleteDialogPrimary"));
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -1546,47 +1531,8 @@ public sealed partial class LibraryPage : Page
             : null;
     }
 
-    private async Task<bool> ConfirmLeaveCoreAsync()
-    {
-        LastLeaveWasExplicitlyCancelled = false;
-        if (ViewModel.IsDetailSaving)
-        {
-            return await ViewModel.TrySaveDetailAsync();
-        }
-
-        if (!ViewModel.IsDetailDirty)
-        {
-            return true;
-        }
-
-        if (XamlRoot is null)
-        {
-            return false;
-        }
-
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            RequestedTheme = ActualTheme,
-            Title = _resources.GetString("UnsavedChangesDialogTitle"),
-            Content = _resources.GetString("UnsavedChangesDialogMessage"),
-            PrimaryButtonText = _resources.GetString("UnsavedChangesDialogSave"),
-            SecondaryButtonText = _resources.GetString("UnsavedChangesDialogDiscard"),
-            CloseButtonText = _resources.GetString("CancelButtonText"),
-            DefaultButton = ContentDialogButton.Primary,
-        };
-        var result = await dialog.ShowAsync();
-        switch (result)
-        {
-            case ContentDialogResult.Primary:
-                return await ViewModel.TrySaveDetailAsync();
-            case ContentDialogResult.Secondary:
-                return await ViewModel.DiscardDetailAsync();
-            default:
-                LastLeaveWasExplicitlyCancelled = true;
-                return false;
-        }
-    }
+    private Task<bool> ConfirmLeaveCoreAsync()
+        => ViewModel.TrySaveDetailAsync();
 
     private async Task ClearCompletedLeaveTaskAsync(Task<bool> task)
     {

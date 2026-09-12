@@ -122,11 +122,6 @@ public sealed partial class MainPage : Page
             var selected = await libraryPage.NavigateToImageAsync(imageItemId);
             if (!selected)
             {
-                if (libraryPage.LastLeaveWasExplicitlyCancelled)
-                {
-                    App.ClearPendingNotificationNavigation(imageItemId);
-                }
-
                 return;
             }
 
@@ -152,12 +147,6 @@ public sealed partial class MainPage : Page
     {
         if (!await TryLeaveCurrentPageAsync())
         {
-            if (ShellFrame.Content is LibraryPage libraryPage
-                && libraryPage.LastLeaveWasExplicitlyCancelled)
-            {
-                App.ClearPendingReminderCreation(imageItemId);
-            }
-
             return;
         }
 

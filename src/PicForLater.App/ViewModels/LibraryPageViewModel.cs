@@ -162,9 +162,7 @@ public partial class LibraryPageViewModel : ObservableObject
             ? _resources.GetString("DetailsSavingStatus")
             : HasDetailSaveFailure
                 ? _resources.GetString("DetailsSaveFailedStatus")
-                : IsDetailDirty
-                    ? _resources.GetString("DetailsUnsavedStatus")
-                    : string.Empty;
+                : string.Empty;
 
     public bool HasDetailSaveStatus => !string.IsNullOrWhiteSpace(DetailSaveStatusMessage);
 
@@ -415,51 +413,6 @@ public partial class LibraryPageViewModel : ObservableObject
         return task;
     }
 
-    public async Task<bool> DiscardDetailAsync()
-    {
-        if (SelectedItemId is not Guid imageItemId)
-        {
-            return true;
-        }
-
-        if (IsDetailSaving)
-        {
-            return await TrySaveDetailAsync().ConfigureAwait(true);
-        }
-
-        var loadGeneration = ++_detailLoadGeneration;
-        var editGeneration = _detailEditGeneration;
-        LibraryEntry? entry;
-        try
-        {
-            entry = await GetLibrary().GetAsync(imageItemId).ConfigureAwait(true);
-        }
-        catch
-        {
-            if (IsCurrentDetailOperation(imageItemId, loadGeneration))
-            {
-                ShowStatus(_resources.GetString("DetailsDiscardFailedStatus"));
-            }
-
-            return false;
-        }
-
-        if (!IsCurrentDetailOperation(imageItemId, loadGeneration)
-            || editGeneration != _detailEditGeneration)
-        {
-            return false;
-        }
-
-        if (entry is null || entry.Item.DeletedAtUtc is not null)
-        {
-            ClearDetail();
-            return true;
-        }
-
-        await ApplyDetailAsync(entry, replaceEditSession: true).ConfigureAwait(true);
-        return true;
-    }
-
     partial void OnSearchTextChanged(string value)
     {
         _itemsLoadGeneration++;
@@ -694,12 +647,6 @@ public partial class LibraryPageViewModel : ObservableObject
             await library.UpdateDetailFieldsAsync(
                 imageItemId,
                 update).ConfigureAwait(true);
-
-            await LoadItemsAsync(reset: true).ConfigureAwait(true);
-            if (!IsCurrentDetailOperation(imageItemId, loadGeneration))
-            {
-                return true;
-            }
 
             LibraryEntry? entry;
             try
