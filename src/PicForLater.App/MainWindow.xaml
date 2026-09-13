@@ -14,20 +14,6 @@
     <Grid
         x:Name="WindowRoot"
         AutomationProperties.AutomationId="MainWindowRoot">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <TitleBar
-            x:Name="AppTitleBar"
-            x:Uid="AppTitleBar"
-            AutomationProperties.AutomationId="AppTitleBar">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="Assets/AppIcon.ico" />
-            </TitleBar.IconSource>
-        </TitleBar>
-
         <!--
             The Frame hosts pages for your application content. Add your UI to
             MainPage.xaml rather than here so you can use Page features such as
@@ -35,7 +21,6 @@
         -->
         <Frame
             x:Name="RootFrame"
-            Grid.Row="1"
             AutomationProperties.AutomationId="RootFrame" />
     </Grid>
 </Window>
