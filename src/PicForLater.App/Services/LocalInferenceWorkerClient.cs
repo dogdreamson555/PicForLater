@@ -32,6 +32,8 @@ public sealed class LocalInferenceWorkerClient :
     private NamedPipeServerStream? _pipe;
     private Process? _process;
     private int _protocolVersion;
+    private int _cachedOcrAvailability = -1;
+    private long _ocrAvailabilityGeneration;
     private bool _disposed;
 
     public LocalInferenceWorkerClient(
@@ -59,6 +61,26 @@ public sealed class LocalInferenceWorkerClient :
 
     public BackgroundFailureCircuit FailureCircuit { get; }
 
+    /// <summary>
+    /// The last OCR capability result observed by the normal analysis path.
+    /// Reading this value never starts the worker; the tray uses it only as a
+    /// cache and falls back to Windows OCR when available.
+    /// </summary>
+    public bool? CachedOcrAvailability => Volatile.Read(ref _cachedOcrAvailability) switch
+    {
+        0 => false,
+        1 => true,
+        _ => null,
+    };
+
+    internal event Action<bool>? OcrAvailabilityChanged;
+
+    internal void InvalidateCachedOcrAvailability()
+    {
+        Interlocked.Increment(ref _ocrAvailabilityGeneration);
+        Volatile.Write(ref _cachedOcrAvailability, -1);
+    }
+
     public OcrProviderDescriptor Descriptor { get; } = new(
         "local.worker-ocr",
         "Local inference worker OCR",
@@ -76,8 +98,10 @@ public sealed class LocalInferenceWorkerClient :
 
     public async ValueTask<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
     {
+        var generation = Volatile.Read(ref _ocrAvailabilityGeneration);
         if (await _componentLocator.LocateAsync(cancellationToken).ConfigureAwait(false) is null)
         {
+            PublishOcrAvailability(false, generation);
             return false;
         }
 
@@ -91,6 +115,7 @@ public sealed class LocalInferenceWorkerClient :
                     mapUnavailable: true,
                     cancellationToken)
                 .ConfigureAwait(false);
+            PublishOcrAvailability(response.IsAvailable, generation);
             return response.IsAvailable;
         }
         catch (Exception exception) when (exception is OcrProviderUnavailableException
@@ -100,11 +125,38 @@ public sealed class LocalInferenceWorkerClient :
                                           or InvalidOperationException
                                           or Win32Exception)
         {
+            PublishOcrAvailability(false, generation);
             return false;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            PublishOcrAvailability(false, generation);
             return false;
+        }
+    }
+
+    private void PublishOcrAvailability(bool isAvailable, long generation)
+    {
+        if (generation != Volatile.Read(ref _ocrAvailabilityGeneration))
+        {
+            return;
+        }
+
+        var publishedValue = isAvailable ? 1 : 0;
+        if (Interlocked.Exchange(ref _cachedOcrAvailability, publishedValue)
+            == publishedValue)
+        {
+            return;
+        }
+
+        try
+        {
+            OcrAvailabilityChanged?.Invoke(isAvailable);
+        }
+        catch
+        {
+            // Availability observers are diagnostic/UI state; they must not
+            // turn a successful worker probe into an OCR failure.
         }
     }
 

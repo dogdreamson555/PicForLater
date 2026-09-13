@@ -55,6 +55,21 @@
   <data name="AppDescription" xml:space="preserve"><value>Save, organize, and revisit images on this device.</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>Phone receive</value></data>
+  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>Phone receive (unavailable)</value></data>
+  <data name="TrayAnalysisModeText" xml:space="preserve"><value>Analysis mode</value></data>
+  <data name="TrayLocalAnalysisText" xml:space="preserve"><value>Local analysis</value></data>
+  <data name="TrayLocalAnalysisUnavailableText" xml:space="preserve"><value>Local analysis (unavailable)</value></data>
+  <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API analysis</value></data>
+  <data name="TrayRemoteAnalysisUnavailableText" xml:space="preserve"><value>API analysis (unavailable)</value></data>
+  <data name="TrayQuickScreenshotText" xml:space="preserve"><value>Quick screenshot</value></data>
+  <data name="TrayQuickScreenshotUnavailableText" xml:space="preserve"><value>Quick screenshot (unavailable)</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>Close</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater cannot stay in the system tray</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>The system tray icon is unavailable. Retry creating it, exit completely, or keep the window open.</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>Retry tray</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>Exit completely</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>Background processing stopped</value></data>
@@ -115,6 +130,10 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Light theme</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>Dark</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Dark theme</value></data>
+  <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>Window behavior</value></data>
+  <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>Keep running in the system tray after closing the window</value></data>
+  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>When enabled, phone receive, quick screenshot, analysis, and reminders continue in the background. Use Close in the tray menu to exit completely.</value></data>
+  <data name="KeepInSystemTrayToggle.AutomationProperties.Name" xml:space="preserve"><value>Keep running in the system tray after closing the window</value></data>
   <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>Language / 界面语言</value></data>
   <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>Interface language</value></data>
   <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>Choose the language used by PicForLater. Changes take effect the next time the app starts.</value></data>
@@ -695,6 +714,7 @@
   <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>Local analysis</value></data>
   <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>Run OCR, visual models, and inference on this device without uploading data.</value></data>
   <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>Ready</value></data>
+  <data name="LocalAnalysisUnavailableStatus" xml:space="preserve"><value>Unavailable</value></data>
   <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>Open API analysis settings</value></data>
   <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>Configure</value></data>
   <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>Cloud API</value></data>
@@ -800,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>The provider replied, but its result did not satisfy PicForLater's strict structured schema.</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>The synthetic test failed. No user image or OCR text was sent.</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>Run a successful synthetic test for this provider, model, and payload mode before enabling it.</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>Local OCR is unavailable. Install or repair the local OCR component, or choose Remote vision mode before enabling remote analysis.</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>Remote analysis is enabled for new jobs with the selected provider and payload mode.</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>New jobs now use Local. Requests not yet sent are blocked.</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>Consent revoked and new jobs returned to Local. Content already received by a provider cannot be recalled.</value></data>

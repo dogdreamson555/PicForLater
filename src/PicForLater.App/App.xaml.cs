@@ -1,7 +1,8 @@
+using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using CommunityToolkit.WinUI.Notifications;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using PicForLater.Analysis;
 using PicForLater.Analysis.PpOcr;
 using PicForLater.App.Models;
@@ -27,17 +28,30 @@ namespace PicForLater.App;
 /// </summary>
 public partial class App : Application
 {
-    private const int ShowWindowRestore = 9;
+    private static readonly TimeSpan ApplicationShutdownTimeout =
+        TimeSpan.FromSeconds(30);
+
+    private enum WindowLifecycleState
+    {
+        Running,
+        ExitConfirmation,
+        CleaningUp,
+        Closed,
+    }
+
     private static readonly CancellationTokenSource AnalysisCancellation = new();
     private static readonly object ForegroundActivationLock = new();
+    private static readonly object LocalSendStartupLock = new();
     private static readonly object NotificationActivationLock = new();
     private static readonly object ScreenshotCaptureLifecycleLock = new();
+    private static readonly object WindowLifecycleLock = new();
     private static AnalysisQueueWakeSignal? _analysisWakeSignal;
     private static HttpClient? _modelDownloadHttpClient;
     private static HttpClient? _componentDownloadHttpClient;
     private static HttpClient? _remoteAnalysisHttpClient;
     private static HttpClient? _updateCheckHttpClient;
     private static Task? _localSendStartupTask;
+    private static ILocalSendReceiverService? _localSendStartupReceiver;
     private static MainWindow? _screenshotCaptureWindow;
     private static IScreenshotCaptureService? _screenshotCapture;
     private static Task _screenshotCaptureStartupTask = Task.CompletedTask;
@@ -50,10 +64,21 @@ public partial class App : Application
     private static LocalInferenceWorkerClient? _localInferenceWorker;
     private static BackgroundFailureCircuit? _localInferenceFailureCircuit;
 #endif
+#if !PICFORLATER_UI_TESTING
+    private static bool _windowsOcrAvailable;
+#endif
     private static BackgroundWorkerSupervisor? _analysisWorkerSupervisor;
     private static BackgroundWorkerSupervisor? _reminderWorkerSupervisor;
     private static bool _isMainWindowReady;
     private static bool _isForegroundActivationPending;
+    private static SystemTrayIconAdapter? _systemTrayIcon;
+    private static BusinessFeatureCoordinator? _businessFeatures;
+    private static int _observedInferenceAccelerationMode = -1;
+    private static WindowLifecycleState _windowLifecycleState = WindowLifecycleState.Running;
+    private static Task? _applicationExitTask;
+    private static Task? _windowCloseTask;
+    private static bool _windowClosed;
+    private static bool _skipExitConfirmation;
 #if !PICFORLATER_UI_TESTING
     private static bool _toastNotificationsRegistered;
 #endif
@@ -94,6 +119,37 @@ public partial class App : Application
 
     public static ILocalSendReceivePreferenceService LocalSendReceivePreference { get; } =
         LocalSendReceivePreferenceService.Instance;
+
+    internal static BusinessFeatureCoordinator? BusinessFeatures => _businessFeatures;
+
+    internal static bool LocalAnalysisAvailable
+    {
+        get
+        {
+#if PICFORLATER_UI_TESTING
+            return true;
+#else
+            return _windowsOcrAvailable
+                || _localInferenceWorker?.CachedOcrAvailability == true;
+#endif
+        }
+    }
+
+    internal static CloseBehaviorPreferenceService CloseBehaviorPreference { get; } =
+        CloseBehaviorPreferenceService.Instance;
+
+    internal static bool IsShuttingDown
+    {
+        get
+        {
+            lock (WindowLifecycleLock)
+            {
+                return _windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed;
+            }
+        }
+    }
 
     public static IReminderService? Reminders { get; private set; }
 
@@ -140,6 +196,10 @@ public partial class App : Application
     }
 
     public static event Action<IScreenshotCaptureService?>? ScreenshotCaptureServiceChanged;
+
+    internal static event Action<ILocalSendReceiverService?>? LocalSendReceiverServiceChanged;
+
+    internal static event Action<bool>? LocalAnalysisAvailabilityChanged;
 
     public static event Action<Guid>? NotificationImageRequested;
 
@@ -219,6 +279,21 @@ public partial class App : Application
         return version;
     }
 
+    private static bool DetectWindowsOcrAvailability()
+    {
+        try
+        {
+            return new WindowsMediaOcrProvider()
+                .Descriptor
+                .SupportedLanguageTags
+                .Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static IInferenceAccelerationPreferenceService CreateInferenceAccelerationPreference()
     {
         var preference = InferenceAccelerationPreferenceService.Instance;
@@ -235,10 +310,49 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        lock (WindowLifecycleLock)
+        {
+            _windowLifecycleState = WindowLifecycleState.Running;
+            _applicationExitTask = null;
+            _windowCloseTask = null;
+            _windowClosed = false;
+            _skipExitConfirmation = false;
+        }
+
         StorageReadiness = new StorageReadinessService(StartStorageInitialization);
         StorageReadiness.ReadinessChanged += StorageReadiness_ReadinessChanged;
+        _observedInferenceAccelerationMode = (int)InferenceAcceleration.CurrentMode;
+        InferenceAcceleration.StateChanged += InferenceAcceleration_StateChanged;
+        _businessFeatures = new BusinessFeatureCoordinator(
+            DispatcherQueue,
+            () => LocalSendReceiver,
+            () => ScreenshotCapture,
+            () => RemoteApiProfiles,
+            () => RemoteApiCredentials,
+            LocalSendReceivePreference,
+            () => LocalAnalysisAvailable);
+        _businessFeatures.StateChanged += BusinessFeatures_StateChanged;
+        // Storage initialization starts from the StorageReadiness constructor,
+        // so a fast initialization can publish a receiver before the
+        // coordinator is constructed. Attach the current facts as a
+        // compensation for that startup ordering window.
+        _businessFeatures.AttachLocalSendReceiver(LocalSendReceiver);
+        _businessFeatures.AttachScreenshotCapture(ScreenshotCapture);
         var mainWindow = new MainWindow();
         Window = mainWindow;
+        try
+        {
+            _systemTrayIcon = new SystemTrayIconAdapter();
+        }
+        catch (Exception exception)
+        {
+            // Tray registration is optional until a close-to-tray request is
+            // made. A Shell/Explorer failure must not prevent the main window
+            // from starting or silently change the user's close policy.
+            Debug.WriteLine($"System tray registration failed: {exception.GetType().Name}.");
+        }
+        mainWindow.Activated += MainWindow_ActivatedForTray;
+
         long windowGeneration;
         lock (ScreenshotCaptureLifecycleLock)
         {
@@ -286,10 +400,14 @@ public partial class App : Application
         object? sender,
         StorageReadinessChangedEventArgs e)
     {
+        _businessFeatures?.SetStorageReady(
+            e.Result.Status == StorageReadinessStatus.Ready);
         if (e.Result.Status != StorageReadinessStatus.Ready)
         {
             return;
         }
+
+        StartLocalSendReceiverIfRequested();
 
         MainWindow? mainWindow;
         long windowGeneration;
@@ -396,6 +514,464 @@ public partial class App : Application
         BeginScreenshotCaptureShutdown();
     }
 
+    internal static void RequestWindowClose()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.TryEnqueue(RequestWindowClose);
+            return;
+        }
+
+        if (Window is not MainWindow mainWindow)
+        {
+            return;
+        }
+
+        if (!CloseBehaviorPreference.IsKeepInSystemTrayEnabled)
+        {
+            _ = RequestApplicationExitAsync();
+            return;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed ||
+                _windowCloseTask is not null ||
+                _applicationExitTask is not null)
+            {
+                return;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _windowCloseTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.ExitConfirmation;
+        }
+
+        _ = HandleWindowCloseAsync(mainWindow, completionSource);
+    }
+
+    internal static void RequestSystemSessionShutdown()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.TryEnqueue(RequestSystemSessionShutdown);
+            return;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return;
+            }
+
+            _skipExitConfirmation = true;
+        }
+
+        _ = RequestApplicationExitAsync(skipPageConfirmation: true);
+    }
+
+    internal static Task RequestApplicationExitAsync(
+        bool skipPageConfirmation = false)
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            var marshalledCompletion = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!DispatcherQueue.TryEnqueue(() =>
+            {
+                _ = RequestApplicationExitAsync(skipPageConfirmation).ContinueWith(
+                    completedTask =>
+                    {
+                        if (completedTask.IsFaulted)
+                        {
+                            marshalledCompletion.TrySetException(
+                                completedTask.Exception!.InnerExceptions);
+                        }
+                        else if (completedTask.IsCanceled)
+                        {
+                            marshalledCompletion.TrySetCanceled();
+                        }
+                        else
+                        {
+                            marshalledCompletion.TrySetResult();
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }))
+            {
+                marshalledCompletion.TrySetResult();
+            }
+
+            return marshalledCompletion.Task;
+        }
+
+        if (Window is not MainWindow mainWindow)
+        {
+            return Task.CompletedTask;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState == WindowLifecycleState.Closed)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (skipPageConfirmation)
+            {
+                _skipExitConfirmation = true;
+            }
+
+            if (_applicationExitTask is not null)
+            {
+                return _applicationExitTask;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _applicationExitTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.ExitConfirmation;
+        }
+
+        _ = CompleteApplicationExitAsync(mainWindow, completionSource);
+        return completionSource.Task;
+    }
+
+    internal static bool TryEnsureSystemTrayIcon()
+    {
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            return false;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return false;
+            }
+        }
+
+        var trayIcon = _systemTrayIcon;
+        if (trayIcon is null)
+        {
+            try
+            {
+                var newTrayIcon = new SystemTrayIconAdapter();
+                var existingTrayIcon = Interlocked.CompareExchange(
+                    ref _systemTrayIcon,
+                    newTrayIcon,
+                    comparand: null);
+                if (existingTrayIcon is not null)
+                {
+                    newTrayIcon.Dispose();
+                    trayIcon = existingTrayIcon;
+                }
+                else
+                {
+                    trayIcon = newTrayIcon;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"System tray registration retry could not create an adapter: {exception.GetType().Name}.");
+                return false;
+            }
+        }
+
+        if (_businessFeatures is { } businessFeatures)
+        {
+            ApplySystemTrayBusinessState(businessFeatures.CurrentState);
+        }
+
+        return trayIcon.TryEnsureCreated();
+    }
+
+    private static async Task HandleWindowCloseAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        try
+        {
+            while (true)
+            {
+                bool hidden;
+                if (TryEnsureSystemTrayIcon())
+                {
+                    try
+                    {
+                        mainWindow.HideToTray();
+                        hidden = true;
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.WriteLine(
+                            $"System tray hide failed: {exception.GetType().Name}.");
+                        hidden = false;
+                    }
+                }
+                else
+                {
+                    hidden = false;
+                }
+
+                if (hidden)
+                {
+                    return;
+                }
+
+                var decision = await ShowTrayUnavailableDialogAsync(mainWindow);
+                if (decision == ContentDialogResult.Primary)
+                {
+                    continue;
+                }
+
+                if (decision == ContentDialogResult.Secondary)
+                {
+                    await RequestApplicationExitAsync();
+                }
+
+                return;
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"System tray close decision failed: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            lock (WindowLifecycleLock)
+            {
+                if (ReferenceEquals(_windowCloseTask, completionSource.Task))
+                {
+                    _windowCloseTask = null;
+                }
+
+                if (_windowLifecycleState == WindowLifecycleState.ExitConfirmation)
+                {
+                    _windowLifecycleState = WindowLifecycleState.Running;
+                }
+            }
+
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static async Task<ContentDialogResult> ShowTrayUnavailableDialogAsync(
+        MainWindow mainWindow)
+    {
+        if (mainWindow.Content is not FrameworkElement root
+            || root.XamlRoot is null)
+        {
+            return ContentDialogResult.None;
+        }
+
+        var resources = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader();
+        var dialog = new ContentDialog
+        {
+            XamlRoot = root.XamlRoot,
+            Title = resources.GetString("TrayUnavailableDialogTitle"),
+            Content = resources.GetString("TrayUnavailableDialogContent"),
+            PrimaryButtonText = resources.GetString("TrayUnavailableDialogRetryButtonText"),
+            SecondaryButtonText = resources.GetString("TrayUnavailableDialogExitButtonText"),
+            CloseButtonText = resources.GetString("TrayUnavailableDialogCancelButtonText"),
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        try
+        {
+            return await dialog.ShowAsync();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"System tray recovery dialog failed: {exception.GetType().Name}.");
+            return ContentDialogResult.None;
+        }
+    }
+
+    private static async Task CompleteApplicationExitAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        bool windowClosed = IsWindowClosed();
+        bool skipExitConfirmation = ShouldSkipExitConfirmation();
+        bool canLeave = skipExitConfirmation || windowClosed;
+        if (!canLeave)
+        {
+            try
+            {
+                canLeave = mainWindow.CurrentMainPage is not MainPage mainPage
+                    || await mainPage.TryLeaveCurrentPageAsync();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Exit confirmation failed: {exception.GetType().Name}.");
+                canLeave = false;
+            }
+
+            // A system-session request or an unexpected native close supersedes
+            // an ordinary page-confirmation result.
+            canLeave |= ShouldSkipExitConfirmation() || IsWindowClosed();
+        }
+
+        if (!canLeave)
+        {
+            // A failed leave check needs to be visible so the user can read the
+            // page's save/error state. A successful check must stay hidden: showing
+            // the window here would create a visible flash before normal shutdown.
+            try
+            {
+                mainWindow.RestoreAndActivate();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Window restore after exit check failed: {exception.GetType().Name}.");
+            }
+
+            if (CancelApplicationExit(completionSource))
+            {
+                return;
+            }
+
+            // The window closed while the confirmation result was being
+            // processed. Continue into cleanup rather than reviving a dead app.
+            canLeave = true;
+        }
+
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState != WindowLifecycleState.ExitConfirmation)
+            {
+                completionSource.TrySetResult();
+                return;
+            }
+
+            _windowLifecycleState = WindowLifecycleState.CleaningUp;
+        }
+
+        bool cleanupCompleted = false;
+        try
+        {
+            if (!IsWindowClosed())
+            {
+                mainWindow.DisableInteractionForShutdown();
+            }
+
+            BeginScreenshotCaptureShutdown();
+            mainWindow.PrepareForFinalClose();
+            cleanupCompleted = await PerformApplicationCleanupAsync();
+        }
+        catch (Exception exception)
+        {
+            // Cleanup is best effort. The process must still leave the normal
+            // running state even when an optional service fails to stop.
+            Debug.WriteLine(
+                $"Application shutdown encountered an unexpected error: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            FinalizeApplicationExit(mainWindow, cleanupCompleted);
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static bool IsWindowClosed()
+    {
+        lock (WindowLifecycleLock)
+        {
+            return _windowClosed;
+        }
+    }
+
+    private static bool ShouldSkipExitConfirmation()
+    {
+        lock (WindowLifecycleLock)
+        {
+            return _skipExitConfirmation;
+        }
+    }
+
+    private static bool CancelApplicationExit(TaskCompletionSource completionSource)
+    {
+        lock (WindowLifecycleLock)
+        {
+            if (_windowClosed)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(_applicationExitTask, completionSource.Task))
+            {
+                _applicationExitTask = null;
+            }
+
+            if (_windowLifecycleState == WindowLifecycleState.ExitConfirmation)
+            {
+                _windowLifecycleState = WindowLifecycleState.Running;
+            }
+
+            _skipExitConfirmation = false;
+        }
+
+        completionSource.TrySetResult();
+        return true;
+    }
+
+    private static void FinalizeApplicationExit(
+        MainWindow mainWindow,
+        bool cleanupCompleted)
+    {
+        DisposeBusinessFeatures();
+        DisposeSystemTrayIcon();
+        UnregisterInstanceKeySafely();
+
+        bool windowClosed;
+        lock (WindowLifecycleLock)
+        {
+            windowClosed = _windowClosed;
+            _windowLifecycleState = WindowLifecycleState.Closed;
+        }
+
+        bool finalCloseFailed = false;
+        if (!windowClosed)
+        {
+            try
+            {
+                mainWindow.CloseAfterFinalCleanup();
+            }
+            catch (Exception exception)
+            {
+                finalCloseFailed = true;
+                Debug.WriteLine(
+                    $"Final window close failed: {exception.GetType().Name}.");
+            }
+        }
+
+        if (!cleanupCompleted || finalCloseFailed)
+        {
+            Debug.WriteLine(
+                "Application shutdown exceeded its safe completion path; terminating the process.");
+            Environment.Exit(1);
+        }
+    }
+
     private static void BeginScreenshotCaptureShutdown()
     {
         IScreenshotCaptureService? service;
@@ -412,7 +988,14 @@ public partial class App : Application
         }
 
         StorageReadiness.ReadinessChanged -= StorageReadiness_ReadinessChanged;
-        AnalysisCancellation.Cancel();
+        InferenceAcceleration.StateChanged -= InferenceAcceleration_StateChanged;
+        try
+        {
+            AnalysisCancellation.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
         Task stopTask = service is null
             ? Task.CompletedTask
             : StopScreenshotCaptureAsync(service);
@@ -438,6 +1021,7 @@ public partial class App : Application
     private static void NotifyScreenshotCaptureServiceChanged(
         IScreenshotCaptureService? service)
     {
+        _businessFeatures?.AttachScreenshotCapture(service);
         Delegate[] handlers = ScreenshotCaptureServiceChanged?.GetInvocationList() ?? [];
         foreach (Action<IScreenshotCaptureService?> handler in handlers.Cast<
                      Action<IScreenshotCaptureService?>>())
@@ -453,8 +1037,38 @@ public partial class App : Application
         }
     }
 
+    private static void NotifyLocalSendReceiverServiceChanged(
+        ILocalSendReceiverService? service)
+    {
+        _businessFeatures?.AttachLocalSendReceiver(service);
+        Delegate[] handlers = LocalSendReceiverServiceChanged?.GetInvocationList() ?? [];
+        foreach (Action<ILocalSendReceiverService?> handler in handlers.Cast<
+                     Action<ILocalSendReceiverService?>>())
+        {
+            try
+            {
+                handler(service);
+            }
+            catch
+            {
+                // A page that is navigating away cannot make receiver startup
+                // or replacement fail.
+            }
+        }
+    }
+
     internal static void RequestForegroundActivation()
     {
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return;
+            }
+        }
+
         lock (ForegroundActivationLock)
         {
             if (!_isMainWindowReady)
@@ -464,19 +1078,306 @@ public partial class App : Application
             }
         }
 
-        _ = DispatcherQueue.TryEnqueue(BringMainWindowToForeground);
+        _ = DispatcherQueue.TryEnqueue(() => _ = BringMainWindowToForeground());
     }
 
-    private static void BringMainWindowToForeground()
+    private static bool BringMainWindowToForeground()
     {
-        nint windowHandle = WindowHandle;
-        if (IsIconic(windowHandle))
+        if (!IsMainWindowReady())
         {
-            _ = ShowWindow(windowHandle, ShowWindowRestore);
+            return false;
         }
 
-        Window.Activate();
-        _ = SetForegroundWindow(windowHandle);
+        lock (WindowLifecycleLock)
+        {
+            if (_windowLifecycleState is
+                    WindowLifecycleState.CleaningUp or
+                    WindowLifecycleState.Closed)
+            {
+                return false;
+            }
+        }
+
+        if (Window is MainWindow mainWindow)
+        {
+            try
+            {
+                mainWindow.RestoreAndActivate();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Window restore failed: {exception.GetType().Name}.");
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsMainWindowReady()
+    {
+        lock (ForegroundActivationLock)
+        {
+            return _isMainWindowReady;
+        }
+    }
+
+    internal static void RefreshSystemTrayBusinessState()
+    {
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        _ = businessFeatures.RefreshAnalysisAsync();
+        ApplySystemTrayBusinessState(businessFeatures.CurrentState);
+    }
+
+    internal static void NotifyAnalysisConfigurationChanged()
+    {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
+        _ = _businessFeatures?.RefreshAnalysisAsync();
+    }
+
+    internal static void InvalidateLocalAnalysisAvailability(
+        bool refreshAfterInvalidation = true)
+    {
+#if !PICFORLATER_UI_TESTING
+        _localInferenceWorker?.InvalidateCachedOcrAvailability();
+#endif
+        NotifyLocalAnalysisAvailabilityChanged();
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is not null && !IsShuttingDown)
+        {
+            businessFeatures.SetLocalAnalysisAvailability(LocalAnalysisAvailable);
+            _ = businessFeatures.RefreshAnalysisAsync();
+        }
+
+        if (refreshAfterInvalidation)
+        {
+            _ = RefreshLocalAnalysisAvailabilityAsync();
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the worker OCR capability cache after component or acceleration
+    /// changes. The probe is intentionally asynchronous because it may launch the
+    /// local worker and perform a named-pipe request.
+    /// </summary>
+    internal static async Task RefreshLocalAnalysisAvailabilityAsync()
+    {
+        bool isAvailable;
+#if PICFORLATER_UI_TESTING
+        isAvailable = true;
+#else
+        isAvailable = _windowsOcrAvailable;
+        if (_localInferenceWorker is { } worker)
+        {
+            try
+            {
+                var workerAvailable = await worker.IsAvailableAsync(AnalysisCancellation.Token)
+                    .ConfigureAwait(false);
+                isAvailable |= workerAvailable;
+            }
+            catch (OperationCanceledException) when (AnalysisCancellation.IsCancellationRequested)
+            {
+                return;
+            }
+            catch
+            {
+                isAvailable = false;
+            }
+        }
+#endif
+
+        NotifyLocalAnalysisAvailabilityChanged(isAvailable);
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        businessFeatures.SetLocalAnalysisAvailability(isAvailable);
+        _ = businessFeatures.RefreshAnalysisAsync();
+    }
+
+    internal static async Task SetLocalSendEnabledFromTrayAsync(bool isEnabled)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        await _businessFeatures.SetLocalSendEnabledAsync(isEnabled)
+            .ConfigureAwait(true);
+    }
+
+    internal static async Task SelectAnalysisBackendFromTrayAsync(
+        AnalysisExecutionBackend backend)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _businessFeatures.SelectAnalysisBackendAsync(backend)
+                .ConfigureAwait(true);
+            if (!result.Applied)
+            {
+                // ToggleMenuFlyoutItem changes IsChecked before its async command
+                // completes. Re-apply the coordinator's reconciled factual
+                // snapshot on every rejected/failed request so optimistic UI
+                // state cannot survive a failed operation.
+                ApplySystemTrayBusinessState(_businessFeatures.CurrentState);
+            }
+        }
+        catch
+        {
+            // The command surface must never leave a toggled menu item behind
+            // when an unexpected coordinator failure escapes its normal result.
+            _businessFeatures.ClearAnalysisStateAfterFailedSelection();
+            ApplySystemTrayBusinessState(_businessFeatures.CurrentState);
+        }
+    }
+
+    internal static async Task SetScreenshotEnabledFromTrayAsync(bool isEnabled)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        await _businessFeatures.SetScreenshotEnabledAsync(isEnabled)
+            .ConfigureAwait(true);
+    }
+
+    private static void BusinessFeatures_StateChanged(TrayBusinessState state)
+    {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
+        ApplySystemTrayBusinessState(state);
+    }
+
+    private static void InferenceAcceleration_StateChanged(
+        object? sender,
+        EventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        var currentMode = (int)InferenceAcceleration.CurrentMode;
+        if (Interlocked.Exchange(ref _observedInferenceAccelerationMode, currentMode)
+            == currentMode)
+        {
+            return;
+        }
+
+        InvalidateLocalAnalysisAvailability();
+    }
+
+#if !PICFORLATER_UI_TESTING
+    private static void LocalInferenceWorker_OcrAvailabilityChanged(bool isAvailable)
+    {
+        NotifyLocalAnalysisAvailabilityChanged(_windowsOcrAvailable || isAvailable);
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        businessFeatures.SetLocalAnalysisAvailability(
+            _windowsOcrAvailable || isAvailable);
+        _ = businessFeatures.RefreshAnalysisAsync();
+    }
+#endif
+
+    private static void NotifyLocalAnalysisAvailabilityChanged(bool? isAvailable = null)
+    {
+        Delegate[] handlers = LocalAnalysisAvailabilityChanged?.GetInvocationList() ?? [];
+        var availability = isAvailable ?? LocalAnalysisAvailable;
+        foreach (Action<bool> handler in handlers.Cast<Action<bool>>())
+        {
+            try
+            {
+                handler(availability);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Local analysis availability observer failed: {exception.GetType().Name}.");
+            }
+        }
+    }
+
+    private static void ApplySystemTrayBusinessState(TrayBusinessState state)
+    {
+        var trayIcon = _systemTrayIcon;
+        if (trayIcon is null)
+        {
+            return;
+        }
+
+        var localSendSnapshot = state.LocalSendSnapshot;
+        var localSendEnabled = state.StorageReady
+            && localSendSnapshot is not null
+            && !state.IsLocalSendOperationInProgress
+            && localSendSnapshot.Status is not
+                LocalSendReceiverStatus.Starting and not LocalSendReceiverStatus.Stopping;
+        var localSendUnavailable = !state.StorageReady
+            || localSendSnapshot is null
+            || localSendSnapshot.Status is
+                LocalSendReceiverStatus.Starting or
+                LocalSendReceiverStatus.Stopping or
+                LocalSendReceiverStatus.Faulted;
+        trayIcon.SetLocalSendState(
+            localSendEnabled,
+            state.IsLocalSendRequested,
+            localSendUnavailable);
+
+        var localAnalysisEnabled = state.StorageReady
+            && state.LocalAnalysisAvailable
+            && !state.IsAnalysisOperationInProgress;
+        var remoteAnalysisEnabled = state.StorageReady
+            && state.IsRemoteAnalysisSelectable
+            && !state.IsAnalysisOperationInProgress;
+        // Keep the parent visible while an available backend is temporarily
+        // busy; hide it only when there is no executable backend to choose.
+        var analysisModeVisible = state.StorageReady
+            && (state.LocalAnalysisAvailable || state.IsRemoteAnalysisSelectable);
+        trayIcon.SetAnalysisState(
+            localAnalysisEnabled,
+            remoteAnalysisEnabled,
+            state.IsRemoteAnalysisVisible,
+            analysisModeVisible,
+            state.AnalysisBackend == AnalysisExecutionBackend.Local,
+            state.AnalysisBackend == AnalysisExecutionBackend.RemoteApi);
+
+        var screenshotSnapshot = state.ScreenshotSnapshot;
+        var canToggleScreenshot = state.StorageReady
+            && screenshotSnapshot is not null
+            && !state.IsScreenshotOperationInProgress
+            && (screenshotSnapshot.RegistrationState is
+                    not RegistrationState.Conflict and not RegistrationState.Faulted
+                && screenshotSnapshot.CaptureState == CaptureState.Idle
+                || screenshotSnapshot.IsEnabledRequested);
+        trayIcon.SetQuickScreenshotState(
+            canToggleScreenshot,
+            screenshotSnapshot?.IsEnabledRequested == true,
+            !state.StorageReady
+            || screenshotSnapshot is null
+            || screenshotSnapshot.RegistrationState is
+                RegistrationState.Conflict or RegistrationState.Faulted
+            || screenshotSnapshot.CaptureState is not CaptureState.Idle);
     }
 
     private static Task<DatabaseInitializationResult> StartStorageInitialization()
@@ -568,6 +1469,8 @@ public partial class App : Application
                     InferenceAcceleration,
                     localInferenceComponents,
                     LocalInferenceWorkerClient.DefaultIdleTimeout);
+                _localInferenceWorker.OcrAvailabilityChanged +=
+                    LocalInferenceWorker_OcrAvailabilityChanged;
                 _localInferenceFailureCircuit = _localInferenceWorker.FailureCircuit;
                 _localInferenceFailureCircuit.StatusChanged += OnBackgroundWorkerStatusChanged;
                 var localInferenceArchitecture = LocalInferenceWorkerClient.GetProcessArchitecture();
@@ -599,6 +1502,7 @@ public partial class App : Application
                         paths.AnalysisCacheDirectoryPath));
                 ModelPackages = modelPackages;
                 RemoteApiProfiles = remoteApiProfiles;
+                _ = _businessFeatures?.RefreshAnalysisAsync();
                 IRemoteApiCredentialService remoteApiCredentials;
 #if PICFORLATER_UI_TESTING
                 remoteApiCredentials = new UiTestRemoteApiCredentialService();
@@ -644,6 +1548,7 @@ public partial class App : Application
                     paths.AnalysisCacheDirectoryPath,
                     InferenceAcceleration);
 #else
+                _windowsOcrAvailable = DetectWindowsOcrAvailability();
                 localOcr = new FallbackOcrProvider(
                     [_localInferenceWorker, new WindowsMediaOcrProvider()]);
                 localVision = _localInferenceWorker;
@@ -714,17 +1619,85 @@ public partial class App : Application
         }
     }
 
-    private static async void OnWindowClosed(object sender, WindowEventArgs args)
+    private static void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        BeginScreenshotCaptureShutdown();
+        _ = args;
+        if (sender is not MainWindow mainWindow)
+        {
+            return;
+        }
+
+        TaskCompletionSource? completionSource = null;
+        lock (WindowLifecycleLock)
+        {
+            _windowClosed = true;
+            if (_windowLifecycleState == WindowLifecycleState.Closed
+                || _applicationExitTask is not null)
+            {
+                return;
+            }
+
+            completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _applicationExitTask = completionSource.Task;
+            _windowLifecycleState = WindowLifecycleState.CleaningUp;
+        }
+
+        _ = CompleteCleanupAfterWindowClosedAsync(mainWindow, completionSource);
+    }
+
+    private static async Task CompleteCleanupAfterWindowClosedAsync(
+        MainWindow mainWindow,
+        TaskCompletionSource completionSource)
+    {
+        bool cleanupCompleted = false;
+        try
+        {
+            BeginScreenshotCaptureShutdown();
+            mainWindow.PrepareForFinalClose();
+            cleanupCompleted = await PerformApplicationCleanupAsync();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Fallback application shutdown encountered an unexpected error: {exception.GetType().Name}.");
+        }
+        finally
+        {
+            FinalizeApplicationExit(mainWindow, cleanupCompleted);
+            completionSource.TrySetResult();
+        }
+    }
+
+    private static async Task<bool> PerformApplicationCleanupAsync()
+    {
+        using var shutdownDeadline = new CancellationTokenSource(
+            ApplicationShutdownTimeout);
+        CancellationToken deadlineToken = shutdownDeadline.Token;
+
         lock (ForegroundActivationLock)
         {
             _isMainWindowReady = false;
             _isForegroundActivationPending = false;
         }
 
-        Program.UnregisterInstanceKey();
-        AnalysisCancellation.Cancel();
+        try
+        {
+            AnalysisCancellation.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        // Close coordinator admission and drain every operation before any
+        // receiver, screenshot, profile, or importer resource is released.
+        if (!await TryAwaitShutdownTaskAsync(
+                _businessFeatures?.WaitForOperationsAsync(),
+                deadlineToken))
+        {
+            return false;
+        }
+
         Task screenshotStartupTask;
         Task screenshotStopTask;
         lock (ScreenshotCaptureLifecycleLock)
@@ -733,54 +1706,40 @@ public partial class App : Application
             screenshotStopTask = _screenshotCaptureStopTask;
         }
 
-        try
+        if (!await TryAwaitShutdownTaskAsync(screenshotStartupTask, deadlineToken)
+            || !await TryAwaitShutdownTaskAsync(screenshotStopTask, deadlineToken))
         {
-            await screenshotStartupTask.ConfigureAwait(false);
-        }
-        catch
-        {
-            // The shutdown generation gate rejects a startup that completed late.
+            return false;
         }
 
-        try
+        if (!await TryAwaitShutdownTaskAsync(
+                StorageReadiness.EnsureReadyAsync(forceRetry: false),
+                deadlineToken))
         {
-            await screenshotStopTask.ConfigureAwait(false);
-        }
-        catch
-        {
-            // StopScreenshotCaptureAsync is best effort and normally absorbs this.
-        }
-
-        try
-        {
-            await StorageReadiness.EnsureReadyAsync(forceRetry: false).ConfigureAwait(false);
-        }
-        catch
-        {
-            // Cancellation or a storage failure still completes the initialization
-            // task, preventing it from publishing a receiver after shutdown proceeds.
+            return false;
         }
 
         if (_localSendStartupTask is { } localSendStartupTask)
         {
-            try
+            if (!await TryAwaitShutdownTaskAsync(localSendStartupTask, deadlineToken))
             {
-                await localSendStartupTask.ConfigureAwait(false);
-            }
-            catch
-            {
-                // Startup is best-effort and reports failures through the receiver
-                // snapshot. Shutdown must still release any partially started node.
+                return false;
             }
         }
 
         var localSendReceiver = LocalSendReceiver;
         LocalSendReceiver = null;
+        NotifyLocalSendReceiverServiceChanged(null);
         if (localSendReceiver is not null)
         {
             try
             {
-                await localSendReceiver.StopAsync().ConfigureAwait(false);
+                if (!await TryAwaitShutdownTaskAsync(
+                        localSendReceiver.StopAsync(deadlineToken),
+                        deadlineToken))
+                {
+                    return false;
+                }
             }
             catch
             {
@@ -790,7 +1749,12 @@ public partial class App : Application
 
             try
             {
-                await localSendReceiver.DisposeAsync().ConfigureAwait(false);
+                if (!await TryAwaitShutdownTaskAsync(
+                        localSendReceiver.DisposeAsync().AsTask(),
+                        deadlineToken))
+                {
+                    return false;
+                }
             }
             catch
             {
@@ -799,14 +1763,25 @@ public partial class App : Application
             }
         }
 
-        var supervisedTasks = new[]
+        var analysisWorkerSupervisor = _analysisWorkerSupervisor;
+        var reminderWorkerSupervisor = _reminderWorkerSupervisor;
+        if (!await TryAwaitShutdownTaskAsync(
+                analysisWorkerSupervisor?.Completion,
+                deadlineToken)
+            || !await TryAwaitShutdownTaskAsync(
+                reminderWorkerSupervisor?.Completion,
+                deadlineToken))
         {
-            _analysisWorkerSupervisor?.Completion,
-            _reminderWorkerSupervisor?.Completion,
-        }.OfType<Task>().ToArray();
-        if (supervisedTasks.Length > 0)
+            return false;
+        }
+        if (analysisWorkerSupervisor is not null)
         {
-            await Task.WhenAll(supervisedTasks).ConfigureAwait(false);
+            analysisWorkerSupervisor.StatusChanged -= OnBackgroundWorkerStatusChanged;
+        }
+
+        if (reminderWorkerSupervisor is not null)
+        {
+            reminderWorkerSupervisor.StatusChanged -= OnBackgroundWorkerStatusChanged;
         }
 
 #if !PICFORLATER_UI_TESTING
@@ -825,30 +1800,190 @@ public partial class App : Application
             _toastNotificationsRegistered = false;
         }
 #endif
+        if (deadlineToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
         lock (ScreenshotCaptureLifecycleLock)
         {
             _screenshotCapture = null;
             _screenshotCaptureWindow = null;
         }
 
-        (ImageImporter as IDisposable)?.Dispose();
-        (Reminders as IDisposable)?.Dispose();
-        (RemoteApiProfiles as IDisposable)?.Dispose();
-        _remoteAnalysisHttpClient?.Dispose();
-        _modelDownloadHttpClient?.Dispose();
-        _componentDownloadHttpClient?.Dispose();
-        _updateCheckHttpClient?.Dispose();
+        DisposeResource(ImageImporter);
+        ImageImporter = null;
+        DisposeResource(Reminders);
+        Reminders = null;
+        DisposeResource(RemoteApiProfiles);
+        RemoteApiProfiles = null;
+        DisposeResource(_remoteAnalysisHttpClient);
+        _remoteAnalysisHttpClient = null;
+        DisposeResource(_modelDownloadHttpClient);
+        _modelDownloadHttpClient = null;
+        DisposeResource(_componentDownloadHttpClient);
+        _componentDownloadHttpClient = null;
+        DisposeResource(_updateCheckHttpClient);
+        _updateCheckHttpClient = null;
 #if PICFORLATER_UI_TESTING
-        _uiTestInferenceRuntime?.Dispose();
+        DisposeResource(_uiTestInferenceRuntime);
+        _uiTestInferenceRuntime = null;
 #else
-        if (_localInferenceWorker is not null)
+        var localInferenceWorker = _localInferenceWorker;
+        _localInferenceWorker = null;
+        if (localInferenceWorker is not null)
         {
-            await _localInferenceWorker.DisposeAsync().ConfigureAwait(false);
+            localInferenceWorker.OcrAvailabilityChanged -=
+                LocalInferenceWorker_OcrAvailabilityChanged;
+            try
+            {
+                if (!await TryAwaitShutdownTaskAsync(
+                        localInferenceWorker.DisposeAsync().AsTask(),
+                        deadlineToken))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                // LocalInferenceWorkerClient bounds its graceful shutdown and
+                // terminates the worker process when needed.
+            }
         }
-        _localInferenceFailureCircuit?.Stop();
+
+        try
+        {
+            _localInferenceFailureCircuit?.Stop();
+        }
+        catch
+        {
+            // The circuit is diagnostic state; it must not prevent the remaining
+            // process resources from reaching their final disposal.
+        }
+        _localInferenceFailureCircuit = null;
 #endif
-        _analysisWakeSignal?.Dispose();
-        AnalysisCancellation.Dispose();
+        DisposeResource(_analysisWakeSignal);
+        _analysisWakeSignal = null;
+        try
+        {
+            AnalysisCancellation.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        return !deadlineToken.IsCancellationRequested;
+    }
+
+    private static async Task<bool> TryAwaitShutdownTaskAsync(
+        Task? task,
+        CancellationToken deadlineToken)
+    {
+        if (task is null)
+        {
+            return true;
+        }
+
+        try
+        {
+            Task completedTask = await Task.WhenAny(
+                    task,
+                    Task.Delay(Timeout.InfiniteTimeSpan, deadlineToken))
+                .ConfigureAwait(false);
+            if (!ReferenceEquals(completedTask, task))
+            {
+                Debug.WriteLine("Application shutdown deadline expired while awaiting a task.");
+                return false;
+            }
+
+            await task.ConfigureAwait(false);
+        }
+        catch
+        {
+            // Independent shutdown steps must continue even when one task fails.
+        }
+
+        return true;
+    }
+
+    private static void DisposeResource(object? resource)
+    {
+        try
+        {
+            (resource as IDisposable)?.Dispose();
+        }
+        catch
+        {
+            // Resource disposal is best effort during process shutdown.
+        }
+    }
+
+    private static void UnregisterInstanceKeySafely()
+    {
+        try
+        {
+            Program.UnregisterInstanceKey();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Single-instance registration cleanup failed: {exception.GetType().Name}.");
+        }
+    }
+
+    private static void DisposeSystemTrayIcon()
+    {
+        if (Window is MainWindow mainWindow)
+        {
+            mainWindow.Activated -= MainWindow_ActivatedForTray;
+        }
+
+        var trayIcon = Interlocked.Exchange(ref _systemTrayIcon, null);
+        if (trayIcon is null)
+        {
+            return;
+        }
+
+        try
+        {
+            trayIcon.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"System tray disposal failed: {exception.GetType().Name}.");
+        }
+    }
+
+    private static void DisposeBusinessFeatures()
+    {
+        var businessFeatures = Interlocked.Exchange(ref _businessFeatures, null);
+        if (businessFeatures is null)
+        {
+            return;
+        }
+
+        try
+        {
+            businessFeatures.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Business feature coordinator disposal failed: {exception.GetType().Name}.");
+        }
+    }
+
+    private static void MainWindow_ActivatedForTray(
+        object sender,
+        WindowActivatedEventArgs args)
+    {
+        _ = sender;
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        {
+            return;
+        }
+
+        _ = TryEnsureSystemTrayIcon();
     }
 
     private static async Task InitializeLocalSendAsync(
@@ -873,12 +2008,7 @@ public partial class App : Application
 #endif
             cancellationToken.ThrowIfCancellationRequested();
             LocalSendReceiver = receiver;
-            if (LocalSendReceivePreference.IsEnabled)
-            {
-                _localSendStartupTask = StartLocalSendReceiverAsync(
-                    receiver,
-                    cancellationToken);
-            }
+            NotifyLocalSendReceiverServiceChanged(receiver);
         }
         catch
         {
@@ -896,6 +2026,7 @@ public partial class App : Application
             if (ReferenceEquals(LocalSendReceiver, receiver))
             {
                 LocalSendReceiver = null;
+                NotifyLocalSendReceiverServiceChanged(null);
             }
 
             if (cancellationToken.IsCancellationRequested)
@@ -911,11 +2042,19 @@ public partial class App : Application
     {
         try
         {
-            // Keep node construction, certificate setup, and listener startup out of
-            // the storage-readiness continuation even when their first awaits complete
-            // synchronously.
+            // Keep listener startup out of the storage-readiness continuation even
+            // when the coordinator can acquire its gate synchronously.
             await Task.Yield();
-            await receiver.StartAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(receiver, LocalSendReceiver)
+                || !LocalSendReceivePreference.IsEnabled
+                || _businessFeatures is not { } businessFeatures)
+            {
+                return;
+            }
+
+            await businessFeatures.StartLocalSendIfRequestedAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -924,6 +2063,29 @@ public partial class App : Application
         {
             // The receiver publishes a safe Faulted snapshot. Network startup is
             // independent from storage readiness and must not hide the library.
+        }
+    }
+
+    private static void StartLocalSendReceiverIfRequested()
+    {
+        var receiver = LocalSendReceiver;
+        if (receiver is null || !LocalSendReceivePreference.IsEnabled)
+        {
+            return;
+        }
+
+        lock (LocalSendStartupLock)
+        {
+            if (ReferenceEquals(_localSendStartupReceiver, receiver)
+                && _localSendStartupTask is not null)
+            {
+                return;
+            }
+
+            _localSendStartupReceiver = receiver;
+            _localSendStartupTask = StartLocalSendReceiverAsync(
+                receiver,
+                AnalysisCancellation.Token);
         }
     }
 
@@ -997,18 +2159,6 @@ public partial class App : Application
             }
         }
     }
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsIconic(nint hWnd);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetForegroundWindow(nint hWnd);
 
 #if !PICFORLATER_UI_TESTING
     private static void RegisterToastNotifications()
@@ -1109,7 +2259,15 @@ public partial class App : Application
         PendingNotificationImageItemId = imageItemId;
         DispatcherQueue.TryEnqueue(() =>
         {
-            Window.Activate();
+            if (!IsMainWindowReady())
+            {
+                return;
+            }
+
+            if (!BringMainWindowToForeground())
+            {
+                return;
+            }
             NotificationImageRequested?.Invoke(imageItemId);
         });
     }
@@ -1127,7 +2285,15 @@ public partial class App : Application
         PendingReminderCreationImageItemId = imageItemId;
         DispatcherQueue.TryEnqueue(() =>
         {
-            Window.Activate();
+            if (!IsMainWindowReady())
+            {
+                return;
+            }
+
+            if (!BringMainWindowToForeground())
+            {
+                return;
+            }
             ReminderCreationRequested?.Invoke(imageItemId);
         });
     }

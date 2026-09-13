@@ -55,6 +55,21 @@
   <data name="AppDescription" xml:space="preserve"><value>在本機儲存、整理並稍後回顧圖片。</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>手機接收</value></data>
+  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>手機接收（無法使用）</value></data>
+  <data name="TrayAnalysisModeText" xml:space="preserve"><value>分析模式</value></data>
+  <data name="TrayLocalAnalysisText" xml:space="preserve"><value>本機分析</value></data>
+  <data name="TrayLocalAnalysisUnavailableText" xml:space="preserve"><value>本機分析（無法使用）</value></data>
+  <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
+  <data name="TrayRemoteAnalysisUnavailableText" xml:space="preserve"><value>API 分析（無法使用）</value></data>
+  <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快速截圖</value></data>
+  <data name="TrayQuickScreenshotUnavailableText" xml:space="preserve"><value>快速截圖（無法使用）</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>關閉</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater 無法常駐系統匣</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>系統匣圖示目前無法使用。您可以重試建立圖示、完全結束，或保持視窗開啟。</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>重試系統匣</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>完全結束</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主導覽</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>背景處理已停止</value></data>
@@ -115,6 +130,10 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>淺色主題</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主題</value></data>
+  <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>視窗行為</value></data>
+  <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>關閉視窗後繼續在系統匣執行</value></data>
+  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>開啟後，手機接收、快速截圖、分析和提醒會繼續在背景執行。需要完全結束時，請使用系統匣選單中的「關閉」。</value></data>
+  <data name="KeepInSystemTrayToggle.AutomationProperties.Name" xml:space="preserve"><value>關閉視窗後繼續在系統匣執行</value></data>
   <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>介面語言 / Language</value></data>
   <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>介面語言</value></data>
   <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>選擇 PicForLater 使用的介面語言。變更將在下次啟動應用程式時生效。</value></data>
@@ -695,6 +714,7 @@
   <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>本機分析</value></data>
   <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>在本機裝置上完成 OCR、視覺模型與推理，資料不上雲端。</value></data>
   <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>就緒</value></data>
+  <data name="LocalAnalysisUnavailableStatus" xml:space="preserve"><value>無法使用</value></data>
   <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>開啟 API 分析設定</value></data>
   <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>設定</value></data>
   <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>雲端 API</value></data>
@@ -800,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供應商已回應，但結果不符合 PicForLater 的嚴格輸出結構描述。</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成測試失敗；沒有傳送使用者圖片或 OCR 文字。</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>啟用前請先讓此供應商、模型和傳送模式通過合成測試。</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>本機 OCR 目前無法使用。請安裝或修復本機 OCR 元件，或在啟用遠端分析前選擇「遠端視覺」模式。</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已為新工作啟用所選供應商和傳送模式的遠端分析。</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新工作已切回本機，尚未傳送的請求已阻止。</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤銷，新工作已切回本機；供應商已經收到的內容無法收回。</value></data>

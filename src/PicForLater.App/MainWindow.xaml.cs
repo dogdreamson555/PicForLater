@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Windowing;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Services;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Graphics;
 
@@ -28,13 +29,28 @@ public sealed partial class MainWindow : Window
     private uint _minimumSizeDpi;
     private nint _windowHandle;
     private bool _minimumSizeConfiguredAfterActivation;
-    private bool _closeDecisionInProgress;
     private bool _allowClosing;
+    private bool _windowCloseRequestQueued;
     private bool _nativeClosingRaised;
     private readonly IScreenshotCapturePlatform _screenshotCapturePlatform;
+    private WindowSessionMessageMonitor? _sessionMessageMonitor;
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint windowHandle);
+
+    private const int ShowWindowRestore = 9;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsIconic(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(nint windowHandle, int command);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(nint windowHandle);
 
     public MainWindow()
     {
@@ -42,14 +58,11 @@ public sealed partial class MainWindow : Window
 
 #if PICFORLATER_UI_VISUAL_FIXTURE
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetHelpText(
-            AppTitleBar,
+            WindowRoot,
             $"fixture:{UiTestVisualFixtureSeeder.FixtureId}");
 #endif
 
         Title = new ResourceLoader().GetString("MainWindowTitle");
-
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
 
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
         if (File.Exists(iconPath))
@@ -62,6 +75,18 @@ public sealed partial class MainWindow : Window
 #else
         _screenshotCapturePlatform = WindowsScreenshotCapturePlatform.Create(_windowHandle);
 #endif
+        try
+        {
+            _sessionMessageMonitor = new WindowSessionMessageMonitor(_windowHandle);
+            _sessionMessageMonitor.SessionEnding +=
+                SessionMessageMonitor_SessionEnding;
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Windows session message monitoring could not start: {exception.GetType().Name}.");
+        }
+
         AppWindow.Changed += AppWindow_Changed;
         AppWindow.Closing += AppWindow_Closing;
         Activated += MainWindow_Activated;
@@ -74,9 +99,11 @@ public sealed partial class MainWindow : Window
     internal IScreenshotCapturePlatform ScreenshotCapturePlatform =>
         _screenshotCapturePlatform;
 
+    internal MainPage? CurrentMainPage => RootFrame.Content as MainPage;
+
     internal event EventHandler? NativeClosing;
 
-    private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
     {
         _ = sender;
         if (args.Cancel)
@@ -90,35 +117,73 @@ public sealed partial class MainWindow : Window
         }
 
         args.Cancel = true;
-        if (_closeDecisionInProgress)
+        if (_windowCloseRequestQueued)
         {
             return;
         }
 
-        _closeDecisionInProgress = true;
-        try
-        {
-            if (RootFrame.Content is MainPage mainPage
-                && !await mainPage.TryLeaveCurrentPageAsync())
+        // Let the native close-button handler finish before changing visibility.
+        _windowCloseRequestQueued = true;
+        if (!DispatcherQueue.TryEnqueue(() =>
             {
-                return;
-            }
-
-            _allowClosing = true;
-            PrepareForFinalClose();
-            Close();
-        }
-        finally
+                _windowCloseRequestQueued = false;
+                if (!_allowClosing && !_nativeClosingRaised)
+                {
+                    App.RequestWindowClose();
+                }
+            }))
         {
-            _closeDecisionInProgress = false;
+            _windowCloseRequestQueued = false;
+            // Do not leave the native close canceled with no follow-up if the
+            // dispatcher is already winding down.
+            App.RequestWindowClose();
         }
     }
 
-    private void PrepareForFinalClose()
+    private void SessionMessageMonitor_SessionEnding(
+        object? sender,
+        EventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        App.RequestSystemSessionShutdown();
+    }
+
+    internal void HideToTray()
+    {
+        AppWindow.Hide();
+    }
+
+    internal void RestoreAndActivate()
+    {
+        // Restore visibility and window placement before activating the window.
+        AppWindow.Show(activateWindow: false);
+        EnsureWindowHandle();
+        if (IsIconic(_windowHandle))
+        {
+            _ = ShowWindow(_windowHandle, ShowWindowRestore);
+        }
+
+        Activate();
+        _ = SetForegroundWindow(_windowHandle);
+    }
+
+    private void EnsureWindowHandle()
+    {
+        if (_windowHandle == 0)
+        {
+            _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        }
+    }
+
+    internal void DisableInteractionForShutdown() => RootFrame.IsEnabled = false;
+
+    internal void PrepareForFinalClose()
     {
         AppWindow.Changed -= AppWindow_Changed;
         AppWindow.Closing -= AppWindow_Closing;
         Activated -= MainWindow_Activated;
+        DisposeSessionMessageMonitor();
         if (_nativeClosingRaised)
         {
             return;
@@ -137,8 +202,43 @@ public sealed partial class MainWindow : Window
         finally
         {
             NativeClosing = null;
-            (_screenshotCapturePlatform as IDisposable)?.Dispose();
+            try
+            {
+                (_screenshotCapturePlatform as IDisposable)?.Dispose();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Screenshot capture platform disposal failed: {exception.GetType().Name}.");
+            }
         }
+    }
+
+    private void DisposeSessionMessageMonitor()
+    {
+        var monitor = _sessionMessageMonitor;
+        _sessionMessageMonitor = null;
+        if (monitor is null)
+        {
+            return;
+        }
+
+        monitor.SessionEnding -= SessionMessageMonitor_SessionEnding;
+        try
+        {
+            monitor.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Windows session message monitor disposal failed: {exception.GetType().Name}.");
+        }
+    }
+
+    internal void CloseAfterFinalCleanup()
+    {
+        _allowClosing = true;
+        Close();
     }
 
     private void AppWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)

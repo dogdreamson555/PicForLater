@@ -11,6 +11,7 @@ Complete attribution and redistribution notices are in [`THIRD-PARTY-NOTICES.md`
 | Microsoft.Windows.SDK.BuildTools.WinApp | 0.4.0 | Windows application build tooling | Microsoft package terms | Build time |
 | CommunityToolkit.Mvvm | 8.4.2 | MVVM observable and command infrastructure | MIT | Core application |
 | CommunityToolkit.WinUI.Notifications | 7.1.2 | Unpackaged desktop notification scheduling and activation | MIT | Core application |
+| H.NotifyIcon.WinUI | 2.4.1 | Native system-tray icon and PopupMenu integration | MIT | Core application |
 | LocalSendDotNet.Core | 0.2.0-preview.5 | UI-independent LocalSend v2.2-compatible LAN discovery, TLS and receive-node implementation | Apache-2.0 | Core application; independent compatibility implementation, not an official LocalSend component |
 | Microsoft.AspNetCore.App | .NET 10 framework reference (10.0.11 in the locally verified publish) | Kestrel HTTPS server and hosting primitives required by the LocalSend receive node | MIT and .NET third-party notices | Version is resolved by the pinned .NET 10.0.3xx SDK; included in the unpackaged self-contained publish, so no separately installed ASP.NET Core runtime is required |
 | System.Drawing.Common | 10.0.11 | Security override for a vulnerable transitive version | MIT | Core application |

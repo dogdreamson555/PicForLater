@@ -55,6 +55,21 @@
   <data name="AppDescription" xml:space="preserve"><value>在本机保存、整理并稍后回看图片。</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>手机接收</value></data>
+  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>手机接收（不可用）</value></data>
+  <data name="TrayAnalysisModeText" xml:space="preserve"><value>分析模式</value></data>
+  <data name="TrayLocalAnalysisText" xml:space="preserve"><value>本地分析</value></data>
+  <data name="TrayLocalAnalysisUnavailableText" xml:space="preserve"><value>本地分析（不可用）</value></data>
+  <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
+  <data name="TrayRemoteAnalysisUnavailableText" xml:space="preserve"><value>API 分析（不可用）</value></data>
+  <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快捷截图</value></data>
+  <data name="TrayQuickScreenshotUnavailableText" xml:space="preserve"><value>快捷截图（不可用）</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>关闭</value></data>
+  <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater 无法常驻系统托盘</value></data>
+  <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>系统托盘图标当前不可用。你可以重试创建托盘图标、完全退出，或保持窗口打开。</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>重试托盘</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>完全退出</value></data>
+  <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>取消</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>主导航</value></data>
   <data name="BackgroundWorkersFaultInfoBar.Title" xml:space="preserve"><value>后台处理已停止</value></data>
@@ -115,6 +130,10 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>浅色主题</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
+  <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>窗口行为</value></data>
+  <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>关闭窗口后继续在系统托盘运行</value></data>
+  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>开启后，手机接收、快捷截图、分析和提醒会继续在后台运行。需要完全退出时，请使用托盘菜单中的“关闭”。</value></data>
+  <data name="KeepInSystemTrayToggle.AutomationProperties.Name" xml:space="preserve"><value>关闭窗口后继续在系统托盘运行</value></data>
   <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>界面语言 / Language</value></data>
   <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>界面语言</value></data>
   <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>选择 PicForLater 使用的界面语言。更改将在下次启动应用时生效。</value></data>
@@ -695,6 +714,7 @@
   <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>本地分析</value></data>
   <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>在本地设备上完成 OCR、视觉模型与推理，数据不上云端。</value></data>
   <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>就绪</value></data>
+  <data name="LocalAnalysisUnavailableStatus" xml:space="preserve"><value>不可用</value></data>
   <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>打开 API 分析设置</value></data>
   <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>配置</value></data>
   <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>云端 API</value></data>
@@ -800,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供应商已响应，但结果不符合 PicForLater 的严格结构化 schema。</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成测试失败；没有发送用户图片或 OCR 文字。</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>启用前请先让此供应商、模型和载荷模式通过合成测试。</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>本地 OCR 当前不可用。请安装或修复本地 OCR 组件，或在启用远程分析前选择“远程视觉”模式。</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已为新任务启用所选供应商和载荷模式的远程分析。</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新任务已切回本地，尚未发送的请求已阻止。</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤销，新任务已切回本地；供应商已经收到的内容无法召回。</value></data>

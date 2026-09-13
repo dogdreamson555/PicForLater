@@ -242,6 +242,7 @@ public partial class SettingsPageViewModel : ObservableObject
             return;
         }
 
+        App.InvalidateLocalAnalysisAvailability(refreshAfterInvalidation: false);
         _modelOperationCancellation?.Dispose();
         _modelOperationCancellation = new CancellationTokenSource();
         IsWorking = true;
@@ -288,6 +289,8 @@ public partial class SettingsPageViewModel : ObservableObject
             _modelOperationCancellation?.Dispose();
             _modelOperationCancellation = null;
         }
+
+        await App.RefreshLocalAnalysisAvailabilityAsync().ConfigureAwait(true);
     }
 
     public async Task RemoveLocalInferenceComponentAsync()
@@ -297,6 +300,7 @@ public partial class SettingsPageViewModel : ObservableObject
             return;
         }
 
+        App.InvalidateLocalAnalysisAvailability(refreshAfterInvalidation: false);
         IsWorking = true;
         CanCancelModelOperation = false;
         IsModelProgressIndeterminate = true;
@@ -321,6 +325,8 @@ public partial class SettingsPageViewModel : ObservableObject
             IsWorking = false;
             SetRecommendedActionsEnabled(true);
         }
+
+        await App.RefreshLocalAnalysisAvailabilityAsync().ConfigureAwait(true);
     }
 
     public async Task SetAnalysisModeAsync(int selectedIndex)
