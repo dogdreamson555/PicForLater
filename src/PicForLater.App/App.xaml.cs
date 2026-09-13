@@ -1365,10 +1365,15 @@ public partial class App : Application
         var remoteAnalysisEnabled = state.StorageReady
             && state.IsRemoteAnalysisSelectable
             && !state.IsAnalysisOperationInProgress;
+        // Keep the parent visible while an available backend is temporarily
+        // busy; hide it only when there is no executable backend to choose.
+        var analysisModeVisible = state.StorageReady
+            && (state.LocalAnalysisAvailable || state.IsRemoteAnalysisSelectable);
         trayIcon.SetAnalysisState(
             localAnalysisEnabled,
             remoteAnalysisEnabled,
             state.IsRemoteAnalysisVisible,
+            analysisModeVisible,
             state.AnalysisBackend == AnalysisExecutionBackend.Local,
             state.AnalysisBackend == AnalysisExecutionBackend.RemoteApi);
 

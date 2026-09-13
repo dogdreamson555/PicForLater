@@ -28,6 +28,7 @@ internal sealed class SystemTrayIconAdapter : IDisposable
     private readonly ToggleMenuFlyoutItem _localSendItem;
     private readonly ToggleMenuFlyoutItem _localAnalysisItem;
     private readonly ToggleMenuFlyoutItem _remoteAnalysisItem;
+    private readonly MenuFlyoutSubItem _analysisModeItem;
     private readonly ToggleMenuFlyoutItem _quickScreenshotItem;
     private bool _disposed;
 
@@ -72,10 +73,12 @@ internal sealed class SystemTrayIconAdapter : IDisposable
         var analysisModeItem = new MenuFlyoutSubItem
         {
             Text = _resources.GetString("TrayAnalysisModeText"),
+            Visibility = Visibility.Collapsed,
         };
         AutomationProperties.SetAutomationId(analysisModeItem, "TrayAnalysisModeItem");
         analysisModeItem.Items.Add(_localAnalysisItem);
         analysisModeItem.Items.Add(_remoteAnalysisItem);
+        _analysisModeItem = analysisModeItem;
 
         var quickScreenshotItem = new ToggleMenuFlyoutItem
         {
@@ -151,6 +154,7 @@ internal sealed class SystemTrayIconAdapter : IDisposable
         bool localEnabled,
         bool remoteEnabled,
         bool remoteVisible,
+        bool analysisModeVisible,
         bool localSelected,
         bool remoteSelected)
     {
@@ -167,6 +171,9 @@ internal sealed class SystemTrayIconAdapter : IDisposable
             _remoteAnalysisItem.IsChecked = remoteSelected;
             _remoteAnalysisItem.IsEnabled = remoteEnabled;
             _remoteAnalysisItem.Visibility = remoteVisible
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            _analysisModeItem.Visibility = analysisModeVisible
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         });
