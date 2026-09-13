@@ -338,37 +338,49 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         }
 
         IsWorking = true;
-        try
-        {
-            var profileService = GetProfileService();
-            var options = await RemoteApiProviderCatalog.EnsureProfilesAsync(profileService)
-                .ConfigureAwait(true);
-            _allProviderOptions.Clear();
-            _allProviderOptions.AddRange(options);
-            PopulateCategories();
-
-            var execution = await profileService.GetExecutionStateAsync().ConfigureAwait(true);
-            ApplyPersistedOutputLanguage(execution.Settings.OutputLanguage);
-            var selectedProfileId = await ResolveInitialProfileIdAsync(
-                    profileService,
-                    execution)
-                .ConfigureAwait(true);
-            var selected = _allProviderOptions.FirstOrDefault(
-                option => option.ProfileId == selectedProfileId)
-                ?? _allProviderOptions.FirstOrDefault();
-            if (selected is not null)
-            {
-                SelectedCategoryOption = CategoryOptions.First(
-                    category => category.Category == selected.Category);
-                await SelectProviderAsync(selected).ConfigureAwait(true);
-            }
-
-            IsInitialized = true;
-            OnPropertyChanged(nameof(CanChangeOutputLanguage));
-        }
-        finally
+        var operationLease = await AcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
             IsWorking = false;
+            ShowOperationFailure();
+            return;
+        }
+
+        await using (operationLease)
+        {
+            try
+            {
+                var profileService = GetProfileService();
+                var options = await RemoteApiProviderCatalog.EnsureProfilesAsync(profileService)
+                    .ConfigureAwait(true);
+                _allProviderOptions.Clear();
+                _allProviderOptions.AddRange(options);
+                PopulateCategories();
+
+                var execution = await profileService.GetExecutionStateAsync().ConfigureAwait(true);
+                ApplyPersistedOutputLanguage(execution.Settings.OutputLanguage);
+                var selectedProfileId = await ResolveInitialProfileIdAsync(
+                        profileService,
+                        execution)
+                    .ConfigureAwait(true);
+                var selected = _allProviderOptions.FirstOrDefault(
+                    option => option.ProfileId == selectedProfileId)
+                    ?? _allProviderOptions.FirstOrDefault();
+                if (selected is not null)
+                {
+                    SelectedCategoryOption = CategoryOptions.First(
+                        category => category.Category == selected.Category);
+                    await SelectProviderAsync(selected).ConfigureAwait(true);
+                }
+
+                IsInitialized = true;
+                OnPropertyChanged(nameof(CanChangeOutputLanguage));
+            }
+            finally
+            {
+                IsWorking = false;
+            }
         }
     }
 
@@ -391,12 +403,29 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
                 return;
             }
 
-            await GetProfileService().SetOutputLanguageAsync(requestedLanguage)
+            var operationLease = await AcquireAnalysisOperationAsync()
                 .ConfigureAwait(true);
-            _persistedOutputLanguage = requestedLanguage;
-            if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+            if (operationLease is null)
             {
-                ClearOutputLanguageSaveFailure();
+                if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+                {
+                    SelectedOutputLanguageIndex = OutputLanguageToIndex(
+                        _persistedOutputLanguage);
+                    ShowOperationFailure();
+                }
+
+                return;
+            }
+
+            await using (operationLease)
+            {
+                await GetProfileService().SetOutputLanguageAsync(requestedLanguage)
+                    .ConfigureAwait(true);
+                _persistedOutputLanguage = requestedLanguage;
+                if (saveVersion == Volatile.Read(ref _outputLanguageSaveVersion))
+                {
+                    ClearOutputLanguageSaveFailure();
+                }
             }
         }
         catch
@@ -537,57 +566,79 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(secret);
         var profile = GetCurrentProfile();
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            await GetCredentialService().StoreAsync(profile.CredentialReference, secret)
-                .ConfigureAwait(true);
-            _profile = await GetProfileService().SaveProfileAsync(profile with
-            {
-                IsEnabled = true,
-                ValidationState = RemoteApiProfileValidationState.Unverified,
-                LastVerifiedAtUtc = null,
-            }).ConfigureAwait(true);
-            _lastSuccessfulTest = null;
-            await RefreshCredentialAsync().ConfigureAwait(true);
-            await RefreshStateAsync().ConfigureAwait(true);
-            ShowStatus("ApiCredentialSavedStatus", SettingsStatusKind.Success);
+            ShowOperationFailure();
+            return;
         }
-        finally
+
+        await using (operationLease)
         {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                await GetCredentialService().StoreAsync(profile.CredentialReference, secret)
+                    .ConfigureAwait(true);
+                _profile = await GetProfileService().SaveProfileAsync(profile with
+                {
+                    IsEnabled = true,
+                    ValidationState = RemoteApiProfileValidationState.Unverified,
+                    LastVerifiedAtUtc = null,
+                }).ConfigureAwait(true);
+                _lastSuccessfulTest = null;
+                await RefreshCredentialAsync().ConfigureAwait(true);
+                await RefreshStateAsync().ConfigureAwait(true);
+                ShowStatus("ApiCredentialSavedStatus", SettingsStatusKind.Success);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
     public async Task DeleteCredentialAsync()
     {
         var profile = GetCurrentProfile();
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            await GetCredentialService().DeleteAsync(profile.CredentialReference)
-                .ConfigureAwait(true);
-            _profile = await GetProfileService().SaveProfileAsync(profile with
-            {
-                IsEnabled = false,
-                ValidationState = RemoteApiProfileValidationState.Unverified,
-                LastVerifiedAtUtc = null,
-                ConsentedInputMode = null,
-                ConsentedDisclosureVersion = null,
-                ConsentGrantedAtUtc = null,
-            }).ConfigureAwait(true);
-            _lastSuccessfulTest = null;
-            await RefreshCredentialAsync().ConfigureAwait(true);
-            await RefreshStateAsync().ConfigureAwait(true);
-            ShowStatus("ApiCredentialDeletedStatus", SettingsStatusKind.Warning);
+            ShowOperationFailure();
+            return;
         }
-        finally
+
+        await using (operationLease)
         {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                await GetCredentialService().DeleteAsync(profile.CredentialReference)
+                    .ConfigureAwait(true);
+                _profile = await GetProfileService().SaveProfileAsync(profile with
+                {
+                    IsEnabled = false,
+                    ValidationState = RemoteApiProfileValidationState.Unverified,
+                    LastVerifiedAtUtc = null,
+                    ConsentedInputMode = null,
+                    ConsentedDisclosureVersion = null,
+                    ConsentGrantedAtUtc = null,
+                }).ConfigureAwait(true);
+                _lastSuccessfulTest = null;
+                await RefreshCredentialAsync().ConfigureAwait(true);
+                await RefreshStateAsync().ConfigureAwait(true);
+                ShowStatus("ApiCredentialDeletedStatus", SettingsStatusKind.Warning);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
@@ -604,54 +655,65 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             return;
         }
 
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            var profile = IsCustomProfile
-                ? await SaveCustomProfileAsync(showSuccessStatus: false).ConfigureAwait(true)
-                : await SaveModelIfChangedAsync().ConfigureAwait(true);
-            if (!HasCredential)
-            {
-                ShowStatus("ApiCredentialRequiredStatus", SettingsStatusKind.Warning);
-                return;
-            }
+            ShowOperationFailure();
+            return;
+        }
 
+        await using (operationLease)
+        {
+            IsWorking = true;
             try
             {
-                await GetConnectionTester().TestAsync(profile, SelectedInputMode)
-                    .ConfigureAwait(true);
-                _profile = await GetProfileService().SaveProfileAsync(profile with
+                var profile = IsCustomProfile
+                    ? await SaveCustomProfileAsync(showSuccessStatus: false).ConfigureAwait(true)
+                    : await SaveModelIfChangedAsync().ConfigureAwait(true);
+                if (!HasCredential)
                 {
-                    IsEnabled = true,
-                    ValidationState = RemoteApiProfileValidationState.Valid,
-                    LastVerifiedAtUtc = DateTimeOffset.UtcNow,
-                }).ConfigureAwait(true);
-                _lastSuccessfulTest = (
-                    _profile.ProfileId,
-                    _profile.ModelId,
-                    SelectedInputMode);
-                ApplyValidationState();
-                ShowStatus("ApiConnectionSucceededStatus", SettingsStatusKind.Success);
+                    ShowStatus("ApiCredentialRequiredStatus", SettingsStatusKind.Warning);
+                    return;
+                }
+
+                try
+                {
+                    await GetConnectionTester().TestAsync(profile, SelectedInputMode)
+                        .ConfigureAwait(true);
+                    _profile = await GetProfileService().SaveProfileAsync(profile with
+                    {
+                        IsEnabled = true,
+                        ValidationState = RemoteApiProfileValidationState.Valid,
+                        LastVerifiedAtUtc = DateTimeOffset.UtcNow,
+                    }).ConfigureAwait(true);
+                    _lastSuccessfulTest = (
+                        _profile.ProfileId,
+                        _profile.ModelId,
+                        SelectedInputMode);
+                    ApplyValidationState();
+                    ShowStatus("ApiConnectionSucceededStatus", SettingsStatusKind.Success);
+                }
+                catch (RemoteAnalysisProviderException exception)
+                {
+                    await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                    _profile = await GetProfileService().SaveProfileAsync(profile with
+                    {
+                        IsEnabled = true,
+                        ValidationState = RemoteApiProfileValidationState.Invalid,
+                        LastVerifiedAtUtc = null,
+                    }).ConfigureAwait(true);
+                    _lastSuccessfulTest = null;
+                    ApplyValidationState();
+                    await RefreshStateAsync().ConfigureAwait(true);
+                    ShowRemoteFailure(exception.ErrorCode);
+                }
             }
-            catch (RemoteAnalysisProviderException exception)
+            finally
             {
-                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-                _profile = await GetProfileService().SaveProfileAsync(profile with
-                {
-                    IsEnabled = true,
-                    ValidationState = RemoteApiProfileValidationState.Invalid,
-                    LastVerifiedAtUtc = null,
-                }).ConfigureAwait(true);
-                _lastSuccessfulTest = null;
-                ApplyValidationState();
-                await RefreshStateAsync().ConfigureAwait(true);
-                ShowRemoteFailure(exception.ErrorCode);
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
             }
-        }
-        finally
-        {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -664,143 +726,197 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             return;
         }
 
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            profile = await GetProfileService().SaveProfileAsync(profile with
-            {
-                IsEnabled = true,
-                ConsentedInputMode = SelectedInputMode,
-                ConsentedDisclosureVersion = profile.DisclosureVersion,
-                ConsentGrantedAtUtc = DateTimeOffset.UtcNow,
-            }).ConfigureAwait(true);
-            await GetProfileService().SelectRemoteAsync(profile.ProfileId, SelectedInputMode)
-                .ConfigureAwait(true);
-            _profile = profile;
-            await RefreshStateAsync().ConfigureAwait(true);
-            ShowStatus("ApiRemoteEnabledStatus", SettingsStatusKind.Success);
+            ShowOperationFailure();
+            return;
         }
-        finally
+
+        await using (operationLease)
         {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                profile = await GetProfileService().SaveProfileAsync(profile with
+                {
+                    IsEnabled = true,
+                    ConsentedInputMode = SelectedInputMode,
+                    ConsentedDisclosureVersion = profile.DisclosureVersion,
+                    ConsentGrantedAtUtc = DateTimeOffset.UtcNow,
+                }).ConfigureAwait(true);
+                await GetProfileService().SelectRemoteAsync(profile.ProfileId, SelectedInputMode)
+                    .ConfigureAwait(true);
+                _profile = profile;
+                await RefreshStateAsync().ConfigureAwait(true);
+                ShowStatus("ApiRemoteEnabledStatus", SettingsStatusKind.Success);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
     public async Task SelectLocalAsync()
     {
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            await RefreshStateAsync().ConfigureAwait(true);
-            ShowStatus("ApiLocalSelectedStatus", SettingsStatusKind.Success);
+            ShowOperationFailure();
+            return;
         }
-        finally
+
+        await using (operationLease)
         {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                await RefreshStateAsync().ConfigureAwait(true);
+                ShowStatus("ApiLocalSelectedStatus", SettingsStatusKind.Success);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
     public async Task RevokeConsentAsync()
     {
         var profile = GetCurrentProfile();
-        IsWorking = true;
-        try
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            _profile = await GetProfileService().SaveProfileAsync(profile with
-            {
-                IsEnabled = false,
-                ConsentedInputMode = null,
-                ConsentedDisclosureVersion = null,
-                ConsentGrantedAtUtc = null,
-            }).ConfigureAwait(true);
-            await RefreshStateAsync().ConfigureAwait(true);
-            ShowStatus("ApiConsentRevokedStatus", SettingsStatusKind.Warning);
+            ShowOperationFailure();
+            return;
         }
-        finally
+
+        await using (operationLease)
         {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                _profile = await GetProfileService().SaveProfileAsync(profile with
+                {
+                    IsEnabled = false,
+                    ConsentedInputMode = null,
+                    ConsentedDisclosureVersion = null,
+                    ConsentGrantedAtUtc = null,
+                }).ConfigureAwait(true);
+                await RefreshStateAsync().ConfigureAwait(true);
+                ShowStatus("ApiConsentRevokedStatus", SettingsStatusKind.Warning);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
     public async Task SaveAdvancedSettingsAsync()
     {
-        if (IsCustomProfile)
+        var operationLease = await TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+        if (operationLease is null)
         {
-            await SaveCustomProfileAsync(showSuccessStatus: true).ConfigureAwait(true);
-            App.NotifyAnalysisConfigurationChanged();
+            ShowOperationFailure();
             return;
         }
 
-        var profile = GetCurrentProfile();
-        if (!Uri.TryCreate(EndpointUriText.Trim(), UriKind.Absolute, out var endpoint))
+        await using (operationLease)
         {
-            throw new RemoteApiProfileException("remote.base-uri-invalid");
-        }
-
-        var preset = RemoteApiProviderCatalog.GetPreset(profile.ProfileId);
-        var isPresetEndpoint = endpoint == preset.BaseUri;
-        var trustMode = isPresetEndpoint
-            ? preset.EndpointTrustMode
-            : RemoteEndpointPolicy.IsLoopbackHost(endpoint.Host)
-                ? RemoteEndpointTrustMode.LoopbackHttp
-                : RemoteEndpointTrustMode.PublicHttps;
-        if (!RemoteEndpointPolicy.IsAllowed(endpoint, trustMode))
-        {
-            throw new RemoteApiProfileException("remote.base-uri-invalid");
-        }
-
-        var (reasoningMode, reasoningWireFormat, maxOutputTokens, timeoutSeconds) =
-            ValidateAdvancedSettings();
-        if (profile.BaseUri == endpoint
-            && profile.EndpointTrustMode == trustMode
-            && profile.ReasoningMode == reasoningMode
-            && profile.ReasoningWireFormat == reasoningWireFormat
-            && profile.MaxOutputTokens == maxOutputTokens
-            && profile.TimeoutSeconds == timeoutSeconds)
-        {
-            AdvancedSettingsDirty = false;
-            return;
-        }
-
-        IsWorking = true;
-        try
-        {
-            await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
-            _profile = await GetProfileService().SaveProfileAsync(profile with
+            if (IsCustomProfile)
             {
-                EndpointId = RemoteApiProviderCatalog.GetEndpointId(preset, endpoint),
-                BaseUri = endpoint,
-                EndpointTrustMode = trustMode,
-                ReasoningMode = reasoningMode,
-                ReasoningWireFormat = reasoningWireFormat,
-                MaxOutputTokens = maxOutputTokens,
-                TimeoutSeconds = timeoutSeconds,
-                ValidationState = RemoteApiProfileValidationState.Unverified,
-                LastVerifiedAtUtc = null,
-                ConsentedInputMode = null,
-                ConsentedDisclosureVersion = null,
-                ConsentGrantedAtUtc = null,
-            }).ConfigureAwait(true);
-            _lastSuccessfulTest = null;
-            EndpointHost = _profile.BaseUri.Host;
-            EndpointUriText = _profile.BaseUri.AbsoluteUri;
-            AdvancedSettingsDirty = false;
-            OnPropertyChanged(nameof(SavedEndpointUriText));
-            OnPropertyChanged(nameof(HasPendingEndpointChange));
-            await RefreshStateAsync().ConfigureAwait(true);
-            ApplyValidationState();
-            ShowStatus("ApiAdvancedSettingsSavedStatus", SettingsStatusKind.Success);
-        }
-        finally
-        {
-            IsWorking = false;
-            App.NotifyAnalysisConfigurationChanged();
+                IsWorking = true;
+                try
+                {
+                    await SaveCustomProfileAsync(showSuccessStatus: true)
+                        .ConfigureAwait(true);
+                }
+                finally
+                {
+                    IsWorking = false;
+                    App.NotifyAnalysisConfigurationChanged();
+                }
+
+                return;
+            }
+
+            var profile = GetCurrentProfile();
+            if (!Uri.TryCreate(EndpointUriText.Trim(), UriKind.Absolute, out var endpoint))
+            {
+                throw new RemoteApiProfileException("remote.base-uri-invalid");
+            }
+
+            var preset = RemoteApiProviderCatalog.GetPreset(profile.ProfileId);
+            var isPresetEndpoint = endpoint == preset.BaseUri;
+            var trustMode = isPresetEndpoint
+                ? preset.EndpointTrustMode
+                : RemoteEndpointPolicy.IsLoopbackHost(endpoint.Host)
+                    ? RemoteEndpointTrustMode.LoopbackHttp
+                    : RemoteEndpointTrustMode.PublicHttps;
+            if (!RemoteEndpointPolicy.IsAllowed(endpoint, trustMode))
+            {
+                throw new RemoteApiProfileException("remote.base-uri-invalid");
+            }
+
+            var (reasoningMode, reasoningWireFormat, maxOutputTokens, timeoutSeconds) =
+                ValidateAdvancedSettings();
+            if (profile.BaseUri == endpoint
+                && profile.EndpointTrustMode == trustMode
+                && profile.ReasoningMode == reasoningMode
+                && profile.ReasoningWireFormat == reasoningWireFormat
+                && profile.MaxOutputTokens == maxOutputTokens
+                && profile.TimeoutSeconds == timeoutSeconds)
+            {
+                AdvancedSettingsDirty = false;
+                return;
+            }
+
+            IsWorking = true;
+            try
+            {
+                await GetProfileService().SelectLocalAsync().ConfigureAwait(true);
+                _profile = await GetProfileService().SaveProfileAsync(profile with
+                {
+                    EndpointId = RemoteApiProviderCatalog.GetEndpointId(preset, endpoint),
+                    BaseUri = endpoint,
+                    EndpointTrustMode = trustMode,
+                    ReasoningMode = reasoningMode,
+                    ReasoningWireFormat = reasoningWireFormat,
+                    MaxOutputTokens = maxOutputTokens,
+                    TimeoutSeconds = timeoutSeconds,
+                    ValidationState = RemoteApiProfileValidationState.Unverified,
+                    LastVerifiedAtUtc = null,
+                    ConsentedInputMode = null,
+                    ConsentedDisclosureVersion = null,
+                    ConsentGrantedAtUtc = null,
+                }).ConfigureAwait(true);
+                _lastSuccessfulTest = null;
+                EndpointHost = _profile.BaseUri.Host;
+                EndpointUriText = _profile.BaseUri.AbsoluteUri;
+                AdvancedSettingsDirty = false;
+                OnPropertyChanged(nameof(SavedEndpointUriText));
+                OnPropertyChanged(nameof(HasPendingEndpointChange));
+                await RefreshStateAsync().ConfigureAwait(true);
+                ApplyValidationState();
+                ShowStatus("ApiAdvancedSettingsSavedStatus", SettingsStatusKind.Success);
+            }
+            finally
+            {
+                IsWorking = false;
+                App.NotifyAnalysisConfigurationChanged();
+            }
         }
     }
 
@@ -1148,6 +1264,30 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     public void ShowOperationFailure() =>
         ShowStatus("ApiOperationFailedStatus", SettingsStatusKind.Error);
 
+    private async Task<IAsyncDisposable?> TryAcquireAnalysisOperationAsync()
+    {
+        if (App.BusinessFeatures is not { } businessFeatures)
+        {
+            // Keep the view model usable during construction/design-time and in
+            // isolated tests where the application coordinator is not hosted.
+            return NoopAnalysisOperationLease.Instance;
+        }
+
+        return await businessFeatures.TryAcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+    }
+
+    private async Task<IAsyncDisposable?> AcquireAnalysisOperationAsync()
+    {
+        if (App.BusinessFeatures is not { } businessFeatures)
+        {
+            return NoopAnalysisOperationLease.Instance;
+        }
+
+        return await businessFeatures.AcquireAnalysisOperationAsync()
+            .ConfigureAwait(true);
+    }
+
     private string ValidateModelId()
     {
         var normalized = ModelId.Trim();
@@ -1199,4 +1339,11 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     private IRemoteApiConnectionTester GetConnectionTester() =>
         _connectionTesterAccessor()
         ?? throw new InvalidOperationException("The remote API connection tester is unavailable.");
+
+    private sealed class NoopAnalysisOperationLease : IAsyncDisposable
+    {
+        internal static NoopAnalysisOperationLease Instance { get; } = new();
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
 }
