@@ -44,7 +44,10 @@ internal sealed class SystemTrayIconAdapter : IDisposable
             IsEnabled = false,
         };
         localSendItem.Command = new AsyncRelayCommand(() =>
-            App.SetLocalSendEnabledFromTrayAsync(localSendItem.IsChecked));
+            // H.NotifyIcon's native PopupMenu invokes the command without
+            // toggling the managed ToggleMenuFlyoutItem first. The requested
+            // value is therefore the inverse of the currently rendered state.
+            App.SetLocalSendEnabledFromTrayAsync(!localSendItem.IsChecked));
         AutomationProperties.SetAutomationId(localSendItem, "TrayLocalSendItem");
         _localSendItem = localSendItem;
 
@@ -81,7 +84,9 @@ internal sealed class SystemTrayIconAdapter : IDisposable
             IsEnabled = false,
         };
         quickScreenshotItem.Command = new AsyncRelayCommand(() =>
-            App.SetScreenshotEnabledFromTrayAsync(quickScreenshotItem.IsChecked));
+            // Keep this symmetric with LocalSend: PopupMenu leaves IsChecked
+            // unchanged when it invokes an item's command.
+            App.SetScreenshotEnabledFromTrayAsync(!quickScreenshotItem.IsChecked));
         AutomationProperties.SetAutomationId(quickScreenshotItem, "TrayQuickScreenshotItem");
         _quickScreenshotItem = quickScreenshotItem;
 
