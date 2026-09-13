@@ -415,6 +415,8 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             {
                 IsSavingOutputLanguage = false;
             }
+
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -555,6 +557,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -584,6 +587,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -647,6 +651,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -679,6 +684,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -694,6 +700,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -717,6 +724,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 
@@ -725,6 +733,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         if (IsCustomProfile)
         {
             await SaveCustomProfileAsync(showSuccessStatus: true).ConfigureAwait(true);
+            App.NotifyAnalysisConfigurationChanged();
             return;
         }
 
@@ -791,6 +800,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         finally
         {
             IsWorking = false;
+            App.NotifyAnalysisConfigurationChanged();
         }
     }
 

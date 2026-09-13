@@ -52,6 +52,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
         SelectedInterfaceLanguageIndex = (int)_languagePreferenceService.CurrentPreference;
         RefreshInterfaceLanguageStatus();
         IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
+        IsKeepInSystemTrayEnabled = App.CloseBehaviorPreference.IsKeepInSystemTrayEnabled;
         CurrentAppVersion = string.Format(
             System.Globalization.CultureInfo.CurrentCulture,
             Resources.GetString("CurrentAppVersionFormat"),
@@ -84,10 +85,18 @@ public partial class SettingsHomePageViewModel : ObservableObject
     public partial string CurrentExecutionDetail { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial string LocalAnalysisStatus { get; set; } =
+        Resources.GetString("LocalAnalysisUnavailableStatus");
+
+    [ObservableProperty]
     public partial string ApiConfigurationStatus { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial int SelectedAnalysisSourceIndex { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSelectLocalAnalysis))]
+    public partial bool HasSelectableLocalAnalysis { get; set; }
 
     [ObservableProperty]
     public partial bool IsLocalSendEnabled { get; set; }
@@ -152,9 +161,22 @@ public partial class SettingsHomePageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
     public partial bool HasSelectableApiAnalysis { get; set; }
 
-    public bool CanChangeAnalysisSource => IsInitialized && !IsWorking;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
+    [NotifyPropertyChangedFor(nameof(CanSelectLocalAnalysis))]
+    [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
+    public partial bool IsSharedAnalysisOperationInProgress { get; set; }
+
+    public bool CanChangeAnalysisSource =>
+        IsInitialized && !IsWorking && !IsSharedAnalysisOperationInProgress;
+
+    public bool CanSelectLocalAnalysis =>
+        CanChangeAnalysisSource && HasSelectableLocalAnalysis;
 
     public bool CanSelectApiAnalysis => CanChangeAnalysisSource && HasSelectableApiAnalysis;
+
+    [ObservableProperty]
+    public partial bool IsKeepInSystemTrayEnabled { get; set; }
 
     public string CurrentAppVersion { get; }
 
@@ -181,6 +203,26 @@ public partial class SettingsHomePageViewModel : ObservableObject
     public partial Uri? ReleasePageUri { get; set; }
 
     public ObservableCollection<LocalSendTrustedDeviceItem> LocalSendTrustedDevices { get; } = [];
+
+    public void SetKeepInSystemTrayEnabled(bool isEnabled)
+    {
+        if (App.IsShuttingDown)
+        {
+            IsKeepInSystemTrayEnabled = App.CloseBehaviorPreference.IsKeepInSystemTrayEnabled;
+            return;
+        }
+
+        try
+        {
+            App.CloseBehaviorPreference.SetKeepInSystemTrayEnabled(isEnabled);
+            IsKeepInSystemTrayEnabled = isEnabled;
+        }
+        catch
+        {
+            IsKeepInSystemTrayEnabled =
+                App.CloseBehaviorPreference.IsKeepInSystemTrayEnabled;
+        }
+    }
 
     partial void OnSelectedThemeIndexChanged(int value)
     {
@@ -388,6 +430,15 @@ public partial class SettingsHomePageViewModel : ObservableObject
         {
             var readiness = await _storageReadinessService.EnsureReadyAsync(forceRetry: false)
                 .ConfigureAwait(true);
+            App.BusinessFeatures?.SetStorageReady(
+                readiness.Status == StorageReadinessStatus.Ready);
+            HasSelectableLocalAnalysis =
+                readiness.Status == StorageReadinessStatus.Ready
+                && App.LocalAnalysisAvailable;
+            LocalAnalysisStatus = Resources.GetString(
+                HasSelectableLocalAnalysis
+                    ? "LocalAnalysisReadyStatus/Text"
+                    : "LocalAnalysisUnavailableStatus");
             await InitializeLocalSendAsync(readiness.Status == StorageReadinessStatus.Ready)
                 .ConfigureAwait(true);
             var profiles = _profileServiceAccessor();
@@ -400,15 +451,17 @@ public partial class SettingsHomePageViewModel : ObservableObject
             var state = await profiles.GetExecutionStateAsync().ConfigureAwait(true);
             var eligibleProfiles = await GetEligibleProfilesAsync(
                     profiles,
-                    _credentialServiceAccessor())
+                    _credentialServiceAccessor(),
+                    HasSelectableLocalAnalysis)
                 .ConfigureAwait(true);
             ApiConfigurationStatus = Resources.GetString(
                 eligibleProfiles.Count > 0
                     ? "ApiConfigurationReadyStatus"
                     : "ApiConfigurationMissingStatus");
             HasSelectableApiAnalysis =
-                state.Settings.Backend == AnalysisExecutionBackend.RemoteApi
-                || ResolveEligibleSelection(state, eligibleProfiles) is not null;
+                AnalysisEligibility.IsEligibleCurrentSelection(state, eligibleProfiles)
+                || AnalysisEligibility.ResolveEligibleSelection(state, eligibleProfiles)
+                    is not null;
             ApplyExecutionState(state);
             IsInitialized = true;
         }
@@ -481,6 +534,23 @@ public partial class SettingsHomePageViewModel : ObservableObject
         IsLocalSendWorking = true;
         try
         {
+            if (App.BusinessFeatures is { } businessFeatures)
+            {
+                await businessFeatures.SetLocalSendEnabledAsync(isEnabled)
+                    .ConfigureAwait(true);
+                var sharedReceiver = _localSendReceiverAccessor();
+                if (sharedReceiver is null)
+                {
+                    ApplyLocalSendUnavailableState();
+                }
+                else
+                {
+                    ApplyLocalSendSnapshot(sharedReceiver.Snapshot);
+                }
+
+                return;
+            }
+
             _localSendReceivePreference.SetEnabled(isEnabled);
             IsLocalSendEnabled = isEnabled;
             var receiver = _localSendReceiverAccessor();
@@ -650,8 +720,10 @@ public partial class SettingsHomePageViewModel : ObservableObject
         await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
     }
 
-    private void ApplyLocalSendUnavailableState()
+    internal void ApplyLocalSendUnavailableState()
     {
+        LocalSendTrustedDevices.Clear();
+        UpdateLocalSendTrustedDeviceVisibility();
         LocalSendReceiverName = string.Format(
             System.Globalization.CultureInfo.CurrentCulture,
             Resources.GetString("LocalSendReceiverNameFormat"),
@@ -694,6 +766,41 @@ public partial class SettingsHomePageViewModel : ObservableObject
             return AnalysisSourceSelectionOutcome.Applied;
         }
 
+        if (App.BusinessFeatures is { } businessFeatures)
+        {
+            IsWorking = true;
+            try
+            {
+                var result = await businessFeatures.SelectAnalysisBackendAsync(
+                        selectedIndex == 0
+                            ? AnalysisExecutionBackend.Local
+                            : AnalysisExecutionBackend.RemoteApi)
+                    .ConfigureAwait(true);
+                HasSelectableLocalAnalysis = result.LocalAnalysisAvailable;
+                LocalAnalysisStatus = Resources.GetString(
+                    result.LocalAnalysisAvailable
+                        ? "LocalAnalysisReadyStatus/Text"
+                        : "LocalAnalysisUnavailableStatus");
+                HasSelectableApiAnalysis = result.RemoteAnalysisSelectable;
+                ApiConfigurationStatus = Resources.GetString(
+                    result.RemoteAnalysisSelectable
+                        ? "ApiConfigurationReadyStatus"
+                        : "ApiConfigurationMissingStatus");
+                if (result.ExecutionState is { } executionState)
+                {
+                    ApplyExecutionState(executionState);
+                }
+
+                return result.Applied
+                    ? AnalysisSourceSelectionOutcome.Applied
+                    : AnalysisSourceSelectionOutcome.RequiresApiConfiguration;
+            }
+            finally
+            {
+                IsWorking = false;
+            }
+        }
+
         var profiles = _profileServiceAccessor();
         var credentials = _credentialServiceAccessor();
         if (profiles is null)
@@ -712,21 +819,23 @@ public partial class SettingsHomePageViewModel : ObservableObject
             }
 
             var state = await profiles.GetExecutionStateAsync().ConfigureAwait(true);
-            if (state.Settings.Backend == AnalysisExecutionBackend.RemoteApi
-                && state.Profile is not null)
-            {
-                ApplyExecutionState(state);
-                return AnalysisSourceSelectionOutcome.Applied;
-            }
-
-            var eligibleProfiles = await GetEligibleProfilesAsync(profiles, credentials)
+            var eligibleProfiles = await GetEligibleProfilesAsync(
+                    profiles,
+                    credentials,
+                    HasSelectableLocalAnalysis)
                 .ConfigureAwait(true);
             ApiConfigurationStatus = Resources.GetString(
                 eligibleProfiles.Count > 0
                     ? "ApiConfigurationReadyStatus"
                     : "ApiConfigurationMissingStatus");
 
-            var selection = ResolveEligibleSelection(state, eligibleProfiles);
+            if (AnalysisEligibility.IsEligibleCurrentSelection(state, eligibleProfiles))
+            {
+                ApplyExecutionState(state);
+                return AnalysisSourceSelectionOutcome.Applied;
+            }
+
+            var selection = AnalysisEligibility.ResolveEligibleSelection(state, eligibleProfiles);
             if (selection is null)
             {
                 HasSelectableApiAnalysis = false;
@@ -770,70 +879,52 @@ public partial class SettingsHomePageViewModel : ObservableObject
                 state.Profile.ModelId);
     }
 
+    internal void ApplyTrayBusinessState(TrayBusinessState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (!state.StorageReady)
+        {
+            ApplyUnavailableState();
+            return;
+        }
+
+        HasSelectableLocalAnalysis = state.LocalAnalysisAvailable;
+        IsSharedAnalysisOperationInProgress = state.IsAnalysisOperationInProgress;
+        LocalAnalysisStatus = Resources.GetString(
+            state.LocalAnalysisAvailable
+                ? "LocalAnalysisReadyStatus/Text"
+                : "LocalAnalysisUnavailableStatus");
+        HasSelectableApiAnalysis = state.IsRemoteAnalysisSelectable;
+        ApiConfigurationStatus = Resources.GetString(
+            state.IsRemoteAnalysisSelectable
+                ? "ApiConfigurationReadyStatus"
+                : "ApiConfigurationMissingStatus");
+        if (state.AnalysisExecutionState is { } executionState)
+        {
+            ApplyExecutionState(executionState);
+        }
+    }
+
     private void ApplyUnavailableState()
     {
+        HasSelectableLocalAnalysis = false;
+        LocalAnalysisStatus = Resources.GetString("LocalAnalysisUnavailableStatus");
         HasSelectableApiAnalysis = false;
         ApiConfigurationStatus = Resources.GetString("ApiConfigurationUnavailableStatus");
         CurrentExecutionTarget = Resources.GetString("ExecutionTargetUnavailable");
         CurrentExecutionDetail = Resources.GetString("ExecutionTargetUnavailableDetail");
     }
 
-    private static async Task<List<(RemoteApiProfile Profile, RemoteInputMode Mode)>>
+    private async Task<List<(RemoteApiProfile Profile, RemoteInputMode Mode)>>
         GetEligibleProfilesAsync(
             IRemoteApiProfileService profiles,
-            IRemoteApiCredentialService? credentials)
-    {
-        var eligibleProfiles = new List<(RemoteApiProfile Profile, RemoteInputMode Mode)>();
-        foreach (var profile in await profiles.GetProfilesAsync().ConfigureAwait(true))
-        {
-            if (!TryGetEligibleMode(profile, out var mode))
-            {
-                continue;
-            }
-
-            var hasCredential = profile.AuthenticationKind == RemoteApiAuthenticationKind.None
-                || credentials is not null
-                && await credentials.ExistsAsync(profile.CredentialReference).ConfigureAwait(true);
-            if (hasCredential)
-            {
-                eligibleProfiles.Add((profile, mode));
-            }
-        }
-
-        return eligibleProfiles;
-    }
-
-    private static (RemoteApiProfile Profile, RemoteInputMode Mode)? ResolveEligibleSelection(
-        RemoteAnalysisExecutionState state,
-        IReadOnlyList<(RemoteApiProfile Profile, RemoteInputMode Mode)> eligibleProfiles)
-    {
-        if (state.Settings.RemoteApiProfileId is { Length: > 0 } rememberedProfileId
-            && state.Settings.RemoteInputMode is { } rememberedMode)
-        {
-            foreach (var selection in eligibleProfiles)
-            {
-                if (selection.Profile.ProfileId == rememberedProfileId
-                    && selection.Mode == rememberedMode)
-                {
-                    return selection;
-                }
-            }
-        }
-
-        return eligibleProfiles.Count == 1 ? eligibleProfiles[0] : null;
-    }
-
-    private static bool TryGetEligibleMode(RemoteApiProfile profile, out RemoteInputMode mode)
-    {
-        mode = profile.ConsentedInputMode ?? default;
-        return profile.IsEnabled
-            && profile.ValidationState == RemoteApiProfileValidationState.Valid
-            && profile.LastVerifiedAtUtc is not null
-            && profile.ConsentedInputMode is not null
-            && profile.ConsentedDisclosureVersion == profile.DisclosureVersion
-            && profile.ConsentGrantedAtUtc is not null
-            && profile.SupportedInputModes.Contains(mode);
-    }
+            IRemoteApiCredentialService? credentials,
+            bool localOcrAvailable) =>
+        await AnalysisEligibility.GetEligibleProfilesAsync(
+                profiles,
+                credentials,
+                localOcrAvailable)
+            .ConfigureAwait(true);
 }
 
 public enum AnalysisSourceSelectionOutcome

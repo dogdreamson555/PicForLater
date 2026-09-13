@@ -65,6 +65,8 @@
              Link="AppSource\RemoteApiSettingsItems.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\RemoteApiProviderCatalog.cs"
              Link="AppSource\RemoteApiProviderCatalog.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\AnalysisEligibility.cs"
+             Link="AppSource\AnalysisEligibility.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\StorageReadinessService.cs"
              Link="AppSource\StorageReadinessService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\ScreenshotCaptureModels.cs"

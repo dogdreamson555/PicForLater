@@ -32,6 +32,7 @@ public sealed class LocalInferenceWorkerClient :
     private NamedPipeServerStream? _pipe;
     private Process? _process;
     private int _protocolVersion;
+    private int _cachedOcrAvailability = -1;
     private bool _disposed;
 
     public LocalInferenceWorkerClient(
@@ -59,6 +60,21 @@ public sealed class LocalInferenceWorkerClient :
 
     public BackgroundFailureCircuit FailureCircuit { get; }
 
+    /// <summary>
+    /// The last OCR capability result observed by the normal analysis path.
+    /// Reading this value never starts the worker; the tray uses it only as a
+    /// cache and falls back to Windows OCR when available.
+    /// </summary>
+    public bool? CachedOcrAvailability => Volatile.Read(ref _cachedOcrAvailability) switch
+    {
+        0 => false,
+        1 => true,
+        _ => null,
+    };
+
+    internal void InvalidateCachedOcrAvailability() =>
+        Volatile.Write(ref _cachedOcrAvailability, -1);
+
     public OcrProviderDescriptor Descriptor { get; } = new(
         "local.worker-ocr",
         "Local inference worker OCR",
@@ -78,6 +94,7 @@ public sealed class LocalInferenceWorkerClient :
     {
         if (await _componentLocator.LocateAsync(cancellationToken).ConfigureAwait(false) is null)
         {
+            Volatile.Write(ref _cachedOcrAvailability, 0);
             return false;
         }
 
@@ -91,6 +108,7 @@ public sealed class LocalInferenceWorkerClient :
                     mapUnavailable: true,
                     cancellationToken)
                 .ConfigureAwait(false);
+            Volatile.Write(ref _cachedOcrAvailability, response.IsAvailable ? 1 : 0);
             return response.IsAvailable;
         }
         catch (Exception exception) when (exception is OcrProviderUnavailableException
@@ -100,10 +118,12 @@ public sealed class LocalInferenceWorkerClient :
                                           or InvalidOperationException
                                           or Win32Exception)
         {
+            Volatile.Write(ref _cachedOcrAvailability, 0);
             return false;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            Volatile.Write(ref _cachedOcrAvailability, 0);
             return false;
         }
     }

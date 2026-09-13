@@ -20,6 +20,7 @@ public sealed partial class SettingsHomePage : Page
     private bool _synchronizingInterfaceLanguage;
     private bool _synchronizingLocalSendToggle;
     private bool _synchronizingScreenshotCaptureToggle;
+    private bool _synchronizingKeepInSystemTrayToggle;
     private bool _interfaceLanguageSelectionReady;
     private int _loadGeneration;
     private CancellationTokenSource? _updateCheckCancellation;
@@ -54,7 +55,10 @@ public sealed partial class SettingsHomePage : Page
             _synchronizingAnalysisSource = true;
             _synchronizingLocalSendToggle = true;
             _synchronizingScreenshotCaptureToggle = true;
+            _synchronizingKeepInSystemTrayToggle = true;
+            App.BusinessFeatures?.StateChanged += BusinessFeatures_StateChanged;
             App.ScreenshotCaptureServiceChanged += App_ScreenshotCaptureServiceChanged;
+            App.LocalSendReceiverServiceChanged += App_LocalSendReceiverServiceChanged;
             SubscribeScreenshotCaptureService(App.ScreenshotCapture);
             await ViewModel.InitializeAsync();
             if (!IsCurrentLoad(loadGeneration))
@@ -62,8 +66,10 @@ public sealed partial class SettingsHomePage : Page
                 return;
             }
 
+            App.RefreshSystemTrayBusinessState();
             SynchronizeLocalSendToggle();
             SynchronizeScreenshotCaptureToggle();
+            SynchronizeKeepInSystemTrayToggle();
             SubscribeLocalSendReceiver();
             UpdateLocalSendPairingTimer();
         }
@@ -74,6 +80,7 @@ public sealed partial class SettingsHomePage : Page
                 _synchronizingAnalysisSource = false;
                 _synchronizingLocalSendToggle = false;
                 _synchronizingScreenshotCaptureToggle = false;
+                _synchronizingKeepInSystemTrayToggle = false;
             }
         }
     }
@@ -86,7 +93,10 @@ public sealed partial class SettingsHomePage : Page
         _synchronizingAnalysisSource = false;
         _synchronizingLocalSendToggle = false;
         _synchronizingScreenshotCaptureToggle = false;
+        _synchronizingKeepInSystemTrayToggle = false;
+        App.BusinessFeatures?.StateChanged -= BusinessFeatures_StateChanged;
         App.ScreenshotCaptureServiceChanged -= App_ScreenshotCaptureServiceChanged;
+        App.LocalSendReceiverServiceChanged -= App_LocalSendReceiverServiceChanged;
         UnsubscribeScreenshotCaptureService();
         UnsubscribeLocalSendReceiver();
         StopLocalSendPairingTimer();
@@ -247,6 +257,71 @@ public sealed partial class SettingsHomePage : Page
         }
     }
 
+    private void KeepInSystemTrayToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_synchronizingKeepInSystemTrayToggle
+            || sender is not ToggleSwitch toggle)
+        {
+            return;
+        }
+
+        try
+        {
+            _synchronizingKeepInSystemTrayToggle = true;
+            ViewModel.SetKeepInSystemTrayEnabled(toggle.IsOn);
+        }
+        finally
+        {
+            SynchronizeKeepInSystemTrayToggle();
+            _synchronizingKeepInSystemTrayToggle = false;
+        }
+    }
+
+    private void BusinessFeatures_StateChanged(TrayBusinessState state)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        _synchronizingAnalysisSource = true;
+        try
+        {
+            ViewModel.ApplyTrayBusinessState(state);
+            _synchronizingLocalSendToggle = true;
+            if (state.LocalSendSnapshot is { } localSendSnapshot)
+            {
+                ViewModel.ApplyLocalSendSnapshot(localSendSnapshot);
+                if (state.IsLocalSendOperationInProgress)
+                {
+                    ViewModel.CanToggleLocalSend = false;
+                }
+            }
+            else
+            {
+                ViewModel.ApplyLocalSendUnavailableState();
+            }
+
+            SynchronizeLocalSendToggle();
+            UpdateLocalSendPairingTimer();
+            _synchronizingLocalSendToggle = false;
+
+            if (state.IsScreenshotOperationInProgress
+                && state.ScreenshotSnapshot is { } screenshotSnapshot)
+            {
+                ScreenshotViewModel.ApplySnapshot(
+                    screenshotSnapshot,
+                    isWorking: true);
+                RefreshScreenshotCaptureBindings();
+            }
+        }
+        finally
+        {
+            _synchronizingLocalSendToggle = false;
+            _synchronizingAnalysisSource = false;
+        }
+    }
+
     private async void ScreenshotCaptureToggle_Toggled(object sender, RoutedEventArgs e)
     {
         var source = _screenshotCaptureSource;
@@ -263,8 +338,9 @@ public sealed partial class SettingsHomePage : Page
         {
             _synchronizingScreenshotCaptureToggle = true;
             ScreenshotViewModel.ApplySnapshot(source.Snapshot, isWorking: true);
-            ScreenshotSettingsOperationResult result =
-                await source.SetEnabledAsync(toggle.IsOn);
+            ScreenshotSettingsOperationResult result = App.BusinessFeatures is { } features
+                ? await features.SetScreenshotEnabledAsync(toggle.IsOn)
+                : await source.SetEnabledAsync(toggle.IsOn);
             if (!IsCurrentScreenshotSource(source, loadGeneration))
             {
                 return;
@@ -424,6 +500,35 @@ public sealed partial class SettingsHomePage : Page
             source.TransferCompleted += LocalSendReceiver_TransferCompleted;
             ViewModel.ApplyLocalSendSnapshot(source.Snapshot);
         }
+        else
+        {
+            ViewModel.ApplyLocalSendUnavailableState();
+        }
+    }
+
+    private void App_LocalSendReceiverServiceChanged(ILocalSendReceiverService? source)
+    {
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (!IsCurrentLoad(loadGeneration)
+                || !ReferenceEquals(source, App.LocalSendReceiver))
+            {
+                return;
+            }
+
+            _synchronizingLocalSendToggle = true;
+            try
+            {
+                SubscribeLocalSendReceiver();
+                SynchronizeLocalSendToggle();
+                UpdateLocalSendPairingTimer();
+            }
+            finally
+            {
+                _synchronizingLocalSendToggle = false;
+            }
+        });
     }
 
     private void App_ScreenshotCaptureServiceChanged(IScreenshotCaptureService? source)
@@ -573,6 +678,11 @@ public sealed partial class SettingsHomePage : Page
     private void SynchronizeLocalSendToggle()
     {
         LocalSendReceiveToggle.IsOn = ViewModel.IsLocalSendEnabled;
+    }
+
+    private void SynchronizeKeepInSystemTrayToggle()
+    {
+        KeepInSystemTrayToggle.IsOn = ViewModel.IsKeepInSystemTrayEnabled;
     }
 
     private void ContentlessToggleSwitch_Loaded(object sender, RoutedEventArgs e)
