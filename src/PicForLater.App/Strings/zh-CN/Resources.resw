@@ -820,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供应商已响应，但结果不符合 PicForLater 的严格结构化 schema。</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成测试失败；没有发送用户图片或 OCR 文字。</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>启用前请先让此供应商、模型和载荷模式通过合成测试。</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>本地 OCR 当前不可用。请安装或修复本地 OCR 组件，或在启用远程分析前选择“远程视觉”模式。</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已为新任务启用所选供应商和载荷模式的远程分析。</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新任务已切回本地，尚未发送的请求已阻止。</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤销，新任务已切回本地；供应商已经收到的内容无法召回。</value></data>

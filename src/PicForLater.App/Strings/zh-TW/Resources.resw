@@ -820,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>供應商已回應，但結果不符合 PicForLater 的嚴格輸出結構描述。</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>合成測試失敗；沒有傳送使用者圖片或 OCR 文字。</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>啟用前請先讓此供應商、模型和傳送模式通過合成測試。</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>本機 OCR 目前無法使用。請安裝或修復本機 OCR 元件，或在啟用遠端分析前選擇「遠端視覺」模式。</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>已為新工作啟用所選供應商和傳送模式的遠端分析。</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>新工作已切回本機，尚未傳送的請求已阻止。</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>同意已撤銷，新工作已切回本機；供應商已經收到的內容無法收回。</value></data>

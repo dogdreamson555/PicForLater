@@ -820,6 +820,7 @@
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>The provider replied, but its result did not satisfy PicForLater's strict structured schema.</value></data>
   <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>The synthetic test failed. No user image or OCR text was sent.</value></data>
   <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>Run a successful synthetic test for this provider, model, and payload mode before enabling it.</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>Local OCR is unavailable. Install or repair the local OCR component, or choose Remote vision mode before enabling remote analysis.</value></data>
   <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>Remote analysis is enabled for new jobs with the selected provider and payload mode.</value></data>
   <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>New jobs now use Local. Requests not yet sent are blocked.</value></data>
   <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>Consent revoked and new jobs returned to Local. Content already received by a provider cannot be recalled.</value></data>

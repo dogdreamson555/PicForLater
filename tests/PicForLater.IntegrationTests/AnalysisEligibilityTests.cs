@@ -48,6 +48,20 @@ public sealed class AnalysisEligibilityTests
         Assert.Equal(first.ProfileId, unique.Value.Profile.ProfileId);
     }
 
+    [Theory]
+    [InlineData(RemoteInputMode.LocalOcrText, false, false)]
+    [InlineData(RemoteInputMode.LocalOcrText, true, true)]
+    [InlineData(RemoteInputMode.DirectImage, false, true)]
+    public void IsInputModeAvailable_RequiresLocalOcrOnlyForTextMode(
+        RemoteInputMode mode,
+        bool localOcrAvailable,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            AnalysisEligibility.IsInputModeAvailable(mode, localOcrAvailable));
+    }
+
     private static RemoteAnalysisExecutionState CreateState(string? profileId) =>
         new(
             new AnalysisExecutionSettings(

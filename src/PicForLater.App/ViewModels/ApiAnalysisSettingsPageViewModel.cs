@@ -26,6 +26,7 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     private int _outputLanguageSaveVersion;
     private bool _credentialExists;
     private bool _loadingAdvancedSettings;
+    private bool? _localAnalysisAvailable;
 
     public ApiAnalysisSettingsPageViewModel(
         IStorageReadinessService storageReadinessService,
@@ -215,6 +216,9 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     public bool CanEnableRemote =>
         CanTestConnection
         && !AdvancedSettingsDirty
+        && AnalysisEligibility.IsInputModeAvailable(
+            SelectedInputMode,
+            _localAnalysisAvailable ?? App.LocalAnalysisAvailable)
         && IsProfileValid
         && _profile is not null
         && string.Equals(_profile.ModelId, ModelId.Trim(), StringComparison.Ordinal)
@@ -227,6 +231,12 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     public RemoteInputMode SelectedInputMode => SelectedInputModeIndex == 1
         ? RemoteInputMode.DirectImage
         : RemoteInputMode.LocalOcrText;
+
+    internal void RefreshLocalAnalysisAvailability(bool isAvailable)
+    {
+        _localAnalysisAvailable = isAvailable;
+        OnPropertyChanged(nameof(CanEnableRemote));
+    }
 
     partial void OnSelectedInputModeIndexChanged(int value)
     {
@@ -722,7 +732,12 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
         var profile = GetCurrentProfile();
         if (!CanEnableRemote)
         {
-            ShowStatus("ApiConnectionTestRequiredStatus", SettingsStatusKind.Warning);
+            ShowStatus(
+                SelectedInputMode == RemoteInputMode.LocalOcrText
+                    && !(_localAnalysisAvailable ?? App.LocalAnalysisAvailable)
+                        ? "ApiLocalOcrUnavailableStatus"
+                        : "ApiConnectionTestRequiredStatus",
+                SettingsStatusKind.Warning);
             return;
         }
 
@@ -736,6 +751,20 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
 
         await using (operationLease)
         {
+            // Local OCR availability can change while waiting for the shared
+            // analysis operation gate. Re-check immediately before mutating
+            // the persisted execution selection.
+            if (!CanEnableRemote)
+            {
+                ShowStatus(
+                    SelectedInputMode == RemoteInputMode.LocalOcrText
+                        && !(_localAnalysisAvailable ?? App.LocalAnalysisAvailable)
+                            ? "ApiLocalOcrUnavailableStatus"
+                            : "ApiConnectionTestRequiredStatus",
+                    SettingsStatusKind.Warning);
+                return;
+            }
+
             IsWorking = true;
             try
             {

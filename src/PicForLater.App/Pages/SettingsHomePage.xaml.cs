@@ -15,6 +15,8 @@ public sealed partial class SettingsHomePage : Page
     private static readonly ResourceLoader ResourceStrings = new();
     private DispatcherQueueTimer? _localSendPairingTimer;
     private ILocalSendReceiverService? _localSendReceiverSource;
+    private Action<LocalSendReceiverSnapshot>? _localSendSnapshotChangedHandler;
+    private Action<LocalSendReceiveSummary>? _localSendTransferCompletedHandler;
     private IScreenshotCaptureService? _screenshotCaptureSource;
     private bool _synchronizingAnalysisSource;
     private bool _synchronizingInterfaceLanguage;
@@ -306,13 +308,24 @@ public sealed partial class SettingsHomePage : Page
             UpdateLocalSendPairingTimer();
             _synchronizingLocalSendToggle = false;
 
-            if (state.IsScreenshotOperationInProgress
-                && state.ScreenshotSnapshot is { } screenshotSnapshot)
+            if (state.ScreenshotSnapshot is { } screenshotSnapshot)
             {
-                ScreenshotViewModel.ApplySnapshot(
-                    screenshotSnapshot,
-                    isWorking: true);
-                RefreshScreenshotCaptureBindings();
+                var wasSynchronizingScreenshotCaptureToggle =
+                    _synchronizingScreenshotCaptureToggle;
+                _synchronizingScreenshotCaptureToggle = true;
+                try
+                {
+                    ScreenshotViewModel.ApplySnapshot(
+                        screenshotSnapshot,
+                        isWorking: state.IsScreenshotOperationInProgress);
+                    SynchronizeScreenshotCaptureToggle();
+                    RefreshScreenshotCaptureBindings();
+                }
+                finally
+                {
+                    _synchronizingScreenshotCaptureToggle =
+                        wasSynchronizingScreenshotCaptureToggle;
+                }
             }
         }
         finally
@@ -496,9 +509,14 @@ public sealed partial class SettingsHomePage : Page
         _localSendReceiverSource = source;
         if (source is not null)
         {
-            source.SnapshotChanged += LocalSendReceiver_SnapshotChanged;
-            source.TransferCompleted += LocalSendReceiver_TransferCompleted;
+            _localSendSnapshotChangedHandler = snapshot =>
+                LocalSendReceiver_SnapshotChanged(source, snapshot);
+            _localSendTransferCompletedHandler = _ =>
+                LocalSendReceiver_TransferCompleted(source);
+            source.SnapshotChanged += _localSendSnapshotChangedHandler;
+            source.TransferCompleted += _localSendTransferCompletedHandler;
             ViewModel.ApplyLocalSendSnapshot(source.Snapshot);
+            _ = ViewModel.RefreshLocalSendTrustedDevicesAsync(source);
         }
         else
         {
@@ -596,11 +614,22 @@ public sealed partial class SettingsHomePage : Page
                 return;
             }
 
+            var wasSynchronizingScreenshotCaptureToggle =
+                _synchronizingScreenshotCaptureToggle;
             _synchronizingScreenshotCaptureToggle = true;
-            ScreenshotViewModel.ApplySnapshot(e.Snapshot);
-            SynchronizeScreenshotCaptureToggle();
-            RefreshScreenshotCaptureBindings();
-            _synchronizingScreenshotCaptureToggle = false;
+            try
+            {
+                var isWorking = App.BusinessFeatures?.CurrentState
+                    .IsScreenshotOperationInProgress == true;
+                ScreenshotViewModel.ApplySnapshot(e.Snapshot, isWorking);
+                SynchronizeScreenshotCaptureToggle();
+                RefreshScreenshotCaptureBindings();
+            }
+            finally
+            {
+                _synchronizingScreenshotCaptureToggle =
+                    wasSynchronizingScreenshotCaptureToggle;
+            }
         });
     }
 
@@ -625,19 +654,35 @@ public sealed partial class SettingsHomePage : Page
     private void UnsubscribeLocalSendReceiver()
     {
         var source = _localSendReceiverSource;
+        var snapshotChangedHandler = _localSendSnapshotChangedHandler;
+        var transferCompletedHandler = _localSendTransferCompletedHandler;
         _localSendReceiverSource = null;
+        _localSendSnapshotChangedHandler = null;
+        _localSendTransferCompletedHandler = null;
         if (source is not null)
         {
-            source.SnapshotChanged -= LocalSendReceiver_SnapshotChanged;
-            source.TransferCompleted -= LocalSendReceiver_TransferCompleted;
+            if (snapshotChangedHandler is not null)
+            {
+                source.SnapshotChanged -= snapshotChangedHandler;
+            }
+
+            if (transferCompletedHandler is not null)
+            {
+                source.TransferCompleted -= transferCompletedHandler;
+            }
         }
     }
 
-    private void LocalSendReceiver_SnapshotChanged(LocalSendReceiverSnapshot snapshot)
+    private void LocalSendReceiver_SnapshotChanged(
+        ILocalSendReceiverService source,
+        LocalSendReceiverSnapshot snapshot)
     {
+        var loadGeneration = _loadGeneration;
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (!IsLoaded || !ReferenceEquals(_localSendReceiverSource, App.LocalSendReceiver))
+            if (!IsCurrentLoad(loadGeneration)
+                || !ReferenceEquals(source, _localSendReceiverSource)
+                || !ReferenceEquals(source, App.LocalSendReceiver))
             {
                 return;
             }
@@ -650,22 +695,23 @@ public sealed partial class SettingsHomePage : Page
         });
     }
 
-    private void LocalSendReceiver_TransferCompleted(LocalSendReceiveSummary summary)
+    private void LocalSendReceiver_TransferCompleted(ILocalSendReceiverService source)
     {
-        var source = _localSendReceiverSource;
         var loadGeneration = _loadGeneration;
         DispatcherQueue.TryEnqueue(async () =>
         {
             if (!IsCurrentLoad(loadGeneration)
-                || !ReferenceEquals(source, _localSendReceiverSource))
+                || !ReferenceEquals(source, _localSendReceiverSource)
+                || !ReferenceEquals(source, App.LocalSendReceiver))
             {
                 return;
             }
 
-            await ViewModel.RefreshLocalSendTrustedDevicesAsync();
+            await ViewModel.RefreshLocalSendTrustedDevicesAsync(source);
             if (IsLoaded
                 && (!IsCurrentLoad(loadGeneration)
-                    || !ReferenceEquals(source, _localSendReceiverSource)))
+                    || !ReferenceEquals(source, _localSendReceiverSource)
+                    || !ReferenceEquals(source, App.LocalSendReceiver)))
             {
                 // The page was reloaded or the receiver changed while the old
                 // query was in flight. Re-read from the current source so stale

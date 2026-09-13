@@ -22,7 +22,7 @@ internal static class AnalysisEligibility
                      .ConfigureAwait(false))
         {
             if (!TryGetEligibleMode(profile, out var mode)
-                || mode == RemoteInputMode.LocalOcrText && !localOcrAvailable)
+                || !IsInputModeAvailable(mode, localOcrAvailable))
             {
                 continue;
             }
@@ -81,6 +81,11 @@ internal static class AnalysisEligibility
             selection.Profile.ProfileId == profileId
             && selection.Mode == inputMode);
     }
+
+    internal static bool IsInputModeAvailable(
+        RemoteInputMode mode,
+        bool localOcrAvailable) =>
+        mode != RemoteInputMode.LocalOcrText || localOcrAvailable;
 
     internal static bool TryGetEligibleMode(
         RemoteApiProfile profile,

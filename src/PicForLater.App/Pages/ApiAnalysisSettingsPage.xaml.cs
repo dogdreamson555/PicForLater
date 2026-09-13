@@ -17,6 +17,8 @@ public sealed partial class ApiAnalysisSettingsPage : Page
     private const double SettingsStackedRowSpacing = 8;
     private static readonly ResourceLoader ResourceStrings = new();
     private bool _synchronizing;
+    private bool _localAnalysisAvailabilitySubscribed;
+    private int _loadGeneration;
 
     public ApiAnalysisSettingsPageViewModel ViewModel { get; } = new(
         App.StorageReadiness,
@@ -28,6 +30,7 @@ public sealed partial class ApiAnalysisSettingsPage : Page
     {
         InitializeComponent();
         Loaded += ApiAnalysisSettingsPage_Loaded;
+        Unloaded += ApiAnalysisSettingsPage_Unloaded;
         SizeChanged += ApiAnalysisSettingsPage_SizeChanged;
     }
 
@@ -61,6 +64,14 @@ public sealed partial class ApiAnalysisSettingsPage : Page
 
     private async void ApiAnalysisSettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
+        _loadGeneration++;
+        if (!_localAnalysisAvailabilitySubscribed)
+        {
+            App.LocalAnalysisAvailabilityChanged +=
+                App_LocalAnalysisAvailabilityChanged;
+            _localAnalysisAvailabilitySubscribed = true;
+        }
+
         ApplyProviderLayout(ActualWidth >= MultiColumnMinimumWidth);
         ApplyHeaderLayout();
         try
@@ -76,6 +87,29 @@ public sealed partial class ApiAnalysisSettingsPage : Page
         {
             _synchronizing = false;
         }
+    }
+
+    private void ApiAnalysisSettingsPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _loadGeneration++;
+        if (_localAnalysisAvailabilitySubscribed)
+        {
+            App.LocalAnalysisAvailabilityChanged -=
+                App_LocalAnalysisAvailabilityChanged;
+            _localAnalysisAvailabilitySubscribed = false;
+        }
+    }
+
+    private void App_LocalAnalysisAvailabilityChanged(bool isAvailable)
+    {
+        var loadGeneration = _loadGeneration;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (IsLoaded && loadGeneration == _loadGeneration)
+            {
+                ViewModel.RefreshLocalAnalysisAvailability(isAvailable);
+            }
+        });
     }
 
     private void ApiAnalysisSettingsPage_SizeChanged(object sender, SizeChangedEventArgs e)

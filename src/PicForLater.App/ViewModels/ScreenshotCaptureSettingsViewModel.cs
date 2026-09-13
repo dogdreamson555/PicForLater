@@ -34,8 +34,11 @@ public partial class ScreenshotCaptureSettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial string InfoMessage { get; set; } = string.Empty;
 
+    private bool _hasSettingsOperationFailure;
+
     public void ApplyPreparing()
     {
+        _hasSettingsOperationFailure = false;
         CanToggle = false;
         CanChangeHotKey = false;
         StatusText = Resources.GetString("ScreenshotCaptureStatusPreparing");
@@ -55,18 +58,21 @@ public partial class ScreenshotCaptureSettingsViewModel : ObservableObject
 
         if (snapshot.RegistrationState == RegistrationState.Conflict)
         {
+            _hasSettingsOperationFailure = false;
             ShowInfo(
                 SettingsStatusKind.Error,
                 Resources.GetString("ScreenshotCaptureHotKeyConflictMessage"));
         }
         else if (snapshot.RegistrationState == RegistrationState.Faulted)
         {
+            _hasSettingsOperationFailure = false;
             ShowInfo(
                 SettingsStatusKind.Error,
                 Resources.GetString("ScreenshotCaptureRegistrationFailedMessage"));
         }
-        else if (snapshot.RegistrationState == RegistrationState.Disabled ||
-                 snapshot.CaptureState != CaptureState.Idle)
+        else if (!_hasSettingsOperationFailure
+                 && (snapshot.RegistrationState == RegistrationState.Disabled
+                     || snapshot.CaptureState != CaptureState.Idle))
         {
             ClearInfo();
         }
@@ -74,14 +80,20 @@ public partial class ScreenshotCaptureSettingsViewModel : ObservableObject
 
     public void ApplySettingsFailure(ScreenshotSettingsFailureKind failureKind)
     {
+        _hasSettingsOperationFailure = true;
         ShowInfo(SettingsStatusKind.Error, SettingsFailureMessage(failureKind));
     }
 
-    public void ApplySettingsSuccess() => ClearInfo();
+    public void ApplySettingsSuccess()
+    {
+        _hasSettingsOperationFailure = false;
+        ClearInfo();
+    }
 
     public void ApplyCaptureResult(ScreenshotCaptureResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
+        _hasSettingsOperationFailure = false;
         switch (result.Outcome)
         {
             case CaptureOutcome.Imported:
