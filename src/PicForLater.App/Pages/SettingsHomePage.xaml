@@ -457,8 +457,9 @@
                         x:Uid="WindowBehaviorSectionTitle"
                         Style="{StaticResource AppSectionTitleTextBlockStyle}" />
                     <Border Style="{StaticResource AppSettingsListGroupStyle}">
+                        <!-- 95 physical px at 150% DPI: 95 / 1.5 = 63.333 DIP. -->
                         <Grid
-                            MinHeight="72"
+                            MinHeight="63.3333"
                             Padding="12,8"
                             ColumnSpacing="{StaticResource AppSpacingMd}">
                             <Grid.ColumnDefinitions>
