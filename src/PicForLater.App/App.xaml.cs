@@ -41,6 +41,7 @@ public partial class App : Application
 
     private static readonly CancellationTokenSource AnalysisCancellation = new();
     private static readonly object ForegroundActivationLock = new();
+    private static readonly object LocalSendStartupLock = new();
     private static readonly object NotificationActivationLock = new();
     private static readonly object ScreenshotCaptureLifecycleLock = new();
     private static readonly object WindowLifecycleLock = new();
@@ -50,6 +51,7 @@ public partial class App : Application
     private static HttpClient? _remoteAnalysisHttpClient;
     private static HttpClient? _updateCheckHttpClient;
     private static Task? _localSendStartupTask;
+    private static ILocalSendReceiverService? _localSendStartupReceiver;
     private static MainWindow? _screenshotCaptureWindow;
     private static IScreenshotCaptureService? _screenshotCapture;
     private static Task _screenshotCaptureStartupTask = Task.CompletedTask;
@@ -328,6 +330,12 @@ public partial class App : Application
             LocalSendReceivePreference,
             () => LocalAnalysisAvailable);
         _businessFeatures.StateChanged += BusinessFeatures_StateChanged;
+        // Storage initialization starts from the StorageReadiness constructor,
+        // so a fast initialization can publish a receiver before the
+        // coordinator is constructed. Attach the current facts as a
+        // compensation for that startup ordering window.
+        _businessFeatures.AttachLocalSendReceiver(LocalSendReceiver);
+        _businessFeatures.AttachScreenshotCapture(ScreenshotCapture);
         var mainWindow = new MainWindow();
         Window = mainWindow;
         try
@@ -396,6 +404,8 @@ public partial class App : Application
         {
             return;
         }
+
+        StartLocalSendReceiverIfRequested();
 
         MainWindow? mainWindow;
         long windowGeneration;
@@ -1148,18 +1158,63 @@ public partial class App : Application
         _ = _businessFeatures?.RefreshAnalysisAsync();
     }
 
-    internal static void InvalidateLocalAnalysisAvailability()
+    internal static void InvalidateLocalAnalysisAvailability(
+        bool refreshAfterInvalidation = true)
     {
 #if !PICFORLATER_UI_TESTING
         _localInferenceWorker?.InvalidateCachedOcrAvailability();
 #endif
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is not null && !IsShuttingDown)
+        {
+            businessFeatures.SetLocalAnalysisAvailability(LocalAnalysisAvailable);
+            _ = businessFeatures.RefreshAnalysisAsync();
+        }
+
+        if (refreshAfterInvalidation)
+        {
+            _ = RefreshLocalAnalysisAvailabilityAsync();
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the worker OCR capability cache after component or acceleration
+    /// changes. The probe is intentionally asynchronous because it may launch the
+    /// local worker and perform a named-pipe request.
+    /// </summary>
+    internal static async Task RefreshLocalAnalysisAvailabilityAsync()
+    {
+        bool isAvailable;
+#if PICFORLATER_UI_TESTING
+        isAvailable = true;
+#else
+        isAvailable = _windowsOcrAvailable;
+        if (_localInferenceWorker is { } worker)
+        {
+            try
+            {
+                var workerAvailable = await worker.IsAvailableAsync(AnalysisCancellation.Token)
+                    .ConfigureAwait(false);
+                isAvailable |= workerAvailable;
+            }
+            catch (OperationCanceledException) when (AnalysisCancellation.IsCancellationRequested)
+            {
+                return;
+            }
+            catch
+            {
+                isAvailable = false;
+            }
+        }
+#endif
+
         var businessFeatures = _businessFeatures;
         if (businessFeatures is null || IsShuttingDown)
         {
             return;
         }
 
-        businessFeatures.SetLocalAnalysisAvailability(LocalAnalysisAvailable);
+        businessFeatures.SetLocalAnalysisAvailability(isAvailable);
         _ = businessFeatures.RefreshAnalysisAsync();
     }
 
@@ -1182,8 +1237,26 @@ public partial class App : Application
             return;
         }
 
-        await _businessFeatures.SelectAnalysisBackendAsync(backend)
-            .ConfigureAwait(true);
+        try
+        {
+            var result = await _businessFeatures.SelectAnalysisBackendAsync(backend)
+                .ConfigureAwait(true);
+            if (!result.Applied)
+            {
+                // ToggleMenuFlyoutItem changes IsChecked before its async command
+                // completes. Re-apply the coordinator's reconciled factual
+                // snapshot on every rejected/failed request so optimistic UI
+                // state cannot survive a failed operation.
+                ApplySystemTrayBusinessState(_businessFeatures.CurrentState);
+            }
+        }
+        catch
+        {
+            // The command surface must never leave a toggled menu item behind
+            // when an unexpected coordinator failure escapes its normal result.
+            _businessFeatures.ClearAnalysisStateAfterFailedSelection();
+            ApplySystemTrayBusinessState(_businessFeatures.CurrentState);
+        }
     }
 
     internal static async Task SetScreenshotEnabledFromTrayAsync(bool isEnabled)
@@ -1222,6 +1295,21 @@ public partial class App : Application
 
         InvalidateLocalAnalysisAvailability();
     }
+
+#if !PICFORLATER_UI_TESTING
+    private static void LocalInferenceWorker_OcrAvailabilityChanged(bool isAvailable)
+    {
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        businessFeatures.SetLocalAnalysisAvailability(
+            _windowsOcrAvailable || isAvailable);
+        _ = businessFeatures.RefreshAnalysisAsync();
+    }
+#endif
 
     private static void ApplySystemTrayBusinessState(TrayBusinessState state)
     {
@@ -1262,14 +1350,15 @@ public partial class App : Application
             state.AnalysisBackend == AnalysisExecutionBackend.RemoteApi);
 
         var screenshotSnapshot = state.ScreenshotSnapshot;
-        var screenshotEnabled = state.StorageReady
+        var canToggleScreenshot = state.StorageReady
             && screenshotSnapshot is not null
             && !state.IsScreenshotOperationInProgress
-            && screenshotSnapshot.CaptureState == CaptureState.Idle
-            && screenshotSnapshot.RegistrationState is not
-                RegistrationState.Conflict and not RegistrationState.Faulted;
+            && (screenshotSnapshot.RegistrationState is
+                    not RegistrationState.Conflict and not RegistrationState.Faulted
+                && screenshotSnapshot.CaptureState == CaptureState.Idle
+                || screenshotSnapshot.IsEnabledRequested);
         trayIcon.SetQuickScreenshotState(
-            screenshotEnabled,
+            canToggleScreenshot,
             screenshotSnapshot?.IsEnabledRequested == true,
             !state.StorageReady
             || screenshotSnapshot is null
@@ -1367,6 +1456,8 @@ public partial class App : Application
                     InferenceAcceleration,
                     localInferenceComponents,
                     LocalInferenceWorkerClient.DefaultIdleTimeout);
+                _localInferenceWorker.OcrAvailabilityChanged +=
+                    LocalInferenceWorker_OcrAvailabilityChanged;
                 _localInferenceFailureCircuit = _localInferenceWorker.FailureCircuit;
                 _localInferenceFailureCircuit.StatusChanged += OnBackgroundWorkerStatusChanged;
                 var localInferenceArchitecture = LocalInferenceWorkerClient.GetProcessArchitecture();
@@ -1729,6 +1820,8 @@ public partial class App : Application
         _localInferenceWorker = null;
         if (localInferenceWorker is not null)
         {
+            localInferenceWorker.OcrAvailabilityChanged -=
+                LocalInferenceWorker_OcrAvailabilityChanged;
             try
             {
                 if (!await TryAwaitShutdownTaskAsync(
@@ -1903,12 +1996,6 @@ public partial class App : Application
             cancellationToken.ThrowIfCancellationRequested();
             LocalSendReceiver = receiver;
             NotifyLocalSendReceiverServiceChanged(receiver);
-            if (LocalSendReceivePreference.IsEnabled)
-            {
-                _localSendStartupTask = StartLocalSendReceiverAsync(
-                    receiver,
-                    cancellationToken);
-            }
         }
         catch
         {
@@ -1942,11 +2029,19 @@ public partial class App : Application
     {
         try
         {
-            // Keep node construction, certificate setup, and listener startup out of
-            // the storage-readiness continuation even when their first awaits complete
-            // synchronously.
+            // Keep listener startup out of the storage-readiness continuation even
+            // when the coordinator can acquire its gate synchronously.
             await Task.Yield();
-            await receiver.StartAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(receiver, LocalSendReceiver)
+                || !LocalSendReceivePreference.IsEnabled
+                || _businessFeatures is not { } businessFeatures)
+            {
+                return;
+            }
+
+            await businessFeatures.StartLocalSendIfRequestedAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -1955,6 +2050,29 @@ public partial class App : Application
         {
             // The receiver publishes a safe Faulted snapshot. Network startup is
             // independent from storage readiness and must not hide the library.
+        }
+    }
+
+    private static void StartLocalSendReceiverIfRequested()
+    {
+        var receiver = LocalSendReceiver;
+        if (receiver is null || !LocalSendReceivePreference.IsEnabled)
+        {
+            return;
+        }
+
+        lock (LocalSendStartupLock)
+        {
+            if (ReferenceEquals(_localSendStartupReceiver, receiver)
+                && _localSendStartupTask is not null)
+            {
+                return;
+            }
+
+            _localSendStartupReceiver = receiver;
+            _localSendStartupTask = StartLocalSendReceiverAsync(
+                receiver,
+                AnalysisCancellation.Token);
         }
     }
 

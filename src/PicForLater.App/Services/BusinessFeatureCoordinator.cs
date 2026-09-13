@@ -387,6 +387,91 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
         }
     }
 
+    /// <summary>
+    /// Starts the receiver only when the persisted request is still enabled.
+    /// This is used by startup after storage becomes ready so a stale startup
+    /// continuation cannot overwrite a user's intervening disable action.
+    /// </summary>
+    internal async Task<bool> StartLocalSendIfRequestedAsync(
+        CancellationToken cancellationToken = default)
+    {
+        // Startup must not be dropped merely because a page/tray operation
+        // reached the gate at the same instant. Once admitted, the preference
+        // is checked again so a completed disable still wins.
+        var lease = await AcquireAsync(
+                _localSendOperationGate,
+                OperationKind.LocalSend,
+                waitForGate: true,
+                cancellationToken: cancellationToken)
+            .ConfigureAwait(true);
+        if (lease is null)
+        {
+            return false;
+        }
+
+        ILocalSendReceiverService? receiver = null;
+        try
+        {
+            receiver = _localSendReceiverAccessor();
+            if (!CurrentState.StorageReady
+                || receiver is null
+                || !_localSendPreference.IsEnabled)
+            {
+                return false;
+            }
+
+            UpdateState(state => state with
+            {
+                IsLocalSendRequested = _localSendPreference.IsEnabled,
+                LocalSendSnapshot = receiver.Snapshot,
+            });
+            await receiver.StartAsync(cancellationToken).ConfigureAwait(true);
+            UpdateState(state => state with
+            {
+                IsLocalSendRequested = _localSendPreference.IsEnabled,
+                LocalSendSnapshot = receiver.Snapshot,
+            });
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            UpdateState(state => state with
+            {
+                IsLocalSendRequested = _localSendPreference.IsEnabled,
+                LocalSendSnapshot = receiver?.Snapshot,
+            });
+            return false;
+        }
+        finally
+        {
+            await lease.DisposeAsync().ConfigureAwait(true);
+        }
+    }
+
+    /// <summary>
+    /// Acquires the same analysis operation gate used by tray and settings-home
+    /// selection. API settings mutations use this lease for their multi-step
+    /// profile/credential transitions.
+    /// </summary>
+    internal Task<IAsyncDisposable?> TryAcquireAnalysisOperationAsync() =>
+        TryAcquireAsync(_analysisOperationGate, OperationKind.Analysis);
+
+    internal Task<IAsyncDisposable?> AcquireAnalysisOperationAsync() =>
+        AcquireAsync(
+            _analysisOperationGate,
+            OperationKind.Analysis,
+            waitForGate: true,
+            cancellationToken: CancellationToken.None);
+
+    internal void ClearAnalysisStateAfterFailedSelection()
+    {
+        ClearAnalysisState(GetLocalAnalysisAvailability());
+    }
+
     internal async Task<AnalysisSelectionResult> SelectAnalysisBackendAsync(
         AnalysisExecutionBackend backend)
     {
@@ -408,6 +493,7 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
             var profiles = _profileServiceAccessor();
             if (!CurrentState.StorageReady || profiles is null)
             {
+                ClearAnalysisState(localAnalysisAvailable);
                 return AnalysisSelectionResult.Unavailable(localAnalysisAvailable);
             }
 
@@ -425,11 +511,13 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
                 {
                     if (!localAnalysisAvailable)
                     {
-                        return CreateAnalysisSelectionResult(
+                        var unavailableResult = CreateAnalysisSelectionResult(
                             false,
                             executionState,
                             localAnalysisAvailable,
                             eligibleProfiles);
+                        ApplyAnalysisState(unavailableResult);
+                        return unavailableResult;
                     }
 
                     await profiles.SelectLocalAsync().ConfigureAwait(true);
@@ -441,11 +529,13 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
                         eligibleProfiles);
                     if (selection is null)
                     {
-                        return CreateAnalysisSelectionResult(
+                        var unavailableResult = CreateAnalysisSelectionResult(
                             false,
                             executionState,
                             localAnalysisAvailable,
                             eligibleProfiles);
+                        ApplyAnalysisState(unavailableResult);
+                        return unavailableResult;
                     }
 
                     await profiles.SelectRemoteAsync(
@@ -471,9 +561,19 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
             }
             catch
             {
-                // Never manufacture a successful checkmark after a failed backend
-                // mutation. The last published state remains authoritative until
-                // the next menu-opening refresh.
+                // The mutation may already have committed before a follow-up
+                // read/qualification failed. Re-read the store independently so
+                // the tray reflects the database fact rather than the old
+                // optimistic snapshot. If that reconciliation also fails, clear
+                // the selection instead of claiming the old backend is factual.
+                var reconciled = await ReconcileAnalysisStateAsync(
+                        localAnalysisAvailable)
+                    .ConfigureAwait(true);
+                if (reconciled is not null)
+                {
+                    return reconciled;
+                }
+
                 return AnalysisSelectionResult.Unavailable(localAnalysisAvailable);
             }
         }
@@ -592,8 +692,36 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
     private async Task<IAsyncDisposable?> TryAcquireAsync(
         SemaphoreSlim gate,
         OperationKind operation)
+        => await AcquireAsync(
+                gate,
+                operation,
+                waitForGate: false,
+                CancellationToken.None)
+            .ConfigureAwait(false);
+
+    private async Task<IAsyncDisposable?> AcquireAsync(
+        SemaphoreSlim gate,
+        OperationKind operation,
+        bool waitForGate,
+        CancellationToken cancellationToken)
     {
-        if (IsClosed() || !await gate.WaitAsync(0).ConfigureAwait(false))
+        if (IsClosed())
+        {
+            return null;
+        }
+
+        bool acquired;
+        if (waitForGate)
+        {
+            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            acquired = true;
+        }
+        else
+        {
+            acquired = await gate.WaitAsync(0, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        if (!acquired)
         {
             return null;
         }
@@ -729,6 +857,52 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
         });
     }
 
+    private async Task<AnalysisSelectionResult?> ReconcileAnalysisStateAsync(
+        bool localAnalysisAvailable)
+    {
+        try
+        {
+            var profiles = _profileServiceAccessor();
+            if (!CurrentState.StorageReady || profiles is null)
+            {
+                ClearAnalysisState(localAnalysisAvailable);
+                return null;
+            }
+
+            var executionState = await profiles.GetExecutionStateAsync()
+                .ConfigureAwait(true);
+            var eligibleProfiles = await AnalysisEligibility.GetEligibleProfilesAsync(
+                    profiles,
+                    _credentialServiceAccessor(),
+                    localAnalysisAvailable)
+                .ConfigureAwait(true);
+            var result = CreateAnalysisSelectionResult(
+                applied: false,
+                executionState,
+                localAnalysisAvailable,
+                eligibleProfiles);
+            ApplyAnalysisState(result);
+            return result;
+        }
+        catch
+        {
+            ClearAnalysisState(localAnalysisAvailable);
+            return null;
+        }
+    }
+
+    private void ClearAnalysisState(bool localAnalysisAvailable)
+    {
+        UpdateState(state => state with
+        {
+            AnalysisBackend = null,
+            AnalysisExecutionState = null,
+            LocalAnalysisAvailable = state.StorageReady && localAnalysisAvailable,
+            IsRemoteAnalysisVisible = false,
+            IsRemoteAnalysisSelectable = false,
+        });
+    }
+
     private void UpdateAnalysisStateIfCurrent(
         long generation,
         AnalysisExecutionBackend? backend,
@@ -814,11 +988,19 @@ internal sealed class BusinessFeatureCoordinator : IDisposable
 
         _ = _dispatcherQueue.TryEnqueue(() =>
         {
-            if (!IsClosed())
+            if (!IsClosed() && IsCurrentState(state))
             {
                 InvokeStateChanged(state);
             }
         });
+    }
+
+    private bool IsCurrentState(TrayBusinessState expected)
+    {
+        lock (_stateGate)
+        {
+            return ReferenceEquals(_state, expected);
+        }
     }
 
     private void InvokeStateChanged(TrayBusinessState state)

@@ -149,11 +149,13 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
+    [NotifyPropertyChangedFor(nameof(CanSelectLocalAnalysis))]
     [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
     public partial bool IsWorking { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanChangeAnalysisSource))]
+    [NotifyPropertyChangedFor(nameof(CanSelectLocalAnalysis))]
     [NotifyPropertyChangedFor(nameof(CanSelectApiAnalysis))]
     public partial bool IsInitialized { get; set; }
 
@@ -902,6 +904,11 @@ public partial class SettingsHomePageViewModel : ObservableObject
         if (state.AnalysisExecutionState is { } executionState)
         {
             ApplyExecutionState(executionState);
+        }
+        else
+        {
+            CurrentExecutionTarget = Resources.GetString("ExecutionTargetUnavailable");
+            CurrentExecutionDetail = Resources.GetString("ExecutionTargetUnavailableDetail");
         }
     }
 
