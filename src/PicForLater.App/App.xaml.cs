@@ -810,35 +810,7 @@ public partial class App : Application
     {
         bool windowClosed = IsWindowClosed();
         bool skipExitConfirmation = ShouldSkipExitConfirmation();
-        bool restored = windowClosed || skipExitConfirmation;
-        if (!restored)
-        {
-            try
-            {
-                // A hidden window cannot host an edit-confirmation dialog. Showing it
-                // here also makes tray-initiated exit observable while the decision is
-                // pending; the window is disabled again once cleanup starts.
-                mainWindow.RestoreAndActivate();
-                restored = true;
-            }
-            catch (Exception exception)
-            {
-                Debug.WriteLine(
-                    $"Window restore before exit confirmation failed: {exception.GetType().Name}.");
-            }
-        }
-
-        // Window.Closed may race with the restore or confirmation task. Once the
-        // HWND is gone, cleanup takes precedence over a failed/ cancelled dialog.
-        if (!restored && !IsWindowClosed())
-        {
-            if (CancelApplicationExit(completionSource))
-            {
-                return;
-            }
-        }
-
-        bool canLeave = skipExitConfirmation || IsWindowClosed();
+        bool canLeave = skipExitConfirmation || windowClosed;
         if (!canLeave)
         {
             try
@@ -860,6 +832,19 @@ public partial class App : Application
 
         if (!canLeave)
         {
+            // A failed leave check needs to be visible so the user can read the
+            // page's save/error state. A successful check must stay hidden: showing
+            // the window here would create a visible flash before normal shutdown.
+            try
+            {
+                mainWindow.RestoreAndActivate();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Window restore after exit check failed: {exception.GetType().Name}.");
+            }
+
             if (CancelApplicationExit(completionSource))
             {
                 return;
