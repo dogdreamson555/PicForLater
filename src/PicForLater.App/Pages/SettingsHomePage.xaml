@@ -380,6 +380,7 @@
                                                 FontWeight="SemiBold" />
                                             <TextBlock
                                                 AutomationProperties.AutomationId="LocalAnalysisReadyStatus"
+                                                AutomationProperties.LiveSetting="Polite"
                                                 Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                                                 Style="{StaticResource CaptionTextBlockStyle}"
                                                 Text="{x:Bind ViewModel.LocalAnalysisStatus, Mode=OneWay}" />
