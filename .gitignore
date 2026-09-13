@@ -57,3 +57,5 @@ model-packages/
 *.safetensors
 *.gguf
 *.bin
+
+/src/PicForLater.App/Directory.Build.props
