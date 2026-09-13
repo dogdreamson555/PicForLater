@@ -30,6 +30,7 @@ public sealed partial class MainWindow : Window
     private nint _windowHandle;
     private bool _minimumSizeConfiguredAfterActivation;
     private bool _allowClosing;
+    private bool _windowCloseRequestQueued;
     private bool _nativeClosingRaised;
     private readonly IScreenshotCapturePlatform _screenshotCapturePlatform;
     private WindowSessionMessageMonitor? _sessionMessageMonitor;
@@ -57,14 +58,11 @@ public sealed partial class MainWindow : Window
 
 #if PICFORLATER_UI_VISUAL_FIXTURE
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetHelpText(
-            AppTitleBar,
+            WindowRoot,
             $"fixture:{UiTestVisualFixtureSeeder.FixtureId}");
 #endif
 
         Title = new ResourceLoader().GetString("MainWindowTitle");
-
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
 
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
         if (File.Exists(iconPath))
@@ -119,7 +117,27 @@ public sealed partial class MainWindow : Window
         }
 
         args.Cancel = true;
-        App.RequestWindowClose();
+        if (_windowCloseRequestQueued)
+        {
+            return;
+        }
+
+        // Let the native close-button handler finish before changing visibility.
+        _windowCloseRequestQueued = true;
+        if (!DispatcherQueue.TryEnqueue(() =>
+            {
+                _windowCloseRequestQueued = false;
+                if (!_allowClosing && !_nativeClosingRaised)
+                {
+                    App.RequestWindowClose();
+                }
+            }))
+        {
+            _windowCloseRequestQueued = false;
+            // Do not leave the native close canceled with no follow-up if the
+            // dispatcher is already winding down.
+            App.RequestWindowClose();
+        }
     }
 
     private void SessionMessageMonitor_SessionEnding(
@@ -138,10 +156,9 @@ public sealed partial class MainWindow : Window
 
     internal void RestoreAndActivate()
     {
-        AppWindow.Show();
-        _windowHandle = _windowHandle == 0
-            ? WinRT.Interop.WindowNative.GetWindowHandle(this)
-            : _windowHandle;
+        // Restore visibility and window placement before activating the window.
+        AppWindow.Show(activateWindow: false);
+        EnsureWindowHandle();
         if (IsIconic(_windowHandle))
         {
             _ = ShowWindow(_windowHandle, ShowWindowRestore);
@@ -149,6 +166,14 @@ public sealed partial class MainWindow : Window
 
         Activate();
         _ = SetForegroundWindow(_windowHandle);
+    }
+
+    private void EnsureWindowHandle()
+    {
+        if (_windowHandle == 0)
+        {
+            _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        }
     }
 
     internal void DisableInteractionForShutdown() => RootFrame.IsEnabled = false;
