@@ -242,6 +242,7 @@ public partial class SettingsPageViewModel : ObservableObject
             return;
         }
 
+        App.InvalidateLocalAnalysisAvailability();
         _modelOperationCancellation?.Dispose();
         _modelOperationCancellation = new CancellationTokenSource();
         IsWorking = true;
@@ -297,6 +298,7 @@ public partial class SettingsPageViewModel : ObservableObject
             return;
         }
 
+        App.InvalidateLocalAnalysisAvailability();
         IsWorking = true;
         CanCancelModelOperation = false;
         IsModelProgressIndeterminate = true;

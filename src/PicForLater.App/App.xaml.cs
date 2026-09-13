@@ -62,11 +62,16 @@ public partial class App : Application
     private static LocalInferenceWorkerClient? _localInferenceWorker;
     private static BackgroundFailureCircuit? _localInferenceFailureCircuit;
 #endif
+#if !PICFORLATER_UI_TESTING
+    private static bool _windowsOcrAvailable;
+#endif
     private static BackgroundWorkerSupervisor? _analysisWorkerSupervisor;
     private static BackgroundWorkerSupervisor? _reminderWorkerSupervisor;
     private static bool _isMainWindowReady;
     private static bool _isForegroundActivationPending;
     private static SystemTrayIconAdapter? _systemTrayIcon;
+    private static BusinessFeatureCoordinator? _businessFeatures;
+    private static int _observedInferenceAccelerationMode = -1;
     private static WindowLifecycleState _windowLifecycleState = WindowLifecycleState.Running;
     private static Task? _applicationExitTask;
     private static Task? _windowCloseTask;
@@ -112,6 +117,21 @@ public partial class App : Application
 
     public static ILocalSendReceivePreferenceService LocalSendReceivePreference { get; } =
         LocalSendReceivePreferenceService.Instance;
+
+    internal static BusinessFeatureCoordinator? BusinessFeatures => _businessFeatures;
+
+    internal static bool LocalAnalysisAvailable
+    {
+        get
+        {
+#if PICFORLATER_UI_TESTING
+            return true;
+#else
+            return _windowsOcrAvailable
+                || _localInferenceWorker?.CachedOcrAvailability == true;
+#endif
+        }
+    }
 
     internal static CloseBehaviorPreferenceService CloseBehaviorPreference { get; } =
         CloseBehaviorPreferenceService.Instance;
@@ -174,6 +194,8 @@ public partial class App : Application
     }
 
     public static event Action<IScreenshotCaptureService?>? ScreenshotCaptureServiceChanged;
+
+    internal static event Action<ILocalSendReceiverService?>? LocalSendReceiverServiceChanged;
 
     public static event Action<Guid>? NotificationImageRequested;
 
@@ -253,6 +275,21 @@ public partial class App : Application
         return version;
     }
 
+    private static bool DetectWindowsOcrAvailability()
+    {
+        try
+        {
+            return new WindowsMediaOcrProvider()
+                .Descriptor
+                .SupportedLanguageTags
+                .Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static IInferenceAccelerationPreferenceService CreateInferenceAccelerationPreference()
     {
         var preference = InferenceAccelerationPreferenceService.Instance;
@@ -280,6 +317,17 @@ public partial class App : Application
 
         StorageReadiness = new StorageReadinessService(StartStorageInitialization);
         StorageReadiness.ReadinessChanged += StorageReadiness_ReadinessChanged;
+        _observedInferenceAccelerationMode = (int)InferenceAcceleration.CurrentMode;
+        InferenceAcceleration.StateChanged += InferenceAcceleration_StateChanged;
+        _businessFeatures = new BusinessFeatureCoordinator(
+            DispatcherQueue,
+            () => LocalSendReceiver,
+            () => ScreenshotCapture,
+            () => RemoteApiProfiles,
+            () => RemoteApiCredentials,
+            LocalSendReceivePreference,
+            () => LocalAnalysisAvailable);
+        _businessFeatures.StateChanged += BusinessFeatures_StateChanged;
         var mainWindow = new MainWindow();
         Window = mainWindow;
         try
@@ -342,6 +390,8 @@ public partial class App : Application
         object? sender,
         StorageReadinessChangedEventArgs e)
     {
+        _businessFeatures?.SetStorageReady(
+            e.Result.Status == StorageReadinessStatus.Ready);
         if (e.Result.Status != StorageReadinessStatus.Ready)
         {
             return;
@@ -630,6 +680,11 @@ public partial class App : Application
             }
         }
 
+        if (_businessFeatures is { } businessFeatures)
+        {
+            ApplySystemTrayBusinessState(businessFeatures.CurrentState);
+        }
+
         return trayIcon.TryEnsureCreated();
     }
 
@@ -886,6 +941,7 @@ public partial class App : Application
         MainWindow mainWindow,
         bool cleanupCompleted)
     {
+        DisposeBusinessFeatures();
         DisposeSystemTrayIcon();
         UnregisterInstanceKeySafely();
 
@@ -935,6 +991,7 @@ public partial class App : Application
         }
 
         StorageReadiness.ReadinessChanged -= StorageReadiness_ReadinessChanged;
+        InferenceAcceleration.StateChanged -= InferenceAcceleration_StateChanged;
         try
         {
             AnalysisCancellation.Cancel();
@@ -967,6 +1024,7 @@ public partial class App : Application
     private static void NotifyScreenshotCaptureServiceChanged(
         IScreenshotCaptureService? service)
     {
+        _businessFeatures?.AttachScreenshotCapture(service);
         Delegate[] handlers = ScreenshotCaptureServiceChanged?.GetInvocationList() ?? [];
         foreach (Action<IScreenshotCaptureService?> handler in handlers.Cast<
                      Action<IScreenshotCaptureService?>>())
@@ -978,6 +1036,26 @@ public partial class App : Application
             catch
             {
                 // A page that is navigating away cannot make capture startup fail.
+            }
+        }
+    }
+
+    private static void NotifyLocalSendReceiverServiceChanged(
+        ILocalSendReceiverService? service)
+    {
+        _businessFeatures?.AttachLocalSendReceiver(service);
+        Delegate[] handlers = LocalSendReceiverServiceChanged?.GetInvocationList() ?? [];
+        foreach (Action<ILocalSendReceiverService?> handler in handlers.Cast<
+                     Action<ILocalSendReceiverService?>>())
+        {
+            try
+            {
+                handler(service);
+            }
+            catch
+            {
+                // A page that is navigating away cannot make receiver startup
+                // or replacement fail.
             }
         }
     }
@@ -1046,6 +1124,158 @@ public partial class App : Application
         {
             return _isMainWindowReady;
         }
+    }
+
+    internal static void RefreshSystemTrayBusinessState()
+    {
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        _ = businessFeatures.RefreshAnalysisAsync();
+        ApplySystemTrayBusinessState(businessFeatures.CurrentState);
+    }
+
+    internal static void NotifyAnalysisConfigurationChanged()
+    {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
+        _ = _businessFeatures?.RefreshAnalysisAsync();
+    }
+
+    internal static void InvalidateLocalAnalysisAvailability()
+    {
+#if !PICFORLATER_UI_TESTING
+        _localInferenceWorker?.InvalidateCachedOcrAvailability();
+#endif
+        var businessFeatures = _businessFeatures;
+        if (businessFeatures is null || IsShuttingDown)
+        {
+            return;
+        }
+
+        businessFeatures.SetLocalAnalysisAvailability(LocalAnalysisAvailable);
+        _ = businessFeatures.RefreshAnalysisAsync();
+    }
+
+    internal static async Task SetLocalSendEnabledFromTrayAsync(bool isEnabled)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        await _businessFeatures.SetLocalSendEnabledAsync(isEnabled)
+            .ConfigureAwait(true);
+    }
+
+    internal static async Task SelectAnalysisBackendFromTrayAsync(
+        AnalysisExecutionBackend backend)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        await _businessFeatures.SelectAnalysisBackendAsync(backend)
+            .ConfigureAwait(true);
+    }
+
+    internal static async Task SetScreenshotEnabledFromTrayAsync(bool isEnabled)
+    {
+        if (IsShuttingDown || _businessFeatures is null)
+        {
+            return;
+        }
+
+        await _businessFeatures.SetScreenshotEnabledAsync(isEnabled)
+            .ConfigureAwait(true);
+    }
+
+    private static void BusinessFeatures_StateChanged(TrayBusinessState state)
+    {
+        if (IsShuttingDown)
+        {
+            return;
+        }
+
+        ApplySystemTrayBusinessState(state);
+    }
+
+    private static void InferenceAcceleration_StateChanged(
+        object? sender,
+        EventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        var currentMode = (int)InferenceAcceleration.CurrentMode;
+        if (Interlocked.Exchange(ref _observedInferenceAccelerationMode, currentMode)
+            == currentMode)
+        {
+            return;
+        }
+
+        InvalidateLocalAnalysisAvailability();
+    }
+
+    private static void ApplySystemTrayBusinessState(TrayBusinessState state)
+    {
+        var trayIcon = _systemTrayIcon;
+        if (trayIcon is null)
+        {
+            return;
+        }
+
+        var localSendSnapshot = state.LocalSendSnapshot;
+        var localSendEnabled = state.StorageReady
+            && localSendSnapshot is not null
+            && !state.IsLocalSendOperationInProgress
+            && localSendSnapshot.Status is not
+                LocalSendReceiverStatus.Starting and not LocalSendReceiverStatus.Stopping;
+        var localSendUnavailable = !state.StorageReady
+            || localSendSnapshot is null
+            || localSendSnapshot.Status is
+                LocalSendReceiverStatus.Starting or
+                LocalSendReceiverStatus.Stopping or
+                LocalSendReceiverStatus.Faulted;
+        trayIcon.SetLocalSendState(
+            localSendEnabled,
+            state.IsLocalSendRequested,
+            localSendUnavailable);
+
+        var localAnalysisEnabled = state.StorageReady
+            && state.LocalAnalysisAvailable
+            && !state.IsAnalysisOperationInProgress;
+        var remoteAnalysisEnabled = state.StorageReady
+            && state.IsRemoteAnalysisSelectable
+            && !state.IsAnalysisOperationInProgress;
+        trayIcon.SetAnalysisState(
+            localAnalysisEnabled,
+            remoteAnalysisEnabled,
+            state.IsRemoteAnalysisVisible,
+            state.AnalysisBackend == AnalysisExecutionBackend.Local,
+            state.AnalysisBackend == AnalysisExecutionBackend.RemoteApi);
+
+        var screenshotSnapshot = state.ScreenshotSnapshot;
+        var screenshotEnabled = state.StorageReady
+            && screenshotSnapshot is not null
+            && !state.IsScreenshotOperationInProgress
+            && screenshotSnapshot.CaptureState == CaptureState.Idle
+            && screenshotSnapshot.RegistrationState is not
+                RegistrationState.Conflict and not RegistrationState.Faulted;
+        trayIcon.SetQuickScreenshotState(
+            screenshotEnabled,
+            screenshotSnapshot?.IsEnabledRequested == true,
+            !state.StorageReady
+            || screenshotSnapshot is null
+            || screenshotSnapshot.RegistrationState is
+                RegistrationState.Conflict or RegistrationState.Faulted
+            || screenshotSnapshot.CaptureState is not CaptureState.Idle);
     }
 
     private static Task<DatabaseInitializationResult> StartStorageInitialization()
@@ -1168,6 +1398,7 @@ public partial class App : Application
                         paths.AnalysisCacheDirectoryPath));
                 ModelPackages = modelPackages;
                 RemoteApiProfiles = remoteApiProfiles;
+                _ = _businessFeatures?.RefreshAnalysisAsync();
                 IRemoteApiCredentialService remoteApiCredentials;
 #if PICFORLATER_UI_TESTING
                 remoteApiCredentials = new UiTestRemoteApiCredentialService();
@@ -1213,6 +1444,7 @@ public partial class App : Application
                     paths.AnalysisCacheDirectoryPath,
                     InferenceAcceleration);
 #else
+                _windowsOcrAvailable = DetectWindowsOcrAvailability();
                 localOcr = new FallbackOcrProvider(
                     [_localInferenceWorker, new WindowsMediaOcrProvider()]);
                 localVision = _localInferenceWorker;
@@ -1353,6 +1585,15 @@ public partial class App : Application
         {
         }
 
+        // Close coordinator admission and drain every operation before any
+        // receiver, screenshot, profile, or importer resource is released.
+        if (!await TryAwaitShutdownTaskAsync(
+                _businessFeatures?.WaitForOperationsAsync(),
+                deadlineToken))
+        {
+            return false;
+        }
+
         Task screenshotStartupTask;
         Task screenshotStopTask;
         lock (ScreenshotCaptureLifecycleLock)
@@ -1384,6 +1625,7 @@ public partial class App : Application
 
         var localSendReceiver = LocalSendReceiver;
         LocalSendReceiver = null;
+        NotifyLocalSendReceiverServiceChanged(null);
         if (localSendReceiver is not null)
         {
             try
@@ -1606,6 +1848,25 @@ public partial class App : Application
         }
     }
 
+    private static void DisposeBusinessFeatures()
+    {
+        var businessFeatures = Interlocked.Exchange(ref _businessFeatures, null);
+        if (businessFeatures is null)
+        {
+            return;
+        }
+
+        try
+        {
+            businessFeatures.Dispose();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(
+                $"Business feature coordinator disposal failed: {exception.GetType().Name}.");
+        }
+    }
+
     private static void MainWindow_ActivatedForTray(
         object sender,
         WindowActivatedEventArgs args)
@@ -1641,6 +1902,7 @@ public partial class App : Application
 #endif
             cancellationToken.ThrowIfCancellationRequested();
             LocalSendReceiver = receiver;
+            NotifyLocalSendReceiverServiceChanged(receiver);
             if (LocalSendReceivePreference.IsEnabled)
             {
                 _localSendStartupTask = StartLocalSendReceiverAsync(
@@ -1664,6 +1926,7 @@ public partial class App : Application
             if (ReferenceEquals(LocalSendReceiver, receiver))
             {
                 LocalSendReceiver = null;
+                NotifyLocalSendReceiverServiceChanged(null);
             }
 
             if (cancellationToken.IsCancellationRequested)

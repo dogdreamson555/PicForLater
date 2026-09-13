@@ -4,9 +4,11 @@ using H.NotifyIcon.Core;
 using System.Diagnostics;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.Windows.ApplicationModel.Resources;
+using PicForLater.Core.Analysis;
 
 namespace PicForLater.App.Services;
 
@@ -35,42 +37,56 @@ internal sealed class SystemTrayIconAdapter : IDisposable
             ?? throw new InvalidOperationException(
                 "The system tray adapter must be created on the UI thread.");
 
-        _localSendItem = new ToggleMenuFlyoutItem
+        var localSendItem = new ToggleMenuFlyoutItem
         {
             Text = _resources.GetString("TrayLocalSendText"),
             IsChecked = false,
             IsEnabled = false,
         };
+        localSendItem.Command = new AsyncRelayCommand(() =>
+            App.SetLocalSendEnabledFromTrayAsync(localSendItem.IsChecked));
+        AutomationProperties.SetAutomationId(localSendItem, "TrayLocalSendItem");
+        _localSendItem = localSendItem;
 
         _localAnalysisItem = new ToggleMenuFlyoutItem
         {
             Text = _resources.GetString("TrayLocalAnalysisText"),
             IsChecked = true,
-            Command = new RelayCommand(SelectLocalAnalysis),
+            Command = new AsyncRelayCommand(() =>
+                App.SelectAnalysisBackendFromTrayAsync(AnalysisExecutionBackend.Local)),
         };
+        AutomationProperties.SetAutomationId(_localAnalysisItem, "TrayLocalAnalysisItem");
         _remoteAnalysisItem = new ToggleMenuFlyoutItem
         {
             Text = _resources.GetString("TrayRemoteAnalysisText"),
             IsChecked = false,
             Visibility = Visibility.Collapsed,
-            Command = new RelayCommand(SelectRemoteAnalysis),
+            Command = new AsyncRelayCommand(() =>
+                App.SelectAnalysisBackendFromTrayAsync(AnalysisExecutionBackend.RemoteApi)),
         };
+        AutomationProperties.SetAutomationId(_remoteAnalysisItem, "TrayRemoteAnalysisItem");
 
         var analysisModeItem = new MenuFlyoutSubItem
         {
             Text = _resources.GetString("TrayAnalysisModeText"),
         };
+        AutomationProperties.SetAutomationId(analysisModeItem, "TrayAnalysisModeItem");
         analysisModeItem.Items.Add(_localAnalysisItem);
         analysisModeItem.Items.Add(_remoteAnalysisItem);
 
-        _quickScreenshotItem = new ToggleMenuFlyoutItem
+        var quickScreenshotItem = new ToggleMenuFlyoutItem
         {
             Text = _resources.GetString("TrayQuickScreenshotText"),
             IsChecked = false,
             IsEnabled = false,
         };
+        quickScreenshotItem.Command = new AsyncRelayCommand(() =>
+            App.SetScreenshotEnabledFromTrayAsync(quickScreenshotItem.IsChecked));
+        AutomationProperties.SetAutomationId(quickScreenshotItem, "TrayQuickScreenshotItem");
+        _quickScreenshotItem = quickScreenshotItem;
 
         var contextMenu = new MenuFlyout();
+        contextMenu.Opening += (_, _) => App.RefreshSystemTrayBusinessState();
         contextMenu.Items.Add(_localSendItem);
         contextMenu.Items.Add(analysisModeItem);
         contextMenu.Items.Add(_quickScreenshotItem);
@@ -81,6 +97,7 @@ internal sealed class SystemTrayIconAdapter : IDisposable
             Text = _resources.GetString("TrayCloseText"),
             Command = new RelayCommand(CloseApplication),
         };
+        AutomationProperties.SetAutomationId(closeItem, "TrayCloseItem");
         contextMenu.Items.Add(closeItem);
 
         _taskbarIcon = new TaskbarIcon
@@ -111,31 +128,56 @@ internal sealed class SystemTrayIconAdapter : IDisposable
 
     public bool IsCreated => !_disposed && _taskbarIcon.IsCreated;
 
-    internal void SetLocalSendState(bool isEnabled, bool isChecked)
+    internal void SetLocalSendState(
+        bool isEnabled,
+        bool isChecked,
+        bool isUnavailable)
     {
         UpdateMenuOnUiThread(() =>
         {
+            _localSendItem.Text = _resources.GetString(
+                isUnavailable ? "TrayLocalSendUnavailableText" : "TrayLocalSendText");
             _localSendItem.IsEnabled = isEnabled;
             _localSendItem.IsChecked = isChecked;
         });
     }
 
-    internal void SetAnalysisMode(bool localSelected, bool remoteVisible)
+    internal void SetAnalysisState(
+        bool localEnabled,
+        bool remoteEnabled,
+        bool remoteVisible,
+        bool localSelected,
+        bool remoteSelected)
     {
         UpdateMenuOnUiThread(() =>
         {
+            _localAnalysisItem.Text = _resources.GetString(
+                localEnabled ? "TrayLocalAnalysisText" : "TrayLocalAnalysisUnavailableText");
+            _remoteAnalysisItem.Text = _resources.GetString(
+                remoteEnabled
+                    ? "TrayRemoteAnalysisText"
+                    : "TrayRemoteAnalysisUnavailableText");
             _localAnalysisItem.IsChecked = localSelected;
-            _remoteAnalysisItem.IsChecked = !localSelected;
+            _localAnalysisItem.IsEnabled = localEnabled;
+            _remoteAnalysisItem.IsChecked = remoteSelected;
+            _remoteAnalysisItem.IsEnabled = remoteEnabled;
             _remoteAnalysisItem.Visibility = remoteVisible
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         });
     }
 
-    internal void SetQuickScreenshotState(bool isEnabled, bool isChecked)
+    internal void SetQuickScreenshotState(
+        bool isEnabled,
+        bool isChecked,
+        bool isUnavailable)
     {
         UpdateMenuOnUiThread(() =>
         {
+            _quickScreenshotItem.Text = _resources.GetString(
+                isUnavailable
+                    ? "TrayQuickScreenshotUnavailableText"
+                    : "TrayQuickScreenshotText");
             _quickScreenshotItem.IsEnabled = isEnabled;
             _quickScreenshotItem.IsChecked = isChecked;
         });
@@ -174,24 +216,6 @@ internal sealed class SystemTrayIconAdapter : IDisposable
 
         _disposed = true;
         _taskbarIcon.Dispose();
-    }
-
-    private void SelectLocalAnalysis()
-    {
-        UpdateMenuOnUiThread(() =>
-        {
-            _localAnalysisItem.IsChecked = true;
-            _remoteAnalysisItem.IsChecked = false;
-        });
-    }
-
-    private void SelectRemoteAnalysis()
-    {
-        UpdateMenuOnUiThread(() =>
-        {
-            _localAnalysisItem.IsChecked = false;
-            _remoteAnalysisItem.IsChecked = true;
-        });
     }
 
     private void CloseApplication()

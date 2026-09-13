@@ -56,10 +56,14 @@
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
   <data name="TrayLocalSendText" xml:space="preserve"><value>手机接收</value></data>
+  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>手机接收（不可用）</value></data>
   <data name="TrayAnalysisModeText" xml:space="preserve"><value>分析模式</value></data>
   <data name="TrayLocalAnalysisText" xml:space="preserve"><value>本地分析</value></data>
+  <data name="TrayLocalAnalysisUnavailableText" xml:space="preserve"><value>本地分析（不可用）</value></data>
   <data name="TrayRemoteAnalysisText" xml:space="preserve"><value>API 分析</value></data>
+  <data name="TrayRemoteAnalysisUnavailableText" xml:space="preserve"><value>API 分析（不可用）</value></data>
   <data name="TrayQuickScreenshotText" xml:space="preserve"><value>快捷截图</value></data>
+  <data name="TrayQuickScreenshotUnavailableText" xml:space="preserve"><value>快捷截图（不可用）</value></data>
   <data name="TrayCloseText" xml:space="preserve"><value>关闭</value></data>
   <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater 无法常驻系统托盘</value></data>
   <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>系统托盘图标当前不可用。你可以重试创建托盘图标、完全退出，或保持窗口打开。</value></data>
@@ -126,6 +130,10 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>浅色主题</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
+  <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>窗口行为</value></data>
+  <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>关闭窗口后继续在系统托盘运行</value></data>
+  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>开启后，手机接收、快捷截图、分析和提醒会继续在后台运行。需要完全退出时，请使用托盘菜单中的“关闭”。</value></data>
+  <data name="KeepInSystemTrayToggle.AutomationProperties.Name" xml:space="preserve"><value>关闭窗口后继续在系统托盘运行</value></data>
   <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>界面语言 / Language</value></data>
   <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>界面语言</value></data>
   <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>选择 PicForLater 使用的界面语言。更改将在下次启动应用时生效。</value></data>
@@ -706,6 +714,7 @@
   <data name="LocalAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>本地分析</value></data>
   <data name="LocalAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>在本地设备上完成 OCR、视觉模型与推理，数据不上云端。</value></data>
   <data name="LocalAnalysisReadyStatus.Text" xml:space="preserve"><value>就绪</value></data>
+  <data name="LocalAnalysisUnavailableStatus" xml:space="preserve"><value>不可用</value></data>
   <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>打开 API 分析设置</value></data>
   <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>配置</value></data>
   <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>云端 API</value></data>
