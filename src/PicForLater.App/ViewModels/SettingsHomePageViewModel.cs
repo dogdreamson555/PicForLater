@@ -428,25 +428,52 @@ public partial class SettingsHomePageViewModel : ObservableObject
     public async Task InitializeAsync()
     {
         IsInitialized = false;
+
+        StorageReadinessResult readiness;
         try
         {
-            var readiness = await _storageReadinessService.EnsureReadyAsync(forceRetry: false)
+            readiness = await _storageReadinessService.EnsureReadyAsync(forceRetry: false)
                 .ConfigureAwait(true);
-            App.BusinessFeatures?.SetStorageReady(
-                readiness.Status == StorageReadinessStatus.Ready);
-            HasSelectableLocalAnalysis =
-                readiness.Status == StorageReadinessStatus.Ready
-                && App.LocalAnalysisAvailable;
-            LocalAnalysisStatus = Resources.GetString(
-                HasSelectableLocalAnalysis
-                    ? "LocalAnalysisReadyStatus/Text"
-                    : "LocalAnalysisUnavailableStatus");
-            await InitializeLocalSendAsync(readiness.Status == StorageReadinessStatus.Ready)
-                .ConfigureAwait(true);
+        }
+        catch
+        {
+            App.BusinessFeatures?.SetStorageReady(false);
+            ApplyUnavailableState();
+            return;
+        }
+
+        var storageReady = readiness.Status == StorageReadinessStatus.Ready;
+        App.BusinessFeatures?.SetStorageReady(storageReady);
+        if (!storageReady)
+        {
+            ApplyLocalSendUnavailableState();
+            ApplyUnavailableState();
+            return;
+        }
+
+        // Local analysis is independent of the LocalSend and API settings
+        // below. A failure in either of those areas must not erase this fact.
+        HasSelectableLocalAnalysis = App.LocalAnalysisAvailable;
+        LocalAnalysisStatus = Resources.GetString(
+            HasSelectableLocalAnalysis
+                ? "LocalAnalysisReadyStatus/Text"
+                : "LocalAnalysisUnavailableStatus");
+
+        try
+        {
+            await InitializeLocalSendAsync(storageReady: true).ConfigureAwait(true);
+        }
+        catch
+        {
+            ApplyLocalSendUnavailableState();
+        }
+
+        try
+        {
             var profiles = _profileServiceAccessor();
-            if (readiness.Status != StorageReadinessStatus.Ready || profiles is null)
+            if (profiles is null)
             {
-                ApplyUnavailableState();
+                ApplyAnalysisBackendUnavailableState();
                 return;
             }
 
@@ -469,7 +496,9 @@ public partial class SettingsHomePageViewModel : ObservableObject
         }
         catch
         {
-            ApplyUnavailableState();
+            // Keep the local capability already established above. Only the
+            // API/execution portion is unknown when this branch is reached.
+            ApplyAnalysisBackendUnavailableState();
         }
     }
 
@@ -656,7 +685,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
         try
         {
             var removed = await receiver.RemoveTrustedDeviceAsync(deviceId).ConfigureAwait(true);
-            await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+            await RefreshLocalSendTrustedDevicesAsync(receiver).ConfigureAwait(true);
             return removed;
         }
         catch
@@ -670,11 +699,17 @@ public partial class SettingsHomePageViewModel : ObservableObject
         }
     }
 
-    public async Task RefreshLocalSendTrustedDevicesAsync()
+    public async Task RefreshLocalSendTrustedDevicesAsync(
+        ILocalSendReceiverService? expectedReceiver = null)
     {
         var receiver = _localSendReceiverAccessor();
         if (receiver is null)
         {
+            if (expectedReceiver is not null)
+            {
+                return;
+            }
+
             LocalSendTrustedDevices.Clear();
             UpdateLocalSendTrustedDeviceVisibility();
             return;
@@ -683,6 +718,13 @@ public partial class SettingsHomePageViewModel : ObservableObject
         try
         {
             var devices = await receiver.GetTrustedDevicesAsync().ConfigureAwait(true);
+            if (expectedReceiver is not null
+                && (!ReferenceEquals(receiver, expectedReceiver)
+                    || !ReferenceEquals(receiver, _localSendReceiverAccessor())))
+            {
+                return;
+            }
+
             LocalSendTrustedDevices.Clear();
             foreach (var device in devices.OrderBy(static device => device.DisplayName))
             {
@@ -719,11 +761,12 @@ public partial class SettingsHomePageViewModel : ObservableObject
         }
 
         ApplyLocalSendSnapshot(receiver.Snapshot);
-        await RefreshLocalSendTrustedDevicesAsync().ConfigureAwait(true);
+        await RefreshLocalSendTrustedDevicesAsync(receiver).ConfigureAwait(true);
     }
 
     internal void ApplyLocalSendUnavailableState()
     {
+        IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
         LocalSendTrustedDevices.Clear();
         UpdateLocalSendTrustedDeviceVisibility();
         LocalSendReceiverName = string.Format(
@@ -916,6 +959,14 @@ public partial class SettingsHomePageViewModel : ObservableObject
     {
         HasSelectableLocalAnalysis = false;
         LocalAnalysisStatus = Resources.GetString("LocalAnalysisUnavailableStatus");
+        HasSelectableApiAnalysis = false;
+        ApiConfigurationStatus = Resources.GetString("ApiConfigurationUnavailableStatus");
+        CurrentExecutionTarget = Resources.GetString("ExecutionTargetUnavailable");
+        CurrentExecutionDetail = Resources.GetString("ExecutionTargetUnavailableDetail");
+    }
+
+    private void ApplyAnalysisBackendUnavailableState()
+    {
         HasSelectableApiAnalysis = false;
         ApiConfigurationStatus = Resources.GetString("ApiConfigurationUnavailableStatus");
         CurrentExecutionTarget = Resources.GetString("ExecutionTargetUnavailable");

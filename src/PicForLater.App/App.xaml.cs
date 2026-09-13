@@ -199,6 +199,8 @@ public partial class App : Application
 
     internal static event Action<ILocalSendReceiverService?>? LocalSendReceiverServiceChanged;
 
+    internal static event Action<bool>? LocalAnalysisAvailabilityChanged;
+
     public static event Action<Guid>? NotificationImageRequested;
 
     public static Guid? PendingNotificationImageItemId { get; private set; }
@@ -1164,6 +1166,7 @@ public partial class App : Application
 #if !PICFORLATER_UI_TESTING
         _localInferenceWorker?.InvalidateCachedOcrAvailability();
 #endif
+        NotifyLocalAnalysisAvailabilityChanged();
         var businessFeatures = _businessFeatures;
         if (businessFeatures is not null && !IsShuttingDown)
         {
@@ -1208,6 +1211,7 @@ public partial class App : Application
         }
 #endif
 
+        NotifyLocalAnalysisAvailabilityChanged(isAvailable);
         var businessFeatures = _businessFeatures;
         if (businessFeatures is null || IsShuttingDown)
         {
@@ -1299,6 +1303,7 @@ public partial class App : Application
 #if !PICFORLATER_UI_TESTING
     private static void LocalInferenceWorker_OcrAvailabilityChanged(bool isAvailable)
     {
+        NotifyLocalAnalysisAvailabilityChanged(_windowsOcrAvailable || isAvailable);
         var businessFeatures = _businessFeatures;
         if (businessFeatures is null || IsShuttingDown)
         {
@@ -1310,6 +1315,24 @@ public partial class App : Application
         _ = businessFeatures.RefreshAnalysisAsync();
     }
 #endif
+
+    private static void NotifyLocalAnalysisAvailabilityChanged(bool? isAvailable = null)
+    {
+        Delegate[] handlers = LocalAnalysisAvailabilityChanged?.GetInvocationList() ?? [];
+        var availability = isAvailable ?? LocalAnalysisAvailable;
+        foreach (Action<bool> handler in handlers.Cast<Action<bool>>())
+        {
+            try
+            {
+                handler(availability);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Local analysis availability observer failed: {exception.GetType().Name}.");
+            }
+        }
+    }
 
     private static void ApplySystemTrayBusinessState(TrayBusinessState state)
     {
