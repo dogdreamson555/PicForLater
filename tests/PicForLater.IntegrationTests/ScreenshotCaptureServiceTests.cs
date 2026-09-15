@@ -705,7 +705,14 @@ public sealed class ScreenshotCaptureServiceTests
         var service = CreateService(
             platform,
             new FakePreferences(isEnabledRequested: true),
-            importer);
+            importer,
+            new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
+            });
         var completions = new List<ScreenshotCaptureResult>();
         service.CaptureCompleted += (_, args) => completions.Add(args.Result);
         await service.StartAsync();
@@ -742,7 +749,14 @@ public sealed class ScreenshotCaptureServiceTests
         var service = CreateService(
             platform,
             new FakePreferences(isEnabledRequested: true),
-            importer);
+            importer,
+            new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
+            });
         await service.StartAsync();
         platform.RaiseHotKey(Assert.Single(platform.Registered).Key);
         await importer.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
