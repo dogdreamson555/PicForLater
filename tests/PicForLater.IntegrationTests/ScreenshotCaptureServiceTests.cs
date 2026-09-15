@@ -261,7 +261,14 @@ public sealed class ScreenshotCaptureServiceTests
         var service = CreateService(
             platform,
             new FakePreferences(isEnabledRequested: true),
-            importer);
+            importer,
+            new ScreenshotCaptureOptions
+            {
+                KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
+                KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
+                ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
+            });
         ScreenshotCaptureResult? completion = null;
         service.CaptureCompleted += (_, args) => completion = args.Result;
         await service.StartAsync();
