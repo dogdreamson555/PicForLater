@@ -265,7 +265,8 @@ jobs:
             --target $env:GITHUB_SHA `
             --title "PicForLater $env:APP_VERSION" `
             --generate-notes `
-            --latest
+            --prerelease `
+            --latest=false
           if ($LASTEXITCODE -ne 0) {
             throw "GitHub Release creation failed with exit code $LASTEXITCODE."
           }
