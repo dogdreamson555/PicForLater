@@ -11,7 +11,7 @@ public sealed class BackdropPreferenceService : IBackdropPreferenceService
 {
     internal const string PreferenceKey = "Appearance.Backdrop";
     private static readonly AppBackdropPreference DefaultPreference =
-        AppBackdropPreference.MicaAlt;
+        AppBackdropPreference.Mica;
 
     private readonly IInt32PreferenceStore _store;
 

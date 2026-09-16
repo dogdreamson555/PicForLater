@@ -122,7 +122,6 @@
   <data name="SettingsPageTitle.Text" xml:space="preserve"><value>設定</value></data>
   <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>偏好設定儲存在此裝置的應用程式資料中；API 金鑰單獨儲存在 Windows 認證保管庫。</value></data>
   <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>外觀</value></data>
-  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>選擇應用程式主題和視窗材質。高對比由 Windows 控制。</value></data>
   <data name="AppearanceStatusInfoBar.Title" xml:space="preserve"><value>外觀</value></data>
   <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>無法儲存視窗材質，已保留先前的材質選擇。</value></data>
   <data name="ThemeOptionsHeader.Text" xml:space="preserve"><value>主題</value></data>
@@ -134,7 +133,6 @@
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主題</value></data>
   <data name="BackdropOptionsHeader.Text" xml:space="preserve"><value>視窗材質</value></data>
-  <data name="BackdropOptionsDescription.Text" xml:space="preserve"><value>Mica 使用基礎材質；Mica Alt 是本應用程式分頁樣式視窗的預設材質。</value></data>
   <data name="BackdropOptions.AutomationProperties.Name" xml:space="preserve"><value>視窗材質</value></data>
   <data name="MicaBackdropOption.Content" xml:space="preserve"><value>Mica</value></data>
   <data name="MicaBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica 材質</value></data>

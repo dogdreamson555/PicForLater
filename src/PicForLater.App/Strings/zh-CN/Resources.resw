@@ -122,7 +122,6 @@
   <data name="SettingsPageTitle.Text" xml:space="preserve"><value>设置</value></data>
   <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>偏好设置保存在此设备的应用数据中；API 密钥单独保存在 Windows 凭据保险箱。</value></data>
   <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>外观</value></data>
-  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>选择应用主题和窗口材质。高对比度由 Windows 控制。</value></data>
   <data name="AppearanceStatusInfoBar.Title" xml:space="preserve"><value>外观</value></data>
   <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>窗口材质无法保存，已保留之前的材质选择。</value></data>
   <data name="ThemeOptionsHeader.Text" xml:space="preserve"><value>主题</value></data>
@@ -134,7 +133,6 @@
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
   <data name="BackdropOptionsHeader.Text" xml:space="preserve"><value>窗口材质</value></data>
-  <data name="BackdropOptionsDescription.Text" xml:space="preserve"><value>Mica 使用基础材质；Mica Alt 是本应用标签页风格窗口的默认材质。</value></data>
   <data name="BackdropOptions.AutomationProperties.Name" xml:space="preserve"><value>窗口材质</value></data>
   <data name="MicaBackdropOption.Content" xml:space="preserve"><value>Mica</value></data>
   <data name="MicaBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica 材质</value></data>

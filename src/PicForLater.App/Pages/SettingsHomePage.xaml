@@ -496,21 +496,18 @@
 
                 <StackPanel Grid.Row="5" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="AppearanceSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
-                    <TextBlock
-                        x:Uid="AppearanceSectionDescription"
-                        Foreground="{ThemeResource AppSecondaryTextBrush}"
-                        TextWrapping="Wrap" />
                     <Border
-                        Padding="12"
+                        Padding="12,10,12,8"
                         Style="{StaticResource AppSettingsListSectionStyle}">
-                        <StackPanel Spacing="{StaticResource AppSpacingMd}">
+                        <StackPanel>
                             <StackPanel Spacing="{StaticResource AppSpacingXs}">
                                 <TextBlock
                                     x:Uid="ThemeOptionsHeader"
-                                    FontWeight="SemiBold" />
+                                    Style="{StaticResource AppSettingsOptionHeaderTextBlockStyle}" />
                                 <RadioButtons
                                     x:Name="ThemeOptions"
                                     x:Uid="ThemeOptions"
+                                    Loaded="AppearanceOptions_Loaded"
                                     AutomationProperties.AutomationId="ThemeOptions"
                                     MaxColumns="1"
                                     SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}">
@@ -526,19 +523,17 @@
                                 </RadioButtons>
                             </StackPanel>
 
-                            <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
+                            <!-- The last radio circle already has 6 DIP below it. -->
+                            <Border Height="1" Margin="0,8,0,10" Background="{ThemeResource AppDividerBrush}" />
 
                             <StackPanel Spacing="{StaticResource AppSpacingXs}">
                                 <TextBlock
                                     x:Uid="BackdropOptionsHeader"
-                                    FontWeight="SemiBold" />
-                                <TextBlock
-                                    x:Uid="BackdropOptionsDescription"
-                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
-                                    TextWrapping="Wrap" />
+                                    Style="{StaticResource AppSettingsOptionHeaderTextBlockStyle}" />
                                 <RadioButtons
                                     x:Name="BackdropOptions"
                                     x:Uid="BackdropOptions"
+                                    Loaded="AppearanceOptions_Loaded"
                                     AutomationProperties.AutomationId="BackdropOptions"
                                     MaxColumns="1"
                                     SelectedIndex="{x:Bind ViewModel.SelectedBackdropIndex, Mode=TwoWay}">

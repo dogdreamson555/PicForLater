@@ -1,6 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Models;
@@ -741,6 +742,44 @@ public sealed partial class SettingsHomePage : Page
 
         toggle.ApplyTemplate();
         RemoveToggleContentSpacing(toggle);
+    }
+
+    private void AppearanceOptions_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButtons { Header: null } options)
+        {
+            options.ApplyTemplate();
+            ApplyAppearanceOptionsSpacing(options);
+        }
+    }
+
+    private static void ApplyAppearanceOptionsSpacing(DependencyObject element)
+    {
+        // Keep the SDK template and its selection/navigation behavior. Set the
+        // instantiated layout directly: local resource overrides did not affect it.
+        if (element is ItemsRepeater { Name: "InnerRepeater" } repeater)
+        {
+            if (repeater.Layout is ColumnMajorUniformToLargestGridLayout layout)
+            {
+                // 32-DIP native row - 20-DIP circle + 2 = 14 DIP (21px at 150%).
+                layout.RowSpacing = 2;
+            }
+
+            return; // Do not traverse or change the individual radio buttons.
+        }
+
+        if (element is ContentPresenter { Name: "HeaderContentPresenter" } header)
+        {
+            // Headings are separate TextBlocks; reduce the empty header's default
+            // 8-DIP bottom margin by 6 DIP (9px at 150%).
+            header.Margin = new Thickness(0, 0, 0, 2);
+            return;
+        }
+
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++)
+        {
+            ApplyAppearanceOptionsSpacing(VisualTreeHelper.GetChild(element, index));
+        }
     }
 
     private static void RemoveToggleContentSpacing(DependencyObject parent)

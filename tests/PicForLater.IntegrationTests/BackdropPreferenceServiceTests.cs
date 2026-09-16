@@ -6,15 +6,15 @@ namespace PicForLater.IntegrationTests;
 public sealed class BackdropPreferenceServiceTests
 {
     [Fact]
-    public void MissingOrInvalidValueFallsBackToMicaAlt()
+    public void MissingOrInvalidValueFallsBackToMica()
     {
         var missing = new BackdropPreferenceService(new MemoryInt32Store());
         var invalidStore = new MemoryInt32Store();
         invalidStore.Values[BackdropPreferenceService.PreferenceKey] = 99;
         var invalid = new BackdropPreferenceService(invalidStore);
 
-        Assert.Equal(AppBackdropPreference.MicaAlt, missing.CurrentPreference);
-        Assert.Equal(AppBackdropPreference.MicaAlt, invalid.CurrentPreference);
+        Assert.Equal(AppBackdropPreference.Mica, missing.CurrentPreference);
+        Assert.Equal(AppBackdropPreference.Mica, invalid.CurrentPreference);
     }
 
     [Theory]
@@ -47,7 +47,7 @@ public sealed class BackdropPreferenceServiceTests
         var changeCount = 0;
         service.PreferenceChanged += (_, _) => changeCount++;
 
-        service.SetPreference(AppBackdropPreference.MicaAlt);
+        service.SetPreference(AppBackdropPreference.Mica);
 
         Assert.Equal(0, store.SetCalls);
         Assert.Equal(0, changeCount);
@@ -60,14 +60,15 @@ public sealed class BackdropPreferenceServiceTests
         var service = new BackdropPreferenceService(store);
 
         Assert.Throws<IOException>(
-            () => service.SetPreference(AppBackdropPreference.Mica));
-        Assert.Equal(AppBackdropPreference.MicaAlt, service.CurrentPreference);
+            () => service.SetPreference(AppBackdropPreference.MicaAlt));
+        Assert.Equal(AppBackdropPreference.Mica, service.CurrentPreference);
     }
 
     [Fact]
     public void SetPreference_IsolatesFailingChangeSubscribers()
     {
         var store = new MemoryInt32Store();
+        store.Values[BackdropPreferenceService.PreferenceKey] = (int)AppBackdropPreference.MicaAlt;
         var service = new BackdropPreferenceService(store);
         var notificationCount = 0;
         service.PreferenceChanged += (_, _) =>
