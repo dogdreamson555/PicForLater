@@ -755,23 +755,20 @@ public sealed partial class SettingsHomePage : Page
 
     private static void ApplyAppearanceOptionsSpacing(DependencyObject element)
     {
-        // Keep the SDK template and its selection/navigation behavior. Set the
-        // instantiated layout directly: local resource overrides did not affect it.
+        // Adjust the instantiated SDK layout while preserving native behavior.
         if (element is ItemsRepeater { Name: "InnerRepeater" } repeater)
         {
             if (repeater.Layout is ColumnMajorUniformToLargestGridLayout layout)
             {
-                // 32-DIP native row - 20-DIP circle + 2 = 14 DIP (21px at 150%).
                 layout.RowSpacing = 2;
             }
 
-            return; // Do not traverse or change the individual radio buttons.
+            return;
         }
 
         if (element is ContentPresenter { Name: "HeaderContentPresenter" } header)
         {
-            // Headings are separate TextBlocks; reduce the empty header's default
-            // 8-DIP bottom margin by 6 DIP (9px at 150%).
+            // The visible heading is outside RadioButtons; remove its empty header gap.
             header.Margin = new Thickness(0, 0, 0, 2);
             return;
         }

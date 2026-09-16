@@ -4,8 +4,7 @@ using PicForLater.App.Models;
 namespace PicForLater.App.Services;
 
 /// <summary>
-/// Persists the selected Mica variant and notifies the main window to apply it.
-/// Unsupported Windows versions fall back through the system backdrop APIs.
+/// Persists the selected Mica material and notifies subscribers.
 /// </summary>
 public sealed class BackdropPreferenceService : IBackdropPreferenceService
 {
@@ -66,9 +65,7 @@ public sealed class BackdropPreferenceService : IBackdropPreferenceService
             }
             catch (Exception exception)
             {
-                // Preference persistence has already succeeded. A failing UI
-                // subscriber must not make the settings binding report failure
-                // or prevent other subscribers from applying the new value.
+                // A failing subscriber must not block later subscribers.
                 Trace.WriteLine(
                     $"Backdrop preference change notification failed: " +
                     $"{exception.GetType().Name}.");

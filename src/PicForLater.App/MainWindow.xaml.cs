@@ -318,8 +318,6 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            // MicaBackdrop owns the platform fallback when the material is
-            // unavailable, transparency is disabled, or high contrast is active.
             SystemBackdrop = new MicaBackdrop
             {
                 Kind = _backdropPreferenceService.CurrentPreference == AppBackdropPreference.Mica
@@ -378,9 +376,7 @@ public sealed partial class MainWindow : Window
 
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
         {
-            // Match the native caption's material to the XAML Mica variant.
-            // Keep Window.SystemBackdrop: DWM alone does not provide the WinUI
-            // client area's composition backdrop. No caption color is overridden.
+            // DWM styles the native caption; SystemBackdrop still owns the client area.
             uint backdropType = BackdropPreferenceMapping.ToDwmSystemBackdropType(
                 _backdropPreferenceService.CurrentPreference);
             var result = DwmSetWindowAttribute(

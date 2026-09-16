@@ -271,9 +271,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
         {
             Trace.WriteLine(
                 $"Backdrop preference persistence failed: {exception.GetType().Name}.");
-            // The generated TwoWay setter updates the selected index before this
-            // callback runs. Restore the durable value when persistence fails so
-            // the radio group cannot advertise an unapplied material.
+            // TwoWay binding updates the index first, so restore the persisted value.
             SelectedBackdropIndex = (int)_backdropPreferenceService.CurrentPreference;
             AppearanceStatusKind = SettingsStatusKind.Error;
             AppearanceStatusMessage = Resources.GetString(

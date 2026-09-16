@@ -523,7 +523,6 @@
                                 </RadioButtons>
                             </StackPanel>
 
-                            <!-- The last radio circle already has 6 DIP below it. -->
                             <Border Height="1" Margin="0,8,0,10" Background="{ThemeResource AppDividerBrush}" />
 
                             <StackPanel Spacing="{StaticResource AppSpacingXs}">

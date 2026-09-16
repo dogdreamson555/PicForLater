@@ -34,8 +34,7 @@
                         <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}" />
                     </ResourceDictionary>
                 </ResourceDictionary.ThemeDictionaries>
-                <!-- Reveal the window backdrop across both inline regions.
-                     The overlay pane and interactive controls retain their own surfaces. -->
+                <!-- Let the window backdrop show through the content regions. -->
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
                 <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
             </ResourceDictionary>
