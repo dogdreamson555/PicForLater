@@ -44,7 +44,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Margin="0,0,0,14" Spacing="{StaticResource AppSpacingXs}">
+        <StackPanel Margin="0,0,0,2" Spacing="{StaticResource AppSpacingXs}">
             <TextBlock x:Uid="RemindersPageTitle" Style="{StaticResource AppPageTitleTextBlockStyle}" />
             <TextBlock
                 x:Uid="RemindersPageSubtitle"
@@ -174,7 +174,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="0,0,16,4">
+                    <Grid Margin="0,0,16,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -242,7 +242,7 @@
 
                     <Grid
                         Grid.Row="1"
-                        Margin="0,0,16,12">
+                        Margin="0,0,16,-2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
@@ -270,8 +270,8 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="models:ReminderCandidateItem">
                                     <Grid
-                                        MinHeight="96"
-                                        Padding="8"
+                                        MinHeight="86.666667"
+                                        Padding="8,7.333333,8,7.333333"
                                         ColumnSpacing="{StaticResource AppSpacingMd}"
                                         AutomationProperties.AutomationId="{x:Bind local:RemindersPage.GetCandidateRowAutomationId(Candidate.Id), Mode=OneTime}">
                                         <Grid.ContextFlyout>
@@ -362,7 +362,7 @@
 
                     <Grid
                         Grid.Row="2"
-                        Margin="0,0,16,4">
+                        Margin="0,0,16,-8.666667">
                         <TextBlock
                             x:Uid="ConfirmedRemindersHeading"
                             VerticalAlignment="Center"
@@ -595,6 +595,7 @@
 
                     <Grid
                         x:Name="ReminderEditorContent"
+                        Margin="0,16,0,0"
                         HorizontalAlignment="Center"
                         Visibility="{x:Bind local:RemindersPage.BoolToVisibility(ViewModel.IsEditorOpen), Mode=OneWay}">
                         <Grid.RowDefinitions>
