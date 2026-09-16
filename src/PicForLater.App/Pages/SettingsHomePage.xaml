@@ -496,26 +496,72 @@
 
                 <StackPanel Grid.Row="5" Spacing="{StaticResource AppSpacingSm}">
                     <TextBlock x:Uid="AppearanceSectionTitle" Style="{StaticResource AppSectionTitleTextBlockStyle}" />
+                    <TextBlock
+                        x:Uid="AppearanceSectionDescription"
+                        Foreground="{ThemeResource AppSecondaryTextBrush}"
+                        TextWrapping="Wrap" />
                     <Border
-                        Padding="12,0,12,8"
+                        Padding="12"
                         Style="{StaticResource AppSettingsListSectionStyle}">
-                        <RadioButtons
-                            x:Name="ThemeOptions"
-                            x:Uid="ThemeOptions"
-                            AutomationProperties.AutomationId="ThemeOptions"
-                            MaxColumns="1"
-                            SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}">
-                            <RadioButton
-                                x:Uid="SystemThemeOption"
-                                AutomationProperties.AutomationId="SystemThemeOption" />
-                            <RadioButton
-                                x:Uid="LightThemeOption"
-                                AutomationProperties.AutomationId="LightThemeOption" />
-                            <RadioButton
-                                x:Uid="DarkThemeOption"
-                                AutomationProperties.AutomationId="DarkThemeOption" />
-                        </RadioButtons>
+                        <StackPanel Spacing="{StaticResource AppSpacingMd}">
+                            <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                <TextBlock
+                                    x:Uid="ThemeOptionsHeader"
+                                    FontWeight="SemiBold" />
+                                <RadioButtons
+                                    x:Name="ThemeOptions"
+                                    x:Uid="ThemeOptions"
+                                    AutomationProperties.AutomationId="ThemeOptions"
+                                    MaxColumns="1"
+                                    SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}">
+                                    <RadioButton
+                                        x:Uid="SystemThemeOption"
+                                        AutomationProperties.AutomationId="SystemThemeOption" />
+                                    <RadioButton
+                                        x:Uid="LightThemeOption"
+                                        AutomationProperties.AutomationId="LightThemeOption" />
+                                    <RadioButton
+                                        x:Uid="DarkThemeOption"
+                                        AutomationProperties.AutomationId="DarkThemeOption" />
+                                </RadioButtons>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
+
+                            <StackPanel Spacing="{StaticResource AppSpacingXs}">
+                                <TextBlock
+                                    x:Uid="BackdropOptionsHeader"
+                                    FontWeight="SemiBold" />
+                                <TextBlock
+                                    x:Uid="BackdropOptionsDescription"
+                                    Foreground="{ThemeResource AppSecondaryTextBrush}"
+                                    TextWrapping="Wrap" />
+                                <RadioButtons
+                                    x:Name="BackdropOptions"
+                                    x:Uid="BackdropOptions"
+                                    AutomationProperties.AutomationId="BackdropOptions"
+                                    MaxColumns="1"
+                                    SelectedIndex="{x:Bind ViewModel.SelectedBackdropIndex, Mode=TwoWay}">
+                                    <RadioButton
+                                        x:Uid="MicaBackdropOption"
+                                        AutomationProperties.AutomationId="MicaBackdropOption" />
+                                    <RadioButton
+                                        x:Uid="MicaAltBackdropOption"
+                                        AutomationProperties.AutomationId="MicaAltBackdropOption" />
+                                </RadioButtons>
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
+                    <InfoBar
+                        x:Name="AppearanceStatusInfoBar"
+                        x:Uid="AppearanceStatusInfoBar"
+                        AutomationProperties.AutomationId="AppearanceStatusInfoBar"
+                        AutomationProperties.LiveSetting="Polite"
+                        IsClosable="False"
+                        IsOpen="{x:Bind ViewModel.IsAppearanceStatusOpen, Mode=OneWay}"
+                        Message="{x:Bind ViewModel.AppearanceStatusMessage, Mode=OneWay}"
+                        Severity="{x:Bind local:SettingsHomePage.StatusSeverity(ViewModel.AppearanceStatusKind), Mode=OneWay}"
+                        Visibility="{x:Bind local:SettingsHomePage.BoolToVisibility(ViewModel.IsAppearanceStatusOpen), Mode=OneWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="6" Spacing="{StaticResource AppSpacingSm}">

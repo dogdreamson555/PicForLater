@@ -39,6 +39,8 @@
   <ItemGroup>
     <Compile Include="..\..\src\PicForLater.App\Models\AppLanguagePreference.cs"
              Link="AppSource\AppLanguagePreference.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Models\AppBackdropPreference.cs"
+             Link="AppSource\AppBackdropPreference.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\StorageReadiness.cs"
              Link="AppSource\StorageReadiness.cs" />
     <Compile Include="..\..\src\PicForLater.App\Models\AppReleaseVersion.cs"
@@ -49,10 +51,16 @@
              Link="AppSource\IUpdateCheckService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\ILanguagePreferenceService.cs"
              Link="AppSource\ILanguagePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\IBackdropPreferenceService.cs"
+             Link="AppSource\IBackdropPreferenceService.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\IInt32PreferenceStore.cs"
              Link="AppSource\IInt32PreferenceStore.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\LanguagePreferenceService.cs"
              Link="AppSource\LanguagePreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\BackdropPreferenceService.cs"
+             Link="AppSource\BackdropPreferenceService.cs" />
+    <Compile Include="..\..\src\PicForLater.App\Services\BackdropPreferenceMapping.cs"
+             Link="AppSource\BackdropPreferenceMapping.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\AppRuntimePaths.cs"
              Link="AppSource\AppRuntimePaths.cs" />
     <Compile Include="..\..\src\PicForLater.App\Services\LocalPreferenceStore.cs"

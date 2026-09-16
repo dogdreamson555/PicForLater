@@ -6,8 +6,8 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
             <StaticResource x:Key="AppWindowBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
-            <StaticResource x:Key="AppNavigationBackgroundBrush" ResourceKey="LayerFillColorDefaultBrush" />
-            <StaticResource x:Key="AppPageBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
+            <StaticResource x:Key="AppNavigationBackgroundBrush" ResourceKey="SystemControlTransparentBrush" />
+            <StaticResource x:Key="AppPageBackgroundBrush" ResourceKey="SystemControlTransparentBrush" />
             <StaticResource x:Key="AppSurfaceBrush" ResourceKey="LayerFillColorDefaultBrush" />
             <StaticResource x:Key="AppSurfaceSecondaryBrush" ResourceKey="LayerFillColorAltBrush" />
             <StaticResource x:Key="AppCardBackgroundBrush" ResourceKey="CardBackgroundFillColorDefaultBrush" />
@@ -22,8 +22,8 @@
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <StaticResource x:Key="AppWindowBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
-            <StaticResource x:Key="AppNavigationBackgroundBrush" ResourceKey="LayerFillColorDefaultBrush" />
-            <StaticResource x:Key="AppPageBackgroundBrush" ResourceKey="ApplicationPageBackgroundThemeBrush" />
+            <StaticResource x:Key="AppNavigationBackgroundBrush" ResourceKey="SystemControlTransparentBrush" />
+            <StaticResource x:Key="AppPageBackgroundBrush" ResourceKey="SystemControlTransparentBrush" />
             <StaticResource x:Key="AppSurfaceBrush" ResourceKey="LayerFillColorDefaultBrush" />
             <StaticResource x:Key="AppSurfaceSecondaryBrush" ResourceKey="LayerFillColorAltBrush" />
             <StaticResource x:Key="AppCardBackgroundBrush" ResourceKey="CardBackgroundFillColorDefaultBrush" />

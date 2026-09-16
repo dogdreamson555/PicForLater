@@ -29,6 +29,7 @@ public sealed partial class SettingsHomePage : Page
 
     public SettingsHomePageViewModel ViewModel { get; } = new(
         ThemePreferenceService.Instance,
+        BackdropPreferenceService.Instance,
         LanguagePreferenceService.Instance,
         App.StorageReadiness,
         () => App.RemoteApiProfiles,

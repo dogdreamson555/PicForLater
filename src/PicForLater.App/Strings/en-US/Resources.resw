@@ -122,7 +122,10 @@
   <data name="SettingsPageTitle.Text" xml:space="preserve"><value>Settings</value></data>
   <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>Preferences stay in this app's local data. API secrets are stored separately in Windows Credential Locker.</value></data>
   <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>Appearance</value></data>
-  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>Follow Windows or keep the app in light or dark mode. High contrast is controlled by Windows.</value></data>
+  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>Choose the app theme and window material. High contrast is controlled by Windows.</value></data>
+  <data name="AppearanceStatusInfoBar.Title" xml:space="preserve"><value>Appearance</value></data>
+  <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>The window material could not be saved. The previous material remains selected.</value></data>
+  <data name="ThemeOptionsHeader.Text" xml:space="preserve"><value>Theme</value></data>
   <data name="ThemeOptions.AutomationProperties.Name" xml:space="preserve"><value>App theme</value></data>
   <data name="SystemThemeOption.Content" xml:space="preserve"><value>Use system setting</value></data>
   <data name="SystemThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Use the system theme</value></data>
@@ -130,6 +133,13 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Light theme</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>Dark</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>Dark theme</value></data>
+  <data name="BackdropOptionsHeader.Text" xml:space="preserve"><value>Window material</value></data>
+  <data name="BackdropOptionsDescription.Text" xml:space="preserve"><value>Mica is the base material. Mica Alt is the default material for this app's tabbed-style window.</value></data>
+  <data name="BackdropOptions.AutomationProperties.Name" xml:space="preserve"><value>Window material</value></data>
+  <data name="MicaBackdropOption.Content" xml:space="preserve"><value>Mica</value></data>
+  <data name="MicaBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica material</value></data>
+  <data name="MicaAltBackdropOption.Content" xml:space="preserve"><value>Mica Alt</value></data>
+  <data name="MicaAltBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica Alt material</value></data>
   <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>Window behavior</value></data>
   <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>Keep running in the system tray after closing the window</value></data>
   <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>When enabled, phone receive, quick screenshot, analysis, and reminders continue in the background. Use Close in the tray menu to exit completely.</value></data>
