@@ -234,7 +234,7 @@ public sealed class ReminderWorkflowTests
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
         var seeded = await SeedCandidateAsync(root.Paths);
-        var now = DateTimeOffset.UtcNow;
+        var now = new DateTimeOffset(2026, 8, 27, 0, 0, 0, TimeSpan.Zero);
         var clock = new MutableTimeProvider(now);
         var scheduler = new FakeReminderNotificationScheduler();
         using var service = new SqliteReminderService(root.Paths, scheduler, clock);
@@ -383,7 +383,7 @@ public sealed class ReminderWorkflowTests
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
         var seeded = await SeedCandidateAsync(root.Paths);
-        var now = DateTimeOffset.UtcNow;
+        var now = new DateTimeOffset(2026, 8, 27, 0, 0, 0, TimeSpan.Zero);
         var clock = new MutableTimeProvider(now);
         var scheduler = new FakeReminderNotificationScheduler();
         using var service = new SqliteReminderService(root.Paths, scheduler, clock);

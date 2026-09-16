@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Windows.ApplicationModel.Resources;
 using PicForLater.App.Models;
@@ -12,6 +13,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
 {
     private static readonly ResourceLoader Resources = new();
     private readonly IThemePreferenceService _themePreferenceService;
+    private readonly IBackdropPreferenceService _backdropPreferenceService;
     private readonly ILanguagePreferenceService _languagePreferenceService;
     private readonly IStorageReadinessService _storageReadinessService;
     private readonly Func<IRemoteApiProfileService?> _profileServiceAccessor;
@@ -23,6 +25,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     public SettingsHomePageViewModel(
         IThemePreferenceService themePreferenceService,
+        IBackdropPreferenceService backdropPreferenceService,
         ILanguagePreferenceService languagePreferenceService,
         IStorageReadinessService storageReadinessService,
         Func<IRemoteApiProfileService?> profileServiceAccessor,
@@ -34,6 +37,8 @@ public partial class SettingsHomePageViewModel : ObservableObject
     {
         _themePreferenceService = themePreferenceService
             ?? throw new ArgumentNullException(nameof(themePreferenceService));
+        _backdropPreferenceService = backdropPreferenceService
+            ?? throw new ArgumentNullException(nameof(backdropPreferenceService));
         _languagePreferenceService = languagePreferenceService
             ?? throw new ArgumentNullException(nameof(languagePreferenceService));
         _storageReadinessService = storageReadinessService
@@ -49,6 +54,7 @@ public partial class SettingsHomePageViewModel : ObservableObject
         _updateCheckService = updateCheckService
             ?? throw new ArgumentNullException(nameof(updateCheckService));
         SelectedThemeIndex = (int)_themePreferenceService.CurrentPreference;
+        SelectedBackdropIndex = (int)_backdropPreferenceService.CurrentPreference;
         SelectedInterfaceLanguageIndex = (int)_languagePreferenceService.CurrentPreference;
         RefreshInterfaceLanguageStatus();
         IsLocalSendEnabled = _localSendReceivePreference.IsEnabled;
@@ -61,6 +67,19 @@ public partial class SettingsHomePageViewModel : ObservableObject
 
     [ObservableProperty]
     public partial int SelectedThemeIndex { get; set; }
+
+    [ObservableProperty]
+    public partial int SelectedBackdropIndex { get; set; }
+
+    [ObservableProperty]
+    public partial SettingsStatusKind AppearanceStatusKind { get; set; } =
+        SettingsStatusKind.Informational;
+
+    [ObservableProperty]
+    public partial string AppearanceStatusMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsAppearanceStatusOpen { get; set; }
 
     [ObservableProperty]
     public partial int SelectedInterfaceLanguageIndex { get; set; }
@@ -231,6 +250,33 @@ public partial class SettingsHomePageViewModel : ObservableObject
         if (Enum.IsDefined(typeof(AppThemePreference), value))
         {
             _themePreferenceService.SetPreference((AppThemePreference)value);
+        }
+    }
+
+    partial void OnSelectedBackdropIndexChanged(int value)
+    {
+        if (!Enum.IsDefined(typeof(AppBackdropPreference), value))
+        {
+            SelectedBackdropIndex = (int)_backdropPreferenceService.CurrentPreference;
+            return;
+        }
+
+        try
+        {
+            _backdropPreferenceService.SetPreference((AppBackdropPreference)value);
+            AppearanceStatusMessage = string.Empty;
+            IsAppearanceStatusOpen = false;
+        }
+        catch (Exception exception)
+        {
+            Trace.WriteLine(
+                $"Backdrop preference persistence failed: {exception.GetType().Name}.");
+            // TwoWay binding updates the index first, so restore the persisted value.
+            SelectedBackdropIndex = (int)_backdropPreferenceService.CurrentPreference;
+            AppearanceStatusKind = SettingsStatusKind.Error;
+            AppearanceStatusMessage = Resources.GetString(
+                "AppearancePreferenceSaveFailedStatus");
+            IsAppearanceStatusOpen = true;
         }
     }
 

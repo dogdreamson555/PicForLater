@@ -21,6 +21,24 @@
         OpenPaneLength="{StaticResource AppNavigationPaneWidth}"
         PaneDisplayMode="Auto"
         SelectionChanged="ShellNavigation_SelectionChanged">
+        <NavigationView.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.ThemeDictionaries>
+                    <ResourceDictionary x:Key="Light">
+                        <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+                    </ResourceDictionary>
+                    <ResourceDictionary x:Key="Dark">
+                        <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+                    </ResourceDictionary>
+                    <ResourceDictionary x:Key="HighContrast">
+                        <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}" />
+                    </ResourceDictionary>
+                </ResourceDictionary.ThemeDictionaries>
+                <!-- Let the window backdrop show through the content regions. -->
+                <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
+                <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
+            </ResourceDictionary>
+        </NavigationView.Resources>
         <NavigationView.MenuItems>
             <NavigationViewItem
                 x:Uid="LibraryNavItem"

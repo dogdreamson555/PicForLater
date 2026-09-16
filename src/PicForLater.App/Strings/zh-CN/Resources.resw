@@ -122,7 +122,9 @@
   <data name="SettingsPageTitle.Text" xml:space="preserve"><value>设置</value></data>
   <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>偏好设置保存在此设备的应用数据中；API 密钥单独保存在 Windows 凭据保险箱。</value></data>
   <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>外观</value></data>
-  <data name="AppearanceSectionDescription.Text" xml:space="preserve"><value>选择应用界面跟随 Windows，或固定使用浅色或深色主题。高对比度由 Windows 控制。</value></data>
+  <data name="AppearanceStatusInfoBar.Title" xml:space="preserve"><value>外观</value></data>
+  <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>窗口材质无法保存，已保留之前的材质选择。</value></data>
+  <data name="ThemeOptionsHeader.Text" xml:space="preserve"><value>主题</value></data>
   <data name="ThemeOptions.AutomationProperties.Name" xml:space="preserve"><value>应用主题</value></data>
   <data name="SystemThemeOption.Content" xml:space="preserve"><value>跟随系统</value></data>
   <data name="SystemThemeOption.AutomationProperties.Name" xml:space="preserve"><value>跟随系统主题</value></data>
@@ -130,6 +132,12 @@
   <data name="LightThemeOption.AutomationProperties.Name" xml:space="preserve"><value>浅色主题</value></data>
   <data name="DarkThemeOption.Content" xml:space="preserve"><value>深色</value></data>
   <data name="DarkThemeOption.AutomationProperties.Name" xml:space="preserve"><value>深色主题</value></data>
+  <data name="BackdropOptionsHeader.Text" xml:space="preserve"><value>窗口材质</value></data>
+  <data name="BackdropOptions.AutomationProperties.Name" xml:space="preserve"><value>窗口材质</value></data>
+  <data name="MicaBackdropOption.Content" xml:space="preserve"><value>Mica</value></data>
+  <data name="MicaBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica 材质</value></data>
+  <data name="MicaAltBackdropOption.Content" xml:space="preserve"><value>Mica Alt</value></data>
+  <data name="MicaAltBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica Alt 材质</value></data>
   <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>窗口行为</value></data>
   <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>关闭窗口后继续在系统托盘运行</value></data>
   <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>开启后，手机接收、快捷截图、分析和提醒会继续在后台运行。需要完全退出时，请使用托盘菜单中的“关闭”。</value></data>

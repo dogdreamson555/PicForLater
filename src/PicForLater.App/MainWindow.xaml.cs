@@ -1,6 +1,9 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
+using PicForLater.App.Models;
 using PicForLater.App.Services;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -32,11 +35,24 @@ public sealed partial class MainWindow : Window
     private bool _allowClosing;
     private bool _windowCloseRequestQueued;
     private bool _nativeClosingRaised;
+    private bool _xamlBackdropApplyPending;
+    private bool _nativeBackdropApplyPending;
     private readonly IScreenshotCapturePlatform _screenshotCapturePlatform;
+    private readonly IBackdropPreferenceService _backdropPreferenceService;
     private WindowSessionMessageMonitor? _sessionMessageMonitor;
+
+    private const uint DwmAttributeUseImmersiveDarkMode = 20;
+    private const uint DwmAttributeSystemBackdropType = 38;
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint windowHandle);
+
+    [DllImport("dwmapi.dll", ExactSpelling = true)]
+    private static extern int DwmSetWindowAttribute(
+        nint windowHandle,
+        uint attribute,
+        ref uint value,
+        uint valueSize);
 
     private const int ShowWindowRestore = 9;
 
@@ -55,6 +71,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _backdropPreferenceService = BackdropPreferenceService.Instance;
 
 #if PICFORLATER_UI_VISUAL_FIXTURE
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetHelpText(
@@ -90,7 +107,11 @@ public sealed partial class MainWindow : Window
         AppWindow.Changed += AppWindow_Changed;
         AppWindow.Closing += AppWindow_Closing;
         Activated += MainWindow_Activated;
+        WindowRoot.ActualThemeChanged += WindowRoot_ActualThemeChanged;
         ThemePreferenceService.Instance.Initialize(WindowRoot);
+        _backdropPreferenceService.PreferenceChanged +=
+            BackdropPreferenceService_PreferenceChanged;
+        ApplyWindowBackdrop();
 
         // Navigate the root frame to the main page on startup.
         RootFrame.Navigate(typeof(MainPage));
@@ -183,6 +204,9 @@ public sealed partial class MainWindow : Window
         AppWindow.Changed -= AppWindow_Changed;
         AppWindow.Closing -= AppWindow_Closing;
         Activated -= MainWindow_Activated;
+        WindowRoot.ActualThemeChanged -= WindowRoot_ActualThemeChanged;
+        _backdropPreferenceService.PreferenceChanged -=
+            BackdropPreferenceService_PreferenceChanged;
         DisposeSessionMessageMonitor();
         if (_nativeClosingRaised)
         {
@@ -253,15 +277,123 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
-        if (_minimumSizeConfiguredAfterActivation ||
-            args.WindowActivationState == WindowActivationState.Deactivated)
+        if (args.WindowActivationState == WindowActivationState.Deactivated)
         {
             return;
         }
 
-        _minimumSizeConfiguredAfterActivation = true;
-        _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        UpdateMinimumSize(GetDpiForWindow(_windowHandle));
+        if (!_minimumSizeConfiguredAfterActivation)
+        {
+            _minimumSizeConfiguredAfterActivation = true;
+            _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            UpdateMinimumSize(GetDpiForWindow(_windowHandle));
+        }
+
+        if (BackdropApplyPending)
+        {
+            ApplyWindowBackdrop();
+            return;
+        }
+
+        TryApplySystemTitleBarTheme();
+    }
+
+    private void WindowRoot_ActualThemeChanged(FrameworkElement sender, object args)
+    {
+        _ = sender;
+        _ = args;
+        TryApplySystemTitleBarTheme();
+    }
+
+    private void BackdropPreferenceService_PreferenceChanged(
+        object? sender,
+        EventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        ApplyWindowBackdrop();
+    }
+
+    private void ApplyWindowBackdrop()
+    {
+        try
+        {
+            SystemBackdrop = new MicaBackdrop
+            {
+                Kind = _backdropPreferenceService.CurrentPreference == AppBackdropPreference.Mica
+                    ? MicaKind.Base
+                    : MicaKind.BaseAlt,
+            };
+            _xamlBackdropApplyPending = false;
+        }
+        catch (Exception exception)
+        {
+            _xamlBackdropApplyPending = true;
+            Trace.WriteLine(
+                $"Window Mica backdrop application failed: {exception.GetType().Name}.");
+        }
+
+        TryApplySystemTitleBarTheme();
+    }
+
+    private bool BackdropApplyPending =>
+        _xamlBackdropApplyPending || _nativeBackdropApplyPending;
+
+    private void TryApplySystemTitleBarTheme()
+    {
+        try
+        {
+            _nativeBackdropApplyPending = !ApplySystemTitleBarTheme();
+        }
+        catch (Exception exception)
+        {
+            _nativeBackdropApplyPending = true;
+            Trace.WriteLine(
+                $"Native Mica backdrop application failed: {exception.GetType().Name}.");
+        }
+    }
+
+    private bool ApplySystemTitleBarTheme()
+    {
+        if (_windowHandle == 0 || !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+        {
+            return true;
+        }
+
+        var isDark = WindowRoot.ActualTheme == ElementTheme.Dark;
+        uint immersiveDarkMode = isDark ? 1u : 0u;
+        var darkModeResult = DwmSetWindowAttribute(
+            _windowHandle,
+            DwmAttributeUseImmersiveDarkMode,
+            ref immersiveDarkMode,
+            sizeof(uint));
+        var nativeBackdropApplied = darkModeResult >= 0;
+        if (darkModeResult < 0)
+        {
+            Trace.WriteLine(
+                $"Native title-bar theme could not be applied: 0x{darkModeResult:X8}.");
+        }
+
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22621))
+        {
+            // DWM styles the native caption; SystemBackdrop still owns the client area.
+            uint backdropType = BackdropPreferenceMapping.ToDwmSystemBackdropType(
+                _backdropPreferenceService.CurrentPreference);
+            var result = DwmSetWindowAttribute(
+                _windowHandle,
+                DwmAttributeSystemBackdropType,
+                ref backdropType,
+                sizeof(uint));
+            if (result < 0)
+            {
+                nativeBackdropApplied = false;
+                Trace.WriteLine(
+                    $"Native {_backdropPreferenceService.CurrentPreference} backdrop " +
+                    $"could not be applied: 0x{result:X8}.");
+            }
+        }
+
+        return nativeBackdropApplied;
     }
 
     private void ConfigureSizeForCurrentDisplay()
