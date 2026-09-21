@@ -8,6 +8,84 @@ namespace PicForLater.IntegrationTests;
 
 public sealed class RemoteApiProviderCatalogTests
 {
+    [Theory]
+    [InlineData("deepseek-official", "deepseek-v4-flash", "deepseek-flash", true)]
+    [InlineData("deepseek-official", "deepseek-v4-flash-vision-exp", "deepseek-flash", true)]
+    [InlineData("tencent-hunyuan-official", "hy3-preview", "hy3", false)]
+    [InlineData("siliconflow-official", "Pro/zai-org/GLM-4.7", "Pro/zai-org/GLM-5.1", false)]
+    [InlineData("groq-official", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3.8-27b", true)]
+    public async Task StartupSync_MigratesRetiredModelsAndInvalidatesTrust(
+        string profileId, string oldModel, string newModel, bool supportsImage)
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+        await ExecuteAsync(
+            root.Paths.DatabasePath,
+            """
+            UPDATE RemoteApiProfiles
+            SET ModelId = @model,
+                SupportedInputModesJson = @modes,
+                ValidationState = @valid,
+                LastVerifiedAtUtc = @verifiedAt,
+                ConsentedInputMode = @inputMode,
+                ConsentedDisclosureVersion = DisclosureVersion,
+                ConsentGrantedAtUtc = @verifiedAt
+            WHERE ProfileId = @profileId;
+
+            UPDATE AnalysisSettings
+            SET ExecutionBackend = @remote,
+                RemoteInputMode = @inputMode,
+                RemoteApiProfileId = @profileId
+            WHERE Id = 1;
+            """,
+            ("@model", oldModel),
+            ("@modes", """["localOcrText"]"""),
+            ("@valid", (int)RemoteApiProfileValidationState.Valid),
+            ("@verifiedAt", "2026-08-01T00:00:00.0000000+00:00"),
+            ("@inputMode", (int)RemoteInputMode.LocalOcrText),
+            ("@profileId", profileId),
+            ("@remote", (int)AnalysisExecutionBackend.RemoteApi));
+
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+
+        var updated = await profiles.GetProfileAsync(profileId);
+        Assert.NotNull(updated);
+        Assert.Equal(newModel, updated.ModelId);
+        Assert.Equal(supportsImage, updated.SupportedInputModes.Contains(RemoteInputMode.DirectImage));
+        Assert.Equal(RemoteApiProfileValidationState.Unverified, updated.ValidationState);
+        Assert.Null(updated.LastVerifiedAtUtc);
+        Assert.Null(updated.ConsentedInputMode);
+        Assert.Null(updated.ConsentedDisclosureVersion);
+        Assert.Null(updated.ConsentGrantedAtUtc);
+        Assert.Equal(AnalysisExecutionBackend.Local, (await profiles.GetExecutionStateAsync()).Settings.Backend);
+
+        var counting = new CountingRemoteApiProfileService(profiles);
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(counting);
+        Assert.Equal(0, counting.SaveProfileCallCount);
+    }
+
+    [Theory]
+    [InlineData("deepseek-official")]
+    [InlineData("tencent-hunyuan-official")]
+    [InlineData("siliconflow-official")]
+    [InlineData("groq-official")]
+    public async Task StartupSync_PreservesUserModelOnUpdatedPresets(string profileId)
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+        var existing = await profiles.GetProfileAsync(profileId);
+        Assert.NotNull(existing);
+        await profiles.SaveProfileAsync(existing with { ModelId = "user-selected-model" });
+
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+
+        Assert.Equal("user-selected-model", (await profiles.GetProfileAsync(profileId))!.ModelId);
+    }
+
     [Fact]
     public async Task StartupSync_ReadsExistingProfilesInSingleBatch()
     {

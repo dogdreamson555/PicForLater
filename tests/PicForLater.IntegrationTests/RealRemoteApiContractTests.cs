@@ -33,7 +33,7 @@ public sealed class RealRemoteApiContractTests(ITestOutputHelper output)
         var modelId = Environment.GetEnvironmentVariable(ModelVariable)?.Trim();
         if (string.IsNullOrWhiteSpace(modelId))
         {
-            modelId = "deepseek-v4-flash";
+            modelId = "deepseek-flash";
         }
 
         using var recordingHandler = new RecordingHandler(SafeRemoteHttpMessageHandler.Create());

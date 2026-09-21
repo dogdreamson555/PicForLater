@@ -80,26 +80,26 @@ public static class RemoteApiProviderCatalog
             "https://www.perplexity.ai/hub/legal/privacy-policy", "https://www.perplexity.ai/hub/legal/terms-of-service", "https://docs.perplexity.ai/getting-started/pricing", disableExternalSearch: true),
 
         OpenAiPreset("deepseek-official", "deepseek.official", "DeepSeek", RemoteApiProviderCategory.ChinaOfficial,
-            "https://api.deepseek.com/chat/completions", "deepseek-v4-flash", TextOnly,
+            "https://api.deepseek.com/chat/completions", "deepseek-flash", TextAndImage,
             "https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html", "https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html", "https://api-docs.deepseek.com/quick_start/pricing", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
             supportedReasoningModes: ToggleReasoning) with
         {
-            RetiredDefaultModelIds = ["deepseek-chat", "deepseek-reasoner"],
+            RetiredDefaultModelIds = ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash", "deepseek-v4-flash-vision-exp"],
         },
         OpenAiPreset("kimi-official", "moonshot.kimi", "月之暗面 / Kimi", RemoteApiProviderCategory.ChinaOfficial,
             "https://api.moonshot.cn/v1/chat/completions", "kimi-k2.5", TextAndImage,
             "https://www.moonshot.cn/privacy-policy", "https://www.moonshot.cn/terms-of-service", "https://platform.kimi.com/docs/pricing/chat", RemoteStructuredOutputMode.PromptOnly),
         OpenAiPreset("tencent-hunyuan-official", "tencent.hunyuan", "腾讯混元", RemoteApiProviderCategory.ChinaOfficial,
-            "https://tokenhub.tencentmaas.com/v1/chat/completions", "hy3-preview", TextOnly,
+            "https://tokenhub.tencentmaas.com/v1/chat/completions", "hy3", TextOnly,
             "https://www.tencentcloud.com/document/product/301/17345", "https://www.tencentcloud.com/document/product/301/9247", "https://cloud.tencent.com/document/product/1823/130051", RemoteStructuredOutputMode.JsonSchema,
             reasoningMode: RemoteReasoningMode.Low,
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
             supportedReasoningModes: EffortReasoning,
             disclosureVersion: "tencent.hunyuan.disclosure.v2") with
         {
-            RetiredDefaultModelIds = ["hunyuan-turbos-latest"],
+            RetiredDefaultModelIds = ["hunyuan-turbos-latest", "hy3-preview"],
         },
         OpenAiPreset("volcengine-doubao-official", "volcengine.doubao", "火山引擎 / 豆包", RemoteApiProviderCategory.ChinaOfficial,
             "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "doubao-seed-2-0-lite-260215", TextAndImage,
@@ -130,17 +130,26 @@ public static class RemoteApiProviderCatalog
             RemoteApiAuthenticationKind.Bearer, RemoteStructuredOutputMode.PromptOnly),
 
         OpenAiPreset("siliconflow-official", "siliconflow.cloud", "硅基流动 SiliconFlow / SiliconCloud", RemoteApiProviderCategory.Aggregator,
-            "https://api.siliconflow.cn/v1/chat/completions", "Pro/zai-org/GLM-4.7", TextOnly,
+            "https://api.siliconflow.cn/v1/chat/completions", "Pro/zai-org/GLM-5.1", TextOnly,
             "https://siliconflow.cn/privacy-policy", "https://siliconflow.cn/terms-of-service", "https://cloud.siliconflow.cn/me/models", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
-            reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
-            supportedReasoningModes: ToggleReasoning),
+            reasoningWireFormat: RemoteReasoningWireFormat.EnableThinkingBoolean,
+            supportedReasoningModes: ToggleReasoning) with
+        {
+            RetiredDefaultModelIds = ["Pro/zai-org/GLM-4.7"],
+        },
         OpenAiPreset("openrouter-official", "openrouter.official", "OpenRouter", RemoteApiProviderCategory.Aggregator,
             "https://openrouter.ai/api/v1/chat/completions", "openai/gpt-4.1-mini", TextAndImage,
             "https://openrouter.ai/privacy", "https://openrouter.ai/terms", "https://openrouter.ai/models", disableProviderFallbacks: true),
         OpenAiPreset("groq-official", "groq.official", "Groq", RemoteApiProviderCategory.Aggregator,
-            "https://api.groq.com/openai/v1/chat/completions", "meta-llama/llama-4-scout-17b-16e-instruct", TextAndImage,
-            "https://groq.com/privacy-policy/", "https://groq.com/terms-of-use/", "https://groq.com/pricing/", RemoteStructuredOutputMode.JsonObject),
+            "https://api.groq.com/openai/v1/chat/completions", "qwen/qwen3.8-27b", TextAndImage,
+            "https://groq.com/privacy-policy/", "https://groq.com/terms-of-use/", "https://groq.com/pricing/", RemoteStructuredOutputMode.JsonObject,
+            reasoningMode: RemoteReasoningMode.Disabled,
+            reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
+            supportedReasoningModes: AllReasoning) with
+        {
+            RetiredDefaultModelIds = ["meta-llama/llama-4-scout-17b-16e-instruct"],
+        },
         OpenAiPreset("together-ai-official", "together.official", "Together AI", RemoteApiProviderCategory.Aggregator,
             "https://api.together.xyz/v1/chat/completions", "Qwen/Qwen3.5-9B", TextAndImage,
             "https://www.together.ai/privacy", "https://www.together.ai/terms-of-service", "https://www.together.ai/pricing",
