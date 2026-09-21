@@ -29,7 +29,7 @@ default. Run it only after deliberately supplying a dedicated test credential:
 ```
 
 The runner defaults to the ignored `.env\myapikey_for_test.txt`, uses synthetic
-OCR and `deepseek-v4-flash`, and writes a safe ignored report below
+OCR and `deepseek-flash`, and writes a safe ignored report below
 `tests\artifacts\remote-contract`. It reads the secret only in the test process,
 does not print it, and clears the environment variables in `finally`. The test
 asserts that the image callback count is zero. A real request may be billed and

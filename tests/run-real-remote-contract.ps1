@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$CredentialFile = ".env\myapikey_for_test.txt",
-    [string]$ModelId = "deepseek-v4-flash",
+    [string]$ModelId = "deepseek-flash",
     [ValidateRange(1, 5)]
     [int]$Samples = 3,
     [string]$MetricsPath = "tests\artifacts\remote-contract\deepseek-remote-ocr-text.json"

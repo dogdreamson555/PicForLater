@@ -1,6 +1,6 @@
 # 远程 API preset、第三方政策与契约核验
 
-核验日期：2026-08-01。本文记录工程事实，不代表供应商对隐私、可用性、价格或
+完整核验日期：2026-08-01；预设增量更新：2026-09-21。本文记录工程事实，不代表供应商对隐私、可用性、价格或
 模型寿命的保证。模型、套餐、地区、保留/训练控制及价格都可能变化；设置页始终
 显示供应商链接，合成连接测试通过且用户完成当前版本同意之前不会发送用户内容。
 
@@ -17,18 +17,18 @@
 | 国际官方 | Anthropic / Claude | `api.anthropic.com/v1/messages` | `claude-sonnet-4-5-20250929` | 文字、图片 | Messages / JSON Schema | 供应商默认 |
 | 国际官方 | Google Gemini | `generativelanguage.googleapis.com/v1beta/openai/chat/completions` | `gemini-3.5-flash` | 文字、图片 | OpenAI / JSON Schema | 供应商默认 |
 | 国际官方 | xAI / Grok | `api.x.ai/v1/chat/completions` | `grok-4.5` | 文字、图片 | OpenAI / JSON Schema | `reasoning_effort=low`；可选 low/medium/high/默认 |
-| 国际官方 | Perplexity Sonar | `api.perplexity.ai/v1/sonar` | `sonar` | 文字 | Sonar OpenAI 兼容 / JSON Schema | 默认；显式 `disable_search=true` |
-| 中国官方 | DeepSeek | `api.deepseek.com/chat/completions` | `deepseek-v4-flash` | 文字 | OpenAI / JSON Object + 完整提示契约 | `thinking.type=disabled`；可切回默认 |
+| 国际官方 | Perplexity Sonar | `api.perplexity.ai/v1/sonar` | `sonar` | 文字、图片（连接测试把关） | Sonar OpenAI 兼容 / JSON Schema | 默认；显式 `disable_search=true` |
+| 中国官方 | DeepSeek | `api.deepseek.com/chat/completions` | `deepseek-flash` | 文字、图片 | OpenAI / JSON Object + 完整提示契约 | `thinking.type=disabled`；可切回默认 |
 | 中国官方 | 月之暗面 / Kimi | `api.moonshot.cn/v1/chat/completions` | `kimi-k2.5` | 文字、图片 | OpenAI / 仅提示契约 | 供应商默认 |
-| 中国官方 | 腾讯混元 | `tokenhub.tencentmaas.com/v1/chat/completions` | `hy3-preview` | 文字 | TokenHub OpenAI / JSON Schema | `reasoning_effort=low`；可选 low/medium/high/默认 |
+| 中国官方 | 腾讯混元 | `tokenhub.tencentmaas.com/v1/chat/completions` | `hy3` | 文字 | TokenHub OpenAI / JSON Schema | `reasoning_effort=low`；可选 low/medium/high/默认 |
 | 中国官方 | 火山引擎 / 豆包 | `ark.cn-beijing.volces.com/api/v3/chat/completions` | `doubao-seed-2-0-lite-260215` | 文字、图片 | OpenAI / JSON Object | `thinking.type=disabled`；可切回默认 |
 | 中国官方 | 阿里云百炼 / Qwen | `dashscope.aliyuncs.com/compatible-mode/v1/chat/completions` | `qwen3.5-plus` | 文字、图片 | OpenAI / JSON Object | `enable_thinking=false`；可切回默认 |
 | 中国官方 | 智谱 BigModel / GLM | `open.bigmodel.cn/api/paas/v4/chat/completions` | `glm-5.2` | 文字 | OpenAI / JSON Object | `thinking.type=disabled`；可切回默认 |
-| 中国官方 | 百度千帆 / 文心 | `qianfan.baidubce.com/v2/chat/completions` | `ernie-4.5-turbo-128k` | 文字 | OpenAI / JSON Object | 供应商默认（该模型默认非深度思考） |
-| 中国官方 | MiniMax | `api.minimaxi.com/anthropic/v1/messages` | `MiniMax-M2.7` | 文字 | Anthropic 兼容 / 仅提示契约；读取首个 text block | 供应商默认 |
-| 聚合/推理 | SiliconFlow | `api.siliconflow.cn/v1/chat/completions` | `Pro/zai-org/GLM-4.7` | 文字 | OpenAI / JSON Object | `thinking.type=disabled`；可切回默认 |
+| 中国官方 | 百度千帆 / 文心 | `qianfan.baidubce.com/v2/chat/completions` | `ernie-5.0` | 文字、图片 | OpenAI / JSON Object | 供应商默认 |
+| 中国官方 | MiniMax | `api.minimax.cn/anthropic/v1/messages` | `MiniMax-M3` | 文字、图片 | Anthropic 兼容 / 仅提示契约；读取首个 text block | 供应商默认 |
+| 聚合/推理 | SiliconFlow | `api.siliconflow.cn/v1/chat/completions` | `Pro/zai-org/GLM-5.1` | 文字 | OpenAI / JSON Object | `enable_thinking=false`；可切回默认 |
 | 聚合/推理 | OpenRouter | `openrouter.ai/api/v1/chat/completions` | `openai/gpt-4.1-mini` | 文字、图片 | OpenAI / JSON Schema | 默认；禁止上游 fallback 并要求参数支持 |
-| 聚合/推理 | Groq | `api.groq.com/openai/v1/chat/completions` | `meta-llama/llama-4-scout-17b-16e-instruct` | 文字、图片 | OpenAI / JSON Object | 供应商默认 |
+| 聚合/推理 | Groq | `api.groq.com/openai/v1/chat/completions` | `qwen/qwen3.8-27b` | 文字、图片 | OpenAI / JSON Object | `reasoning_effort=none`；可选关闭/low/medium/high/默认 |
 | 聚合/推理 | Together AI | `api.together.xyz/v1/chat/completions` | `Qwen/Qwen3.5-9B` | 文字、图片 | OpenAI / JSON Schema | `reasoning.enabled=false`；可切回默认 |
 | 本机/私有 | Ollama | `127.0.0.1:11434/v1/chat/completions` | `qwen3-vl:4b` | 文字、图片 | OpenAI / JSON Schema | 供应商默认 |
 | 本机/私有 | vLLM | `127.0.0.1:8000/v1/chat/completions` | `Qwen/Qwen3-VL-4B-Instruct` | 文字、图片 | OpenAI / JSON Schema | 供应商默认 |
@@ -44,7 +44,53 @@ OpenAI-compatible 图片请求只发送标准的 `text` 与 `image_url.url`（da
 兼容层都承诺接收。图片在此之前仍由 PicForLater 本地缩放、重编码并移除元数据，
 输出数量仍由本地严格 parser 和 `max_tokens` 上限共同约束。
 
-## 2026-08-01 官方契约复核结论
+## 2026-09-21 百度、MiniMax、Perplexity 图片扩展
+
+- 百度默认模型由 `ernie-4.5-turbo-128k` 迁移到 `ernie-5.0`，开放图片输入，
+  保留 OpenAI 兼容端点和 JSON Object。
+- MiniMax 默认模型由 `MiniMax-M2.7` 迁移到 `MiniMax-M3`，开放图片输入，
+  使用官方当前的 `https://api.minimax.cn/anthropic/v1/messages` 端点。
+  保留 Bearer 鉴权、Anthropic 图片内容块和 PromptOnly；M3 官方默认关闭思考。
+- Perplexity 保留默认 `sonar`，开放图片连接测试和图片模式，继续发送
+  `disable_search=true` 与 JSON Schema。是否可以启用以当前账号、模型的实际
+  图片连接测试结果为准，不以文档缺少该型号的示例禁用入口。
+
+这里迁移百度和 MiniMax 的旧默认值是为了提供视觉默认模型，不表示旧模型已下线。
+用户填写的其他模型及自定义端点继续保留。输入能力、模型或端点变化会使旧验证和
+同意失效；图片模式必须重新通过连接测试及同意，测试失败不能启用。
+本次使用本地自动化测试检查迁移和启用限制，未进行供应商付费实测。
+
+依据：[百度模型及输入模态](https://cloud.baidu.com/doc/qianfan-api/s/Dmba8k71y)、
+[MiniMax Anthropic 兼容与 M3 图片支持](https://platform.minimax.cn/docs/api-reference/text-anthropic-api)、
+[Perplexity 图片请求格式](https://docs.perplexity.ai/docs/sonar/media)。
+
+## 2026-09-21 四项预设更新
+
+- DeepSeek 默认模型改为 `deepseek-flash`，开放图片输入。旧 `deepseek-v4-flash`
+  和 `deepseek-v4-flash-vision-exp` 已由新版 Flash 承接，迁移时统一名称。
+  保留 JSON Object 与 `thinking.type=disabled`。
+- 腾讯混元 `hy3-preview` 已下线，默认值与旧配置迁移到 `hy3`，保留文字输入、
+  JSON Schema 和 `reasoning_effort`。
+- SiliconFlow 的 `Pro/zai-org/GLM-4.7` 已下线，迁移到 `Pro/zai-org/GLM-5.1`，
+  保留文字输入和 JSON Object，按平台 API 使用 `enable_thinking=false`。
+- Groq 的 Llama 4 Scout 已对普通账户停服，迁移到支持图片的 `qwen/qwen3.8-27b`
+  （官方标记为 Preview），保留 JSON Object；新配置默认 `reasoning_effort=none`。
+  已有配置保留仍受支持的思考选择。
+
+启动同步仅替换迁移清单中的旧模型名称，保留其他用户填写的模型。
+模型、输入能力或请求参数改变时，现有配置服务会清除连接验证和同意，并将选中的
+远程执行切回本地；需重新连接测试和同意后启用。启用图片能力不会自动选择图片上传。
+此次仅核验模型及请求契约，未更新第三方隐私政策核验日期，也未调用付费 API。
+
+依据：[DeepSeek 模型与图片能力](https://api-docs.deepseek.com/quick_start/pricing/)、
+[混元下线公告](https://cloud.tencent.com/announce/detail/2391)、
+[SiliconFlow 下线公告](https://docs.siliconflow.cn/docs/release-notes/overview)、
+[SiliconFlow 模型中心](https://www.siliconflow.cn/models)、
+[SiliconFlow API 参数](https://docs.siliconflow.cn/docs/api/chat-completions-post)、
+[Groq 下线公告](https://console.groq.com/docs/deprecations)、
+[Groq Qwen3.8](https://console.groq.com/docs/model/qwen/qwen3.8-27b)。
+
+## 2026-08-01 官方契约复核结论（历史记录）
 
 - 腾讯云已公告旧混元平台迁往 TokenHub，`hunyuan-turbos-latest` 已在旧模型下线
   清单中；preset 已改为广州 TokenHub 的 `hy3-preview`，并使用其文档声明的 Chat
