@@ -76,9 +76,6 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 | 本地运行与私有化部署     | Ollama、vLLM                                                                                                                          |
 | 其他                     | 自定义兼容接口                                                                                                                        |
 
-> [!NOTE]
-> 截至 2026-08-16，DeepSeek API 不能直接处理图片，因此 PicForLater 对其默认使用“仅发送 OCR 文字”：先在本地提取图片文字，再将文本发送给云端模型处理。
-
 <p align="center">
   <img src="docs/images/remote-api-setup.png" alt="PicForLater 远程 API 配置界面" width="850">
 </p>
@@ -215,48 +212,9 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 ## Privacy
 
-PicForLater 默认本地运行，但不能笼统称为“完全离线”。以下是实际数据与网络边界：
+PicForLater 默认在本地处理和保存图片，无账号、无广告、无产品遥测。远程 API 分析需要用户明确启用，并按所选模式发送 OCR 文字或处理后的图片；检查更新、下载组件及局域网接收也会涉及网络访问。
 
-| 模式或操作                       | 会发送 / 访问                                                                                                                                                                | 不会发送                                                                    |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 本地分析                         | 本机 Windows OCR；已安装时使用本地组件和模型。loopback Ollama / vLLM 由用户配置的本机服务处理                                                                                | PicForLater 不向远程分析供应商发送图片或 OCR                                |
-| OCR 文字 API (`RemoteOcrText`) | 有长度上限的 OCR 纯文本、语言标签、输出语言策略、参考 UTC 时间 / 时区，以及所选模型、prompt / schema 和输出限制                                                              | 图片、缩略图、文件名、路径、内容哈希、内部 ID、框坐标、分类和其他资料库内容 |
-| 图片 API (`RemoteVision`)      | 从不可变原图解码、按方向处理、转换到 sRGB、优先保留原分辨率（超过 1600 万像素或请求上限时才等比例缩小）、重新编码的临时 PNG；另含参考时间 / 时区、输出语言策略和固定请求契约 | 原图字节、EXIF / XMP、文件名、路径、哈希、内部 ID、OCR、分类和资料库上下文  |
-| API 连接测试                     | 固定合成文字，或用户明确运行图片测试时发送仓库内授权猫图；测试可能计费                                                                                                       | 用户图片、用户 OCR 和资料库内容                                             |
-| 手动检查更新                     | 只有用户点击“检查更新”后，才请求固定的 GitHub Releases API。GitHub 仍会收到常规网络信息，例如 IP 地址、请求时间和包含当前三段版本的 `PicForLater/M.m.p` User-Agent               | 图片、OCR 文字、资料库内容、设置、API Key 和其他凭据                        |
-| 手机接收（兼容 LocalSend）       | 用户开启后，在局域网监听 TCP/UDP`53317`，通过本地发现、TLS 和临时 PIN 接收已选择的图片；传输不经过 PicForLater 或 LocalSend 的云端中继                                     | 仅仅接收图片不会自动把图片发送给远程分析 API                                |
-| 快捷截图                         | 默认关闭；开启且 PicForLater 正在运行时注册用户选择的全局快捷键。触发后短暂检查相关按键是否释放、合成 `Win+Shift+S`，并在有时限的会话内观察前台 HWND/PID、Clipboard sequence 和随后出现的 PNG/DIBV5 图片；导入图片会保存到资料库并按当前分析配置处理 | 不使用低级键盘 hook，不记录一般击键；空闲或关闭时不读取 Clipboard；不读取前台窗口标题、进程名或路径；不会持久化或发送 HWND/PID、sequence，也不会把未导入的 Clipboard 内容或底层异常写入状态、错误或日志 |
-| 按需下载                         | 用户确认后访问清单固定的 GitHub Releases、Hugging Face 或 NVIDIA 来源以取得组件、模型或运行库                                                                                | 不会后台自动下载大型模型；核心 Setup 的 Windows App Runtime 已离线携带      |
-
-### 快捷截图的本地访问与系统边界
-
-快捷截图只在用户开启且 PicForLater 进程运行时注册所选快捷键；关闭功能或退出应用会停止响应。它使用 Windows `RegisterHotKey`，不安装能观察所有键盘输入的低级 hook。触发后最多约一秒查询 Win、Ctrl、Alt、Shift、配置主键和 S 是否已释放，以免合成按键留下卡键，随后通过 `SendInput` 发送固定的 `Win+Shift+S`。快捷截图功能只在本地 `settings.json` 中保存启用状态和当前快捷键，不保存按键历史或当时位于前台的应用；成功导入的图片仍像其他资料库项目一样记录必要的本地文件与数据库信息。
-
-截图会话平时不存在。触发后，应用保存一个只表示 Clipboard 是否变化的 sequence 数值；检测到变化时只检查并复制 PNG 或 CF_DIBV5 图片，其他 Clipboard 格式不会被读取。Clipboard 在解码和导入前已经关闭；来自 Clipboard 的 linked color profile 路径会被拒绝，不会访问其可能指向的本地或网络文件。会话最长 60 秒；截图覆盖层离开前台且没有新图片时，默认约 750 毫秒后结束。
-
-为识别截图覆盖层是否已经退出，Capturing 会话会临时采样当前前台窗口的 HWND 和 PID。这可能包括用户通过 Alt+Tab 切换到的其他应用，但 PicForLater 只比较数值是否仍属于同一窗口或进程，不读取窗口标题、进程名称、可执行文件路径或窗口内容。HWND/PID 和 Clipboard sequence 仅存在于当前会话内，不写入设置、数据库、状态、错误或日志，也不发送到网络。
-
-Clipboard 不提供可信的图片来源标识，因此 PicForLater 无法严格证明新图片来自本次 Windows 截图工具。如果用户在会话期间从其他应用复制图片，该图片也可能被导入。导入结果与手动导入一致，会保存到 `%LocalAppData%\PicForLater` 并进入当前分析流程；关闭快捷截图不会删除既有图片，本地/远程处理仍遵循上表边界。
-
-PicForLater 不会在导入后清空 Clipboard，也不控制 Windows 的 Clipboard 历史、跨设备同步或截图工具自身的保存行为。根据用户的 Windows 设置和截图工具版本，截图可能继续保留在 Clipboard 历史或由截图工具自动保存到 Screenshots 文件夹；Clipboard 历史的跨设备同步行为由 Windows 和登录账号的设置决定。关闭功能、删除 PicForLater 中的图片或卸载 PicForLater 都不会删除这些系统侧副本。相关行为可在 Windows 的 [Clipboard 设置](https://support.microsoft.com/en-us/windows/apps/using-the-clipboard)和[截图工具设置](https://support.microsoft.com/en-us/windows/apps/use-snipping-tool-to-capture-screenshots)中管理。
-
-### 其他信息
-
-启动应用、恢复应用、打开或停留在设置页都不会检查更新。发现新版本后，应用也不会自动打开浏览器；只有用户再次点击“查看发布页”才会打开由已验证版本号构造的具体 GitHub Release 页面。应用不会自动下载或运行安装程序，下载与安装仍由用户手动完成。
-
-第三方 API 的数据保留、训练、地域、账号政策和费用取决于用户选择的供应商与计划；PicForLater 不能替供应商承诺零保留或不训练。取消任务可以阻止尚未发送的请求，但不能召回供应商已经收到的数据或费用。应用禁用 HTTP redirect 和 Cookie，不绕过 TLS 证书验证；公共自定义 endpoint 只允许 HTTPS，loopback 服务是受限例外。
-
-手机接收默认关闭，开启时 Windows 防火墙可能在首次监听局域网时请求授权。设备信任基于 PicForLater 在本地保存的 TLS 证书 SHA-256 指纹；临时 PIN 验证并成功保存指纹后，后续发送才可免 PIN。手机重装、清除数据或证书身份变化后会被视为新设备，需要重新配对；用户也可以随时在设置中移除信任。LocalSend 传输本身发生在局域网，但接收成功的图片会成为普通资料库项目：如果用户之后选择并同意远程 API 分析，图片或 OCR 文字仍可能按上表发送到用户配置的服务。
-
-PicForLater 只是“兼容 LocalSend”并支持“通过 LocalSend 接收”的独立应用，不是 LocalSend 官方产品，也未获得其官方认可或背书。
-
-生产数据位于 `%LocalAppData%\PicForLater`，包括 SQLite 数据库及备份、不可变原图、缩略图与缓存、staging、设置、模型和可选组件。远程图片副本只在内存中有界持有并在调用后释放。API Key 保存在当前 Windows 用户的 Credential Locker (`PasswordVault`) 中，不写入 SQLite、`settings.json`、任务快照或日志。
-
-应用是普通 unpackaged 桌面进程，不具有 MSIX 容器隔离；它以当前用户权限访问用户选择或拖放的文件、应用管理的数据目录、用户明确触发的剪贴板读取、网络和 Windows 通知。Credential Locker 保护静态凭据，但不能防御同一用户权限下已经运行的恶意程序。
-
-普通卸载会删除程序、快捷方式、通知注册和卸载项，但保留 `%LocalAppData%\PicForLater`。如需删除本地资料，先在应用中永久删除相关内容，或退出应用后自行删除整个数据目录；这不是安全擦除承诺。删除远程 profile / 本机凭据也不会吊销供应商后台密钥，必要时还应在供应商控制台撤销。
-
-用户可在设置中切回本地模式、撤销远程同意、删除已保存凭据，或取消尚未发送的任务。相关固定边界见 [架构决策记录](docs/adr/)。
+完整的数据发送范围、本地存储与凭据保护、截图与剪贴板访问，以及删除和卸载说明，见 [隐私说明（PRIVACY.md）](PRIVACY.md)。
 
 ## Security
 
