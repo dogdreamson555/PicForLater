@@ -76,7 +76,7 @@ public static class RemoteApiProviderCatalog
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
             supportedReasoningModes: EffortReasoning),
         OpenAiPreset("perplexity-sonar-official", "perplexity.sonar", "Perplexity Sonar", RemoteApiProviderCategory.InternationalOfficial,
-            "https://api.perplexity.ai/v1/sonar", "sonar", TextOnly,
+            "https://api.perplexity.ai/v1/sonar", "sonar", TextAndImage,
             "https://www.perplexity.ai/hub/legal/privacy-policy", "https://www.perplexity.ai/hub/legal/terms-of-service", "https://docs.perplexity.ai/getting-started/pricing", disableExternalSearch: true),
 
         OpenAiPreset("deepseek-official", "deepseek.official", "DeepSeek", RemoteApiProviderCategory.ChinaOfficial,
@@ -121,13 +121,19 @@ public static class RemoteApiProviderCatalog
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
             supportedReasoningModes: ToggleReasoning),
         OpenAiPreset("baidu-qianfan-official", "baidu.qianfan", "百度智能云千帆 / 文心", RemoteApiProviderCategory.ChinaOfficial,
-            "https://qianfan.baidubce.com/v2/chat/completions", "ernie-4.5-turbo-128k", TextOnly,
-            "https://cloud.baidu.com/doc/Agreements/s/Kjwvy245m", "https://cloud.baidu.com/doc/Agreements/s/2jwvx9m0a", "https://cloud.baidu.com/doc/qianfan-docs/s/6m9l6p8iw", RemoteStructuredOutputMode.JsonObject),
+            "https://qianfan.baidubce.com/v2/chat/completions", "ernie-5.0", TextAndImage,
+            "https://cloud.baidu.com/doc/Agreements/s/Kjwvy245m", "https://cloud.baidu.com/doc/Agreements/s/2jwvx9m0a", "https://cloud.baidu.com/doc/qianfan-docs/s/6m9l6p8iw", RemoteStructuredOutputMode.JsonObject) with
+        {
+            RetiredDefaultModelIds = ["ernie-4.5-turbo-128k"],
+        },
         AnthropicCompatiblePreset(
             "minimax-official", "minimax.official", "MiniMax", RemoteApiProviderCategory.ChinaOfficial,
-            "https://api.minimaxi.com/anthropic/v1/messages", "MiniMax-M2.7", TextOnly,
+            "https://api.minimax.cn/anthropic/v1/messages", "MiniMax-M3", TextAndImage,
             "https://www.minimaxi.com/privacy", "https://www.minimaxi.com/terms", "https://platform.minimaxi.com/docs/guides/pricing",
-            RemoteApiAuthenticationKind.Bearer, RemoteStructuredOutputMode.PromptOnly),
+            RemoteApiAuthenticationKind.Bearer, RemoteStructuredOutputMode.PromptOnly) with
+        {
+            RetiredDefaultModelIds = ["MiniMax-M2.7"],
+        },
 
         OpenAiPreset("siliconflow-official", "siliconflow.cloud", "硅基流动 SiliconFlow / SiliconCloud", RemoteApiProviderCategory.Aggregator,
             "https://api.siliconflow.cn/v1/chat/completions", "Pro/zai-org/GLM-5.1", TextOnly,

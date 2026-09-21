@@ -14,7 +14,10 @@ public sealed class RemoteApiProviderCatalogTests
     [InlineData("tencent-hunyuan-official", "hy3-preview", "hy3", false)]
     [InlineData("siliconflow-official", "Pro/zai-org/GLM-4.7", "Pro/zai-org/GLM-5.1", false)]
     [InlineData("groq-official", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3.8-27b", true)]
-    public async Task StartupSync_MigratesRetiredModelsAndInvalidatesTrust(
+    [InlineData("baidu-qianfan-official", "ernie-4.5-turbo-128k", "ernie-5.0", true)]
+    [InlineData("minimax-official", "MiniMax-M2.7", "MiniMax-M3", true)]
+    [InlineData("perplexity-sonar-official", "sonar", "sonar", true)]
+    public async Task StartupSync_UpdatesLegacyPresetsAndInvalidatesTrust(
         string profileId, string oldModel, string newModel, bool supportsImage)
     {
         using var root = new TemporaryAppDataRoot();
@@ -60,6 +63,12 @@ public sealed class RemoteApiProviderCatalogTests
         Assert.Null(updated.ConsentedDisclosureVersion);
         Assert.Null(updated.ConsentGrantedAtUtc);
         Assert.Equal(AnalysisExecutionBackend.Local, (await profiles.GetExecutionStateAsync()).Settings.Backend);
+        if (supportsImage)
+        {
+            var error = await Assert.ThrowsAsync<RemoteApiProfileException>(() =>
+                profiles.SelectRemoteAsync(profileId, RemoteInputMode.DirectImage));
+            Assert.Equal("remote.profile-not-verified", error.ErrorCode);
+        }
 
         var counting = new CountingRemoteApiProfileService(profiles);
         await RemoteApiProviderCatalog.EnsureProfilesAsync(counting);
@@ -71,6 +80,9 @@ public sealed class RemoteApiProviderCatalogTests
     [InlineData("tencent-hunyuan-official")]
     [InlineData("siliconflow-official")]
     [InlineData("groq-official")]
+    [InlineData("baidu-qianfan-official")]
+    [InlineData("minimax-official")]
+    [InlineData("perplexity-sonar-official")]
     public async Task StartupSync_PreservesUserModelOnUpdatedPresets(string profileId)
     {
         using var root = new TemporaryAppDataRoot();
