@@ -55,8 +55,8 @@
   <data name="AppDescription" xml:space="preserve"><value>Save, organize, and revisit images on this device.</value></data>
   <data name="PublisherDisplayName" xml:space="preserve"><value>PicForLater</value></data>
   <data name="MainWindowTitle" xml:space="preserve"><value>PicForLater</value></data>
-  <data name="TrayLocalSendText" xml:space="preserve"><value>Phone receive</value></data>
-  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>Phone receive (unavailable)</value></data>
+  <data name="TrayLocalSendText" xml:space="preserve"><value>Receive from phone</value></data>
+  <data name="TrayLocalSendUnavailableText" xml:space="preserve"><value>Receive from phone (unavailable)</value></data>
   <data name="TrayAnalysisModeText" xml:space="preserve"><value>Analysis mode</value></data>
   <data name="TrayLocalAnalysisText" xml:space="preserve"><value>Local analysis</value></data>
   <data name="TrayLocalAnalysisUnavailableText" xml:space="preserve"><value>Local analysis (unavailable)</value></data>
@@ -64,11 +64,11 @@
   <data name="TrayRemoteAnalysisUnavailableText" xml:space="preserve"><value>API analysis (unavailable)</value></data>
   <data name="TrayQuickScreenshotText" xml:space="preserve"><value>Quick screenshot</value></data>
   <data name="TrayQuickScreenshotUnavailableText" xml:space="preserve"><value>Quick screenshot (unavailable)</value></data>
-  <data name="TrayCloseText" xml:space="preserve"><value>Close</value></data>
+  <data name="TrayCloseText" xml:space="preserve"><value>Exit</value></data>
   <data name="TrayUnavailableDialogTitle" xml:space="preserve"><value>PicForLater cannot stay in the system tray</value></data>
   <data name="TrayUnavailableDialogContent" xml:space="preserve"><value>The system tray icon is unavailable. Retry creating it, exit completely, or keep the window open.</value></data>
-  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>Retry tray</value></data>
-  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>Exit completely</value></data>
+  <data name="TrayUnavailableDialogRetryButtonText" xml:space="preserve"><value>Try again</value></data>
+  <data name="TrayUnavailableDialogExitButtonText" xml:space="preserve"><value>Exit</value></data>
   <data name="TrayUnavailableDialogCancelButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="AppTitleBar.Title" xml:space="preserve"><value>PicForLater</value></data>
   <data name="ShellNavigation.AutomationProperties.Name" xml:space="preserve"><value>Main navigation</value></data>
@@ -76,8 +76,8 @@
   <data name="BackgroundWorkersRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
   <data name="BackgroundWorkersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry stopped background tasks</value></data>
   <data name="BackgroundAnalysisStoppedMessage" xml:space="preserve"><value>Background analysis stopped. Queued work was preserved and can be retried.</value></data>
-  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>Background reminder processing stopped. Reminder data was preserved and can be retried.</value></data>
-  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>The local inference process exited repeatedly, so automatic restarts stopped. You can retry.</value></data>
+  <data name="BackgroundRemindersStoppedMessage" xml:space="preserve"><value>Background reminder processing has stopped. Your reminders have been saved. You can retry processing.</value></data>
+  <data name="BackgroundLocalInferenceStoppedMessage" xml:space="preserve"><value>The local inference process has stopped unexpectedly several times. Automatic restarts have been paused. You can try again.</value></data>
   <data name="BackgroundWorkersStoppedMessage" xml:space="preserve"><value>One or more background tasks stopped. Data was preserved and the tasks can be retried.</value></data>
   <data name="LibraryNavItem.Content" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryNavItem.AutomationProperties.Name" xml:space="preserve"><value>Library</value></data>
@@ -96,9 +96,9 @@
   <data name="LibraryLoadingTitle.Text" xml:space="preserve"><value>Loading the library</value></data>
   <data name="LibraryLoadingMessage.Text" xml:space="preserve"><value>Reading image information from local storage.</value></data>
   <data name="LibraryEmptyTitle.Text" xml:space="preserve"><value>Your library is empty</value></data>
-  <data name="LibraryEmptyMessage.Text" xml:space="preserve"><value>Drop images here, or use Import and Ctrl+V to save them reliably on this device.</value></data>
+  <data name="LibraryEmptyMessage.Text" xml:space="preserve"><value>Drag images here, select Import, or press Ctrl+V to save images on this device.</value></data>
   <data name="LibraryErrorTitle.Text" xml:space="preserve"><value>The library could not be opened</value></data>
-  <data name="LibraryErrorMessage.Text" xml:space="preserve"><value>Local data is temporarily unavailable. If reopening the app does not help, keep the data and review the diagnostics.</value></data>
+  <data name="LibraryErrorMessage.Text" xml:space="preserve"><value>Local data is temporarily unavailable. If restarting the app does not help, keep your data intact and check the diagnostic information.</value></data>
   <data name="LibraryRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
   <data name="LibraryRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry opening the local library</value></data>
   <data name="LibraryPermissionDeniedTitle.Text" xml:space="preserve"><value>Local storage cannot be accessed</value></data>
@@ -112,18 +112,18 @@
   <data name="LibraryStatePermissionDeniedAnnouncement" xml:space="preserve"><value>Local storage cannot be accessed. Check permissions and retry.</value></data>
   <data name="LibraryStateUnsupportedAnnouncement" xml:space="preserve"><value>The library contains content this version does not support.</value></data>
   <data name="RemindersPageTitle.Text" xml:space="preserve"><value>Reminders</value></data>
-  <data name="RemindersPageSubtitle.Text" xml:space="preserve"><value>Review date and location evidence. A local reminder is created only after you confirm it.</value></data>
-  <data name="RemindersEmptyTitle.Text" xml:space="preserve"><value>No candidates or reminders</value></data>
+  <data name="RemindersPageSubtitle.Text" xml:space="preserve"><value>Check the dates and locations found in your images. A reminder is saved on this device only after you confirm it.</value></data>
+  <data name="RemindersEmptyTitle.Text" xml:space="preserve"><value>No suggestions or reminders</value></data>
   <data name="RemindersEmptyMessage.Text" xml:space="preserve"><value>Dates and places found in images remain suggestions. A reminder appears here only after you confirm it.</value></data>
   <data name="RecycleBinPageTitle.Text" xml:space="preserve"><value>Recycle bin</value></data>
-  <data name="RecycleBinPageSubtitle.Text" xml:space="preserve"><value>Deleted images stay inside the app until you explicitly remove them permanently.</value></data>
+  <data name="RecycleBinPageSubtitle.Text" xml:space="preserve"><value>Deleted images stay in the app until you choose to delete them permanently.</value></data>
   <data name="RecycleBinEmptyTitle.Text" xml:space="preserve"><value>The recycle bin is empty</value></data>
   <data name="RecycleBinEmptyMessage.Text" xml:space="preserve"><value>Images deleted from the library appear here and can be restored with their existing information.</value></data>
   <data name="SettingsPageTitle.Text" xml:space="preserve"><value>Settings</value></data>
-  <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>Preferences stay in this app's local data. API secrets are stored separately in Windows Credential Locker.</value></data>
+  <data name="SettingsPageSubtitle.Text" xml:space="preserve"><value>Your preferences are saved on this device. API keys are stored separately in Windows Credential Locker.</value></data>
   <data name="AppearanceSectionTitle.Text" xml:space="preserve"><value>Appearance</value></data>
   <data name="AppearanceStatusInfoBar.Title" xml:space="preserve"><value>Appearance</value></data>
-  <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>The window material could not be saved. The previous material remains selected.</value></data>
+  <data name="AppearancePreferenceSaveFailedStatus" xml:space="preserve"><value>Your window material preference could not be saved. Your previous selection is still active.</value></data>
   <data name="ThemeOptionsHeader.Text" xml:space="preserve"><value>Theme</value></data>
   <data name="ThemeOptions.AutomationProperties.Name" xml:space="preserve"><value>App theme</value></data>
   <data name="SystemThemeOption.Content" xml:space="preserve"><value>Use system setting</value></data>
@@ -140,14 +140,14 @@
   <data name="MicaAltBackdropOption.AutomationProperties.Name" xml:space="preserve"><value>Mica Alt material</value></data>
   <data name="WindowBehaviorSectionTitle.Text" xml:space="preserve"><value>Window behavior</value></data>
   <data name="KeepInSystemTrayToggleTitle.Text" xml:space="preserve"><value>Keep running in the system tray after closing the window</value></data>
-  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>When enabled, phone receive, quick screenshot, analysis, and reminders continue in the background. Use Close in the tray menu to exit completely.</value></data>
+  <data name="KeepInSystemTrayToggleDescription.Text" xml:space="preserve"><value>When enabled, the app continues to receive images from your phone, handle screenshot shortcuts, analyze images, and process reminders in the background. Select Exit in the tray menu to close the app.</value></data>
   <data name="KeepInSystemTrayToggle.AutomationProperties.Name" xml:space="preserve"><value>Keep running in the system tray after closing the window</value></data>
   <data name="InterfaceLanguageSectionTitle.Text" xml:space="preserve"><value>Language / 界面语言</value></data>
   <data name="InterfaceLanguageTitle.Text" xml:space="preserve"><value>Interface language</value></data>
   <data name="InterfaceLanguageDescription.Text" xml:space="preserve"><value>Choose the language used by PicForLater. Changes take effect the next time the app starts.</value></data>
   <data name="InterfaceLanguageComboBox.AutomationProperties.Name" xml:space="preserve"><value>Interface language</value></data>
-  <data name="SystemInterfaceLanguageOption.Content" xml:space="preserve"><value>Follow system</value></data>
-  <data name="SystemInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Follow the Windows display language</value></data>
+  <data name="SystemInterfaceLanguageOption.Content" xml:space="preserve"><value>Use system setting</value></data>
+  <data name="SystemInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Use the Windows display language</value></data>
   <data name="SimplifiedChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>简体中文</value></data>
   <data name="SimplifiedChineseInterfaceLanguageOption.AutomationProperties.Name" xml:space="preserve"><value>Simplified Chinese</value></data>
   <data name="TraditionalChineseInterfaceLanguageOption.Content" xml:space="preserve"><value>繁體中文（台灣）</value></data>
@@ -168,8 +168,8 @@
   <data name="CheckForUpdatesButtonText.Text" xml:space="preserve"><value>Check for updates</value></data>
   <data name="UpdateStatusInfoBar.Title" xml:space="preserve"><value>Update status</value></data>
   <data name="ViewReleasePageButton.Content" xml:space="preserve"><value>View release page</value></data>
-  <data name="ViewReleasePageButton.AutomationProperties.Name" xml:space="preserve"><value>View the new version release page in your browser</value></data>
-  <data name="UpdateCheckingStatus" xml:space="preserve"><value>Checking the latest stable release on GitHub…</value></data>
+  <data name="ViewReleasePageButton.AutomationProperties.Name" xml:space="preserve"><value>Open the release page for the new version in your browser</value></data>
+  <data name="UpdateCheckingStatus" xml:space="preserve"><value>Checking GitHub for the latest stable release…</value></data>
   <data name="UpdateUpToDateStatusFormat" xml:space="preserve"><value>You already have the latest version ({0}).</value></data>
   <data name="UpdateAvailableStatusFormat" xml:space="preserve"><value>Version {0} is available. Your current version is {1}.</value></data>
   <data name="UpdateLocalAheadStatusFormat" xml:space="preserve"><value>Your version {0} is newer than the latest release {1}. This may be a development or test build.</value></data>
@@ -209,12 +209,12 @@
   <data name="DetailTitleLabel.Text" xml:space="preserve"><value>Title</value></data>
   <data name="DetailTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>Image title</value></data>
   <data name="DetailSummaryTextBox.Header" xml:space="preserve"><value>Summary</value></data>
-  <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>Add a note for later review</value></data>
+  <data name="DetailSummaryTextBox.PlaceholderText" xml:space="preserve"><value>Add a summary to help you find this image later</value></data>
   <data name="DetailSummaryTextBox.AutomationProperties.Name" xml:space="preserve"><value>Image summary</value></data>
   <data name="DetailNotesTextBox.Header" xml:space="preserve"><value>Notes</value></data>
   <data name="DetailNotesTextBox.PlaceholderText" xml:space="preserve"><value>Add your own notes for later</value></data>
   <data name="DetailNotesTextBox.AutomationProperties.Name" xml:space="preserve"><value>Image notes</value></data>
-  <data name="DetailSaveStatusTextBlock.AutomationProperties.Name" xml:space="preserve"><value>Detail save status</value></data>
+  <data name="DetailSaveStatusTextBlock.AutomationProperties.Name" xml:space="preserve"><value>Image details save status</value></data>
   <data name="CategoriesSectionTitle.Text" xml:space="preserve"><value>Categories</value></data>
   <data name="AddCategoryButton.AutomationProperties.Name" xml:space="preserve"><value>Create category</value></data>
   <data name="AddCategoryButton.ToolTipService.ToolTip" xml:space="preserve"><value>Create a custom category</value></data>
@@ -232,7 +232,7 @@
   <data name="DetailAddReminderButton.Content" xml:space="preserve"><value>Add reminder</value></data>
   <data name="DetailAddReminderButton.AutomationProperties.Name" xml:space="preserve"><value>Add a reminder for the current image</value></data>
   <data name="DetailAddReminderButton.ToolTipService.ToolTip" xml:space="preserve"><value>Save details, then open reminder confirmation</value></data>
-  <data name="DropOverlayTitle.Text" xml:space="preserve"><value>Release to import</value></data>
+  <data name="DropOverlayTitle.Text" xml:space="preserve"><value>Drop to import</value></data>
   <data name="DropOverlayMessage.Text" xml:space="preserve"><value>Each image is saved independently; a damaged file will not affect the others.</value></data>
   <data name="RestoreButton.Label" xml:space="preserve"><value>Restore</value></data>
   <data name="RestoreButton.AutomationProperties.Name" xml:space="preserve"><value>Restore selected images</value></data>
@@ -259,7 +259,7 @@
   <data name="RecycleBinCancelSelectionButton.Label" xml:space="preserve"><value>Cancel selection</value></data>
   <data name="RecycleBinCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Exit recycle bin multiple-selection mode</value></data>
   <data name="RecycleBinCancelSelectionButton.ToolTipService.ToolTip" xml:space="preserve"><value>Clear the selection and exit recycle bin multiple-selection mode</value></data>
-  <data name="RecycleBinSelectionCountFormat" xml:space="preserve"><value>{0} images selected</value></data>
+  <data name="RecycleBinSelectionCountFormat" xml:space="preserve"><value>Images selected: {0}</value></data>
   <data name="RecycleBinContextPermanentDeleteMenuItem.Text" xml:space="preserve"><value>Delete permanently</value></data>
   <data name="RecycleBinContextPermanentDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>Permanently delete image</value></data>
   <data name="RecycleBinContextRestoreMenuItem.Text" xml:space="preserve"><value>Restore</value></data>
@@ -275,18 +275,18 @@
   <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>Changes were saved, but the latest details could not be loaded.</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>Image restored. Future reminders must be confirmed before they are scheduled again.</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>Restored {0} of {1} images. Future reminders must be confirmed before they are scheduled again.</value></data>
-  <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>The image and unreferenced managed files were permanently deleted.</value></data>
-  <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>Permanent deletion is incomplete. The app kept a deletion plan for a safe retry.</value></data>
-  <data name="PermanentDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>Permanently deleted {0} images and their unreferenced managed files.</value></data>
-  <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>Permanently deleted {0} of {1} images. Incomplete deletions kept a plan for safe retry.</value></data>
+  <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>The image and any files stored by the app that were no longer used by other images were permanently deleted.</value></data>
+  <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>Permanent deletion is incomplete. You can safely retry the remaining steps.</value></data>
+  <data name="PermanentDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>Images permanently deleted: {0}. Files stored by the app were also deleted if no other images used them.</value></data>
+  <data name="PermanentDeleteBatchPartialStatusFormat" xml:space="preserve"><value>Permanently deleted {0} of {1} images. You can safely retry the remaining deletions.</value></data>
   <data name="ImportPickerCommitText" xml:space="preserve"><value>Import</value></data>
   <data name="ClipboardFileNameFormat" xml:space="preserve"><value>Clipboard image {0:yyyyMMdd-HHmmss}.png</value></data>
-  <data name="QuickScreenshotImportedStatus" xml:space="preserve"><value>Screenshot saved and the library was refreshed.</value></data>
-  <data name="QuickScreenshotDuplicateStatus" xml:space="preserve"><value>This screenshot already exists; the current library view was unchanged.</value></data>
+  <data name="QuickScreenshotImportedStatus" xml:space="preserve"><value>Screenshot saved. The library has been refreshed.</value></data>
+  <data name="QuickScreenshotDuplicateStatus" xml:space="preserve"><value>This screenshot is already in your library. The current view has not changed.</value></data>
   <data name="ClipboardImportFailedStatus" xml:space="preserve"><value>The clipboard image could not be read or saved.</value></data>
   <data name="ClipboardNoImageStatus" xml:space="preserve"><value>The clipboard does not contain an importable image.</value></data>
   <data name="DropCaption" xml:space="preserve"><value>Copy to PicForLater</value></data>
-  <data name="ImportBatchStatusFormat" xml:space="preserve"><value>Imported {0}; found {1} duplicate(s); {2} failed.</value></data>
+  <data name="ImportBatchStatusFormat" xml:space="preserve"><value>Imported: {0}; duplicates: {1}; failed: {2}.</value></data>
   <data name="ImportCompletedStatus" xml:space="preserve"><value>Image saved and queued for analysis.</value></data>
   <data name="ImportDuplicateStatus" xml:space="preserve"><value>This image already exists; the existing item was opened.</value></data>
   <data name="ImportFailedStatus" xml:space="preserve"><value>The image was not imported. The existing library was not changed.</value></data>
@@ -305,9 +305,9 @@
   <data name="SoftDeleteDialogPrimary" xml:space="preserve"><value>Move to recycle bin</value></data>
   <data name="SoftDeleteCompletedStatus" xml:space="preserve"><value>Image moved to the recycle bin.</value></data>
   <data name="PermanentDeleteDialogTitle" xml:space="preserve"><value>Permanently delete image?</value></data>
-  <data name="PermanentDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}” and unreferenced managed files will be permanently deleted. This cannot be undone in the app.</value></data>
+  <data name="PermanentDeleteDialogMessageFormat" xml:space="preserve"><value>“{0}” will be permanently deleted, along with any files stored by the app that no other images use. This cannot be undone in the app.</value></data>
   <data name="PermanentDeleteBatchDialogTitle" xml:space="preserve"><value>Permanently delete selected images?</value></data>
-  <data name="PermanentDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The {0} selected images and unreferenced managed files will be permanently deleted. This cannot be undone in the app.</value></data>
+  <data name="PermanentDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The selected images ({0}) will be permanently deleted, along with any files stored by the app that no other images use. This cannot be undone in the app.</value></data>
   <data name="PermanentDeleteDialogPrimary" xml:space="preserve"><value>Delete permanently</value></data>
   <data name="CancelButtonText" xml:space="preserve"><value>Cancel</value></data>
   <data name="ByteUnitBytes" xml:space="preserve"><value>B</value></data>
@@ -327,7 +327,7 @@
   <data name="ListViewModeButton.AutomationProperties.Name" xml:space="preserve"><value>Use list view</value></data>
   <data name="ListViewModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>Show images in a compact list</value></data>
   <data name="SelectionSummaryFormat" xml:space="preserve"><value>{0} selected</value></data>
-  <data name="SelectAllLoadedButton.Label" xml:space="preserve"><value>Select loaded</value></data>
+  <data name="SelectAllLoadedButton.Label" xml:space="preserve"><value>Select all loaded</value></data>
   <data name="SelectAllLoadedButton.AutomationProperties.Name" xml:space="preserve"><value>Select all loaded images</value></data>
   <data name="SelectAllLoadedButton.ToolTipService.ToolTip" xml:space="preserve"><value>Select the images currently loaded</value></data>
   <data name="DeleteSelectedButton.Label" xml:space="preserve"><value>Delete</value></data>
@@ -347,7 +347,7 @@
   <data name="ContextDeleteMenuItem.AutomationProperties.Name" xml:space="preserve"><value>Move image to the recycle bin</value></data>
   <data name="DetailImageButton.AutomationProperties.Name" xml:space="preserve"><value>Open the original image with the default app</value></data>
   <data name="DetailImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>Open original image</value></data>
-  <data name="OpenImageFailedStatus" xml:space="preserve"><value>Windows could not open this image with the default image app. The managed original was not changed.</value></data>
+  <data name="OpenImageFailedStatus" xml:space="preserve"><value>Windows could not open this image with the default image app. The original image stored by PicForLater has not changed.</value></data>
   <data name="SortByTimeSubItem.Text" xml:space="preserve"><value>Time</value></data>
   <data name="SortNewestMenuItem.Text" xml:space="preserve"><value>Newest first</value></data>
   <data name="SortOldestMenuItem.Text" xml:space="preserve"><value>Oldest first</value></data>
@@ -361,16 +361,16 @@
   <data name="SortCategoryAscendingMenuItem.Text" xml:space="preserve"><value>A to Z</value></data>
   <data name="SortCategoryDescendingMenuItem.Text" xml:space="preserve"><value>Z to A</value></data>
   <data name="SoftDeleteBatchDialogTitle" xml:space="preserve"><value>Move selected images to the recycle bin?</value></data>
-  <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The {0} selected images will move to the in-app recycle bin and can be restored individually.</value></data>
+  <data name="SoftDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The selected images ({0}) will be moved to the in-app recycle bin. You can restore them individually.</value></data>
   <data name="SoftDeleteBatchCompletedStatusFormat" xml:space="preserve"><value>Moved {0} of {1} images to the recycle bin.</value></data>
   <data name="SoftDeleteFailedStatus" xml:space="preserve"><value>The image could not be moved to the recycle bin. Existing data was kept.</value></data>
   <data name="AnalysisSectionTitle.Text" xml:space="preserve"><value>Analysis mode</value></data>
-  <data name="AnalysisSectionDescription.Text" xml:space="preserve"><value>The analysis policy affects only new imports and newly queued reanalysis jobs. Existing results are not rerun automatically.</value></data>
+  <data name="AnalysisSectionDescription.Text" xml:space="preserve"><value>The analysis mode applies only to new imports and newly queued reanalysis tasks. Existing images are not reanalyzed automatically.</value></data>
   <data name="OcrOnlyAnalysisOption.Content" xml:space="preserve"><value>OCR only — never load the vision model</value></data>
   <data name="BalancedAnalysisOption.Content" xml:space="preserve"><value>Balanced — always run OCR; use the vision model when needed and merge reminder candidates</value></data>
   <data name="AlwaysEnhanceAnalysisOption.Content" xml:space="preserve"><value>Always enhance — always run OCR and the selected local vision model, then merge reminder candidates</value></data>
   <data name="InferenceAccelerationSectionTitle.Text" xml:space="preserve"><value>Inference acceleration</value></data>
-  <data name="InferenceAccelerationSectionDescription.Text" xml:space="preserve"><value>Select the local inference device. Automatic uses the device qualified by the current model package; x64 can check the NVIDIA environment below.</value></data>
+  <data name="InferenceAccelerationSectionDescription.Text" xml:space="preserve"><value>Choose a device for local inference. Automatic selects a device validated for the current model package. In the x64 version of the app, you can check NVIDIA compatibility below.</value></data>
   <data name="InferenceAccelerationOptions.AutomationProperties.Name" xml:space="preserve"><value>Local model inference device</value></data>
   <data name="AutomaticAccelerationOption.Content" xml:space="preserve"><value>Automatic (recommended)</value></data>
   <data name="AutomaticAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>Automatically select inference device</value></data>
@@ -380,9 +380,9 @@
   <data name="CpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>Use CPU only</value></data>
   <data name="CudaGpuAccelerationOption.Content" xml:space="preserve"><value>NVIDIA CUDA GPU</value></data>
   <data name="CudaGpuAccelerationOption.AutomationProperties.Name" xml:space="preserve"><value>Use CUDA GPU</value></data>
-  <data name="InferenceAccelerationSavedStatus" xml:space="preserve"><value>The inference device preference was saved for subsequent model tasks.</value></data>
+  <data name="InferenceAccelerationSavedStatus" xml:space="preserve"><value>Your inference device preference has been saved and will apply to future model tasks.</value></data>
   <data name="InferenceAccelerationSaveFailedStatus" xml:space="preserve"><value>The inference device preference could not be saved.</value></data>
-  <data name="InferenceAccelerationNotRunStatus" xml:space="preserve"><value>No local model has run since this app launch.</value></data>
+  <data name="InferenceAccelerationNotRunStatus" xml:space="preserve"><value>No local model has run since the app was started.</value></data>
   <data name="InferenceWorkloadPpOcr" xml:space="preserve"><value>PP-OCRv6-small</value></data>
   <data name="InferenceWorkloadQwen3Vl" xml:space="preserve"><value>Qwen3-VL-2B-Instruct</value></data>
   <data name="InferenceDeviceDirectMlGpu" xml:space="preserve"><value>DirectML GPU</value></data>
@@ -398,7 +398,7 @@
   <data name="InstallNvidiaRuntimeButton.AutomationProperties.Name" xml:space="preserve"><value>Install the NVIDIA CUDA and cuDNN runtime</value></data>
   <data name="OpenNvidiaDriverPageButton.Content" xml:space="preserve"><value>Open NVIDIA driver page</value></data>
   <data name="OpenNvidiaDriverPageButton.AutomationProperties.Name" xml:space="preserve"><value>Open the official NVIDIA driver download page in a browser</value></data>
-  <data name="NvidiaEnvironmentReadyStatusFormat" xml:space="preserve"><value>Ready: {0}, {1} VRAM, compute capability {2}, driver supports CUDA {3}; runtime source: {4}. The model self-test remains authoritative.</value></data>
+  <data name="NvidiaEnvironmentReadyStatusFormat" xml:space="preserve"><value>Ready: {0}, {1} VRAM, compute capability {2}, driver supports CUDA {3}; runtime source: {4}. The model must still pass its self-test.</value></data>
   <data name="NvidiaEnvironmentUnsupportedStatus" xml:space="preserve"><value>This app architecture does not support NVIDIA CUDA. Use the CPU model.</value></data>
   <data name="NvidiaDriverMissingStatus" xml:space="preserve"><value>No usable NVIDIA display driver was detected. Install or update it through an official NVIDIA channel, then check again.</value></data>
   <data name="NvidiaCudaDeviceMissingStatus" xml:space="preserve"><value>The driver loaded, but no usable NVIDIA CUDA GPU was detected. Use the CPU model.</value></data>
@@ -406,75 +406,75 @@
   <data name="NvidiaDriverTooOldStatusFormat" xml:space="preserve"><value>{0} was detected, but its driver only supports CUDA {1}. Update the driver through an official NVIDIA channel.</value></data>
   <data name="NvidiaInsufficientVramStatus" xml:space="preserve"><value>The CUDA model requires a nominal 8 GB-class GPU (at least 7.5 GiB reported). Use the CPU model.</value></data>
   <data name="NvidiaInsufficientVramStatusFormat" xml:space="preserve"><value>{0} was detected with {1} VRAM, below the 7.5 GiB reported threshold for nominal 8 GB cards. Use the CPU model.</value></data>
-  <data name="NvidiaRuntimeMissingStatusFormat" xml:space="preserve"><value>{0} was detected with {1} VRAM and a driver supporting CUDA {2}, but CUDA/cuDNN user-mode libraries are missing. PicForLater can install them privately without the full CUDA Toolkit or PATH changes.</value></data>
-  <data name="NvidiaRuntimeIncompleteStatusFormat" xml:space="preserve"><value>{0} was detected with {1} VRAM and a driver supporting CUDA {2}, but the app-private CUDA/cuDNN runtime is incomplete. Download it again to repair the installation.</value></data>
+  <data name="NvidiaRuntimeMissingStatusFormat" xml:space="preserve"><value>{0} was detected with {1} VRAM and a driver supporting CUDA {2}, but the CUDA/cuDNN runtime libraries are missing. PicForLater can install them in its own folder without installing the full CUDA Toolkit or changing PATH.</value></data>
+  <data name="NvidiaRuntimeIncompleteStatusFormat" xml:space="preserve"><value>{0} was detected with {1} VRAM and a driver supporting CUDA {2}, but the CUDA/cuDNN runtime in the app's folder is incomplete. Download it again to repair the installation.</value></data>
   <data name="NvidiaEnvironmentDetectionFailedStatus" xml:space="preserve"><value>The NVIDIA environment check could not be completed. Models and existing data were not changed.</value></data>
   <data name="NvidiaUnknownDeviceName" xml:space="preserve"><value>NVIDIA GPU</value></data>
-  <data name="NvidiaRuntimeSourceApp" xml:space="preserve"><value>PicForLater private directory</value></data>
+  <data name="NvidiaRuntimeSourceApp" xml:space="preserve"><value>PicForLater's own folder</value></data>
   <data name="NvidiaRuntimeSourceSystem" xml:space="preserve"><value>existing system installation</value></data>
   <data name="NvidiaRuntimeSourceNone" xml:space="preserve"><value>not installed</value></data>
   <data name="NvidiaRuntimeInstallDialogTitle" xml:space="preserve"><value>Install the NVIDIA runtime?</value></data>
   <data name="NvidiaRuntimeInstallAction" xml:space="preserve"><value>Download and install</value></data>
   <data name="NvidiaRuntimeAndModelInstallAction" xml:space="preserve"><value>Install runtime and model</value></data>
-  <data name="NvidiaRuntimeInstallConfirmationFormat" xml:space="preserve"><value>PicForLater will download pinned CUDA {0} and cuDNN {1} redistributables from NVIDIA's official HTTPS source. Exact download: {2}; private installation uses up to {3}. Archive size and SHA-256 are verified, and only allowlisted DLLs are extracted. The full Toolkit is not installed, no installer is executed, and system PATH is not changed. Continuing accepts the NVIDIA CUDA license ({4}) and cuDNN license ({5}). Source: {6}</value></data>
+  <data name="NvidiaRuntimeInstallConfirmationFormat" xml:space="preserve"><value>PicForLater will download the specified versions of CUDA {0} and cuDNN {1} from NVIDIA's official HTTPS source. Download size: {2}; installation in the app's own folder uses up to {3}. Archive sizes and SHA-256 hashes are verified, and only approved DLLs are extracted. The full Toolkit is not installed, no installer is run, and the system PATH is not changed. By continuing, you accept the NVIDIA CUDA license ({4}) and cuDNN license ({5}). Source: {6}</value></data>
   <data name="NvidiaRuntimeAndModelConfirmationFormat" xml:space="preserve"><value>{0}&#x0A;&#x0A;Then: {1}</value></data>
   <data name="NvidiaRuntimePreparingStatus" xml:space="preserve"><value>Preparing the NVIDIA runtime download and checking disk space…</value></data>
-  <data name="NvidiaRuntimeDownloadingStatus" xml:space="preserve"><value>Downloading runtime archives from NVIDIA; completed archives can be reused after a retry…</value></data>
+  <data name="NvidiaRuntimeDownloadingStatus" xml:space="preserve"><value>Downloading runtime archives from NVIDIA. Completed downloads can be reused if you retry…</value></data>
   <data name="NvidiaRuntimeVerifyingStatus" xml:space="preserve"><value>Checking NVIDIA archive sizes and SHA-256 hashes…</value></data>
   <data name="NvidiaRuntimeInstallingStatus" xml:space="preserve"><value>Extracting allowlisted DLLs and atomically installing them in the app-private directory…</value></data>
   <data name="NvidiaRuntimeCompletingStatus" xml:space="preserve"><value>The NVIDIA runtime was installed; checking the environment again…</value></data>
   <data name="NvidiaRuntimeInstalledStatus" xml:space="preserve"><value>The NVIDIA CUDA/cuDNN runtime was installed and passed the local environment check.</value></data>
   <data name="NvidiaRuntimeAlreadyAvailableStatus" xml:space="preserve"><value>An existing NVIDIA CUDA/cuDNN runtime is already usable; nothing was downloaded.</value></data>
   <data name="NvidiaRuntimeInstallFailedStatus" xml:space="preserve"><value>The NVIDIA runtime could not be installed. Existing models and data were not changed.</value></data>
-  <data name="NvidiaRuntimeUnsupportedStatus" xml:space="preserve"><value>The current NVIDIA environment cannot use this CUDA model. Follow the check result or use the CPU model.</value></data>
-  <data name="ModelSlotsSectionTitle.Text" xml:space="preserve"><value>Capability slots and model packages</value></data>
+  <data name="NvidiaRuntimeUnsupportedStatus" xml:space="preserve"><value>Your current NVIDIA setup cannot run this CUDA model. Follow the recommendations in the compatibility check or use the CPU model.</value></data>
+  <data name="ModelSlotsSectionTitle.Text" xml:space="preserve"><value>Model assignments and packages</value></data>
   <data name="ModelSlotsSectionDescription.Text" xml:space="preserve"><value>Choose installed local models for visual understanding, titles, and summaries. Incompatible packages are never enabled.</value></data>
   <data name="ImportModelPackageButton.Content" xml:space="preserve"><value>Import local model package</value></data>
   <data name="ImportModelPackageButton.AutomationProperties.Name" xml:space="preserve"><value>Select a supported local model package manifest.json</value></data>
-  <data name="OcrSlotTitle.Text" xml:space="preserve"><value>OCR fact layer</value></data>
+  <data name="OcrSlotTitle.Text" xml:space="preserve"><value>Text recognition (OCR)</value></data>
   <data name="OcrSlotDescription.Text" xml:space="preserve"><value>Preserves source text, lines, words, and bounding boxes</value></data>
   <data name="OcrSlotCurrentValue.Text" xml:space="preserve"><value>PP-OCRv6-small with fallback to installed Windows OCR</value></data>
-  <data name="VisionSlotTitle.Text" xml:space="preserve"><value>Vision caption</value></data>
-  <data name="VisionSlotDescription.Text" xml:space="preserve"><value>Candidate objects, scenes, and layout relationships</value></data>
-  <data name="VisionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>Vision caption model</value></data>
+  <data name="VisionSlotTitle.Text" xml:space="preserve"><value>Image description</value></data>
+  <data name="VisionSlotDescription.Text" xml:space="preserve"><value>Identifies possible objects, scenes, and spatial relationships</value></data>
+  <data name="VisionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>Image description model</value></data>
   <data name="TextCompositionSlotTitle.Text" xml:space="preserve"><value>Title and summary</value></data>
-  <data name="TextCompositionSlotDescription.Text" xml:space="preserve"><value>Strictly structured title, summary, and category drafts</value></data>
+  <data name="TextCompositionSlotDescription.Text" xml:space="preserve"><value>Drafts titles, summaries, and categories in a strict structured format</value></data>
   <data name="TextCompositionModelComboBox.AutomationProperties.Name" xml:space="preserve"><value>Title and summary model</value></data>
-  <data name="EntitySlotTitle.Text" xml:space="preserve"><value>Entity candidates</value></data>
-  <data name="EntitySlotDescription.Text" xml:space="preserve"><value>Evidence candidates for dates, times, and locations</value></data>
-  <data name="EntitySlotCurrentValue.Text" xml:space="preserve"><value>Local deterministic parsing; model candidates require reviewable evidence</value></data>
+  <data name="EntitySlotTitle.Text" xml:space="preserve"><value>Suggested dates, times, and locations</value></data>
+  <data name="EntitySlotDescription.Text" xml:space="preserve"><value>Finds possible dates, times, and locations in the source</value></data>
+  <data name="EntitySlotCurrentValue.Text" xml:space="preserve"><value>Uses local rules to identify details; model suggestions must include supporting source information that you can check</value></data>
   <data name="InstalledModelsSectionTitle.Text" xml:space="preserve"><value>Installed model packages</value></data>
   <data name="InstalledModelsEmptyState.Title" xml:space="preserve"><value>No optional local vision model is installed</value></data>
   <data name="InstalledModelsSummaryEmpty" xml:space="preserve"><value>No local model packages installed</value></data>
-  <data name="InstalledModelsSummaryFormat" xml:space="preserve"><value>{0} model packages installed</value></data>
+  <data name="InstalledModelsSummaryFormat" xml:space="preserve"><value>Model packages installed: {0}</value></data>
   <data name="ModelManagementStatusInfoBar.Title" xml:space="preserve"><value>Model management</value></data>
   <data name="VisionBuiltInOptionName" xml:space="preserve"><value>Do not use a vision model</value></data>
-  <data name="VisionBuiltInOptionDescription" xml:space="preserve"><value>Keep the vision slot OCR-only</value></data>
+  <data name="VisionBuiltInOptionDescription" xml:space="preserve"><value>Use OCR only</value></data>
   <data name="TextComposerBuiltInOptionName" xml:space="preserve"><value>Local extractive title and summary</value></data>
   <data name="TextComposerBuiltInOptionDescription" xml:space="preserve"><value>Do not load a generation model</value></data>
   <data name="ModelManagementUnavailableStatus" xml:space="preserve"><value>Local storage is not ready, so model packages cannot be managed yet.</value></data>
-  <data name="AnalysisModeSavedStatus" xml:space="preserve"><value>The analysis policy was saved and affects only jobs created later.</value></data>
-  <data name="AnalysisModeSaveFailedStatus" xml:space="preserve"><value>The analysis policy was not saved. The previous setting remains active.</value></data>
+  <data name="AnalysisModeSavedStatus" xml:space="preserve"><value>The analysis mode has been saved and will apply only to new tasks.</value></data>
+  <data name="AnalysisModeSaveFailedStatus" xml:space="preserve"><value>The analysis mode could not be saved. Your previous setting is still active.</value></data>
   <data name="ModelImportCompletedStatusFormat" xml:space="preserve"><value>Model package {0} passed the local self-test and was installed.</value></data>
   <data name="ModelImportFailedStatus" xml:space="preserve"><value>The model package did not pass import validation. The current model and existing data were kept.</value></data>
   <data name="ModelOperationErrorCodeFormat" xml:space="preserve"><value>{0} (Error code: {1})</value></data>
-  <data name="LocalModelPackageContractFailedStatus" xml:space="preserve"><value>The manifest or file layout does not match the local model package contract supported by this app. The current model and existing data were kept.</value></data>
+  <data name="LocalModelPackageContractFailedStatus" xml:space="preserve"><value>The manifest or folder structure does not match a local model package format supported by this app. Your current model and existing data have not changed.</value></data>
   <data name="LocalModelExecutionProviderUnavailableStatus" xml:space="preserve"><value>The execution provider declared by this model package is not included in the current app build. Use the x64 CUDA build for a CUDA package, or use the CPU package.</value></data>
-  <data name="LocalModelPackageConflictStatus" xml:space="preserve"><value>The same model ID and version already exists with different files or an inconsistent install directory. Keep the installed version, or assign a new version to the rebuilt package.</value></data>
+  <data name="LocalModelPackageConflictStatus" xml:space="preserve"><value>A package with the same model ID and version already exists, but its files or installation folder differ. Keep the installed version, or give the rebuilt package a new version number.</value></data>
   <data name="LocalModelFileIoFailedStatus" xml:space="preserve"><value>A local disk read or write failed while copying or installing the model. Make sure the source files are not locked and the target disk has enough free space, then retry.</value></data>
   <data name="LocalModelFileAccessDeniedStatus" xml:space="preserve"><value>The app cannot read the source model or write to the model installation directory. Choose a local model directory accessible to the current account and retry.</value></data>
   <data name="LocalModelInsufficientMemoryStatus" xml:space="preserve"><value>There was not enough available memory to validate the model. Close memory-intensive apps and retry; the previous model and existing data were kept.</value></data>
-  <data name="ModelSwitchCompletedStatus" xml:space="preserve"><value>The capability slot was switched and affects only jobs created later.</value></data>
-  <data name="ModelSwitchFailedStatus" xml:space="preserve"><value>Model validation or switching failed. The previous capability slot remains active.</value></data>
+  <data name="ModelSwitchCompletedStatus" xml:space="preserve"><value>The selected model has been changed. This applies only to new tasks.</value></data>
+  <data name="ModelSwitchFailedStatus" xml:space="preserve"><value>The model could not be validated or selected. Your previous model selection is still active.</value></data>
   <data name="ImportModelPickerCommitText" xml:space="preserve"><value>Select manifest</value></data>
   <data name="ModelSwitchDialogTitle" xml:space="preserve"><value>Switch local model?</value></data>
   <data name="ModelSwitchDialogMessageFormat" xml:space="preserve"><value>Switch to “{0}”. A local self-test runs before switching; existing jobs and results retain their original profile.</value></data>
   <data name="ModelSwitchDialogPrimary" xml:space="preserve"><value>Validate and switch</value></data>
   <data name="ReanalyzeSelectedButton.Label" xml:space="preserve"><value>Reanalyze</value></data>
   <data name="ReanalyzeSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Reanalyze selected images with the current local models</value></data>
-  <data name="ReanalyzeSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>Selectively reanalyze</value></data>
+  <data name="ReanalyzeSelectedButton.ToolTipService.ToolTip" xml:space="preserve"><value>Reanalyze selected images</value></data>
   <data name="ReanalysisDialogTitle" xml:space="preserve"><value>Reanalyze selected images?</value></data>
-  <data name="ReanalysisDialogMessageFormat" xml:space="preserve"><value>Create one durable job for each of the {0} selected images and pin the current policy and model versions. User titles, summaries, and categories are not overwritten.</value></data>
+  <data name="ReanalysisDialogMessageFormat" xml:space="preserve"><value>Queue analysis for the selected images ({0}) using the current analysis mode and model versions. These tasks are saved and keep those settings even if you change them later. Titles, summaries, and categories you edited will not be overwritten.</value></data>
   <data name="ReanalysisDialogPrimary" xml:space="preserve"><value>Queue reanalysis</value></data>
   <data name="ReanalysisQueuedStatusFormat" xml:space="preserve"><value>Queued {0}; skipped {1} already queued, deleted, or unavailable items.</value></data>
   <data name="ReanalysisFailedStatus" xml:space="preserve"><value>Reanalysis jobs could not be created. Existing results were kept.</value></data>
@@ -486,51 +486,51 @@
   <data name="ModelPackageSelfTestPassedStatus" xml:space="preserve"><value>Local inference self-test passed; real-sample benchmark pending</value></data>
   <data name="ModelPackageBenchmarkStatusFormat" xml:space="preserve"><value>Benchmark status: {0}</value></data>
   <data name="ModelCapabilityOcrName" xml:space="preserve"><value>OCR</value></data>
-  <data name="ModelCapabilityVisionCaptionName" xml:space="preserve"><value>Vision caption</value></data>
+  <data name="ModelCapabilityVisionCaptionName" xml:space="preserve"><value>Image description</value></data>
   <data name="ModelCapabilityTextCompositionName" xml:space="preserve"><value>Title and summary composition</value></data>
   <data name="ModelCapabilityEntityExtractionName" xml:space="preserve"><value>Entity extraction</value></data>
   <data name="RecommendedModelsSectionTitle.Text" xml:space="preserve"><value>Recommended local models</value></data>
-  <data name="RecommendedModelsSectionDescription.Text" xml:space="preserve"><value>Fixed model files are downloaded only after you confirm. Requests contain no images, OCR text, or other user content; analysis remains offline after installation.</value></data>
+  <data name="RecommendedModelsSectionDescription.Text" xml:space="preserve"><value>The specified model versions are downloaded only after you confirm. Download requests contain no images, OCR text, or other user content. After installation, analysis works offline.</value></data>
   <data name="RecommendedPpOcrDescription" xml:space="preserve"><value>Improves multilingual text recognition. Windows OCR remains available as a fallback.</value></data>
   <data name="RecommendedQwenCpuDescription" xml:space="preserve"><value>Creates visual descriptions, titles, and summaries on the CPU without requiring a discrete GPU.</value></data>
-  <data name="RecommendedQwenCudaDescription" xml:space="preserve"><value>Uses a supported NVIDIA GPU to accelerate visual descriptions, titles, and summaries.</value></data>
+  <data name="RecommendedQwenCudaDescription" xml:space="preserve"><value>Uses a supported NVIDIA GPU to generate image descriptions, titles, and summaries faster.</value></data>
   <data name="RecommendedModelDetailsFormat" xml:space="preserve"><value>Version: {0} · download: {1} · installed: {2}</value></data>
   <data name="RecommendedModelHardwareFormat" xml:space="preserve"><value>Minimum RAM: {0} · {1}</value></data>
-  <data name="RecommendedPpOcrHardwareGuidance" xml:space="preserve"><value>x64/ARM64 CPU baseline supported</value></data>
+  <data name="RecommendedPpOcrHardwareGuidance" xml:space="preserve"><value>Runs on x64 and ARM64 CPUs</value></data>
   <data name="RecommendedQwenCpuHardwareGuidance" xml:space="preserve"><value>CPU only; 16 GiB system RAM recommended, with about 6.43 GiB peak working set measured on Windows x64</value></data>
   <data name="RecommendedQwenCudaHardwareGuidance" xml:space="preserve"><value>CUDA only; nominal 8 GB-class NVIDIA GPU (at least 7.5 GiB reported by the driver) and a driver supporting CUDA 12.x; missing CUDA/cuDNN user-mode libraries can be installed privately by the app without PATH changes; 12 GiB system RAM recommended</value></data>
-  <data name="RecommendedQwenCpuBenchmarkStatus" xml:space="preserve"><value>Windows x64 Simplified Chinese, English, and Japanese real samples and strict structured output passed; full golden-set benchmark pending</value></data>
-  <data name="RecommendedQwenCudaBenchmarkStatus" xml:space="preserve"><value>Windows x64 CUDA Simplified Chinese, English, and Japanese real samples and strict structured output passed; full golden-set benchmark pending</value></data>
+  <data name="RecommendedQwenCpuBenchmarkStatus" xml:space="preserve"><value>Tests with real Simplified Chinese, English, and Japanese samples and strict structured output passed on Windows x64; the full reference-sample benchmark is still pending</value></data>
+  <data name="RecommendedQwenCudaBenchmarkStatus" xml:space="preserve"><value>Tests with real Simplified Chinese, English, and Japanese samples and strict structured output passed with CUDA on Windows x64; the full reference-sample benchmark is still pending</value></data>
   <data name="RecommendedModelExperimentalStatus" xml:space="preserve"><value>Optional experimental package: pinned file hashes verified; Windows real-sample benchmark pending</value></data>
   <data name="RecommendedModelArtifactPinnedStatus" xml:space="preserve"><value>Official model files and hashes pinned; Windows real-sample benchmark pending</value></data>
   <data name="RecommendedModelDownloadAction" xml:space="preserve"><value>Download, import, and enable</value></data>
   <data name="RecommendedModelEnableAction" xml:space="preserve"><value>Validate and enable</value></data>
   <data name="RecommendedModelEnabledAction" xml:space="preserve"><value>Enabled</value></data>
   <data name="RecommendedModelConfirmationTitleFormat" xml:space="preserve"><value>Download and enable {0}?</value></data>
-  <data name="RecommendedModelDownloadConfirmationFormat" xml:space="preserve"><value>Download “{0}” from pinned HTTPS sources. Download size: {1}; installed size: {2}. License: {3}. Source: {4}. Minimum RAM: {5}; {6}. File sizes and SHA-256 are checked, followed by a local inference self-test and atomic installation and enablement. Canceling or failure keeps the current model. No user content is uploaded.</value></data>
-  <data name="RecommendedModelEnableConfirmationFormat" xml:space="preserve"><value>“{0}” is already installed and will be validated and enabled. Installed size: {2}. License: {3}. Source: {4}. Minimum RAM: {5}; {6}. A failed switch keeps the current model, and existing analysis results are not rerun automatically.</value></data>
+  <data name="RecommendedModelDownloadConfirmationFormat" xml:space="preserve"><value>Download “{0}” from predefined HTTPS sources. Download size: {1}; installed size: {2}. License: {3}. Source: {4}. Minimum RAM: {5}; {6}. File sizes and SHA-256 hashes are verified, then a local inference self-test runs. The model is installed and enabled only when all checks pass. If you cancel or the operation fails, your current model is kept. No user content is uploaded.</value></data>
+  <data name="RecommendedModelEnableConfirmationFormat" xml:space="preserve"><value>“{0}” is already installed and will be validated and enabled. Installed size: {2}. License: {3}. Source: {4}. Minimum RAM: {5}; {6}. If switching fails, your current model is kept. Existing images are not reanalyzed automatically.</value></data>
   <data name="CancelModelOperationButton.Content" xml:space="preserve"><value>Cancel</value></data>
   <data name="CancelModelOperationButton.AutomationProperties.Name" xml:space="preserve"><value>Cancel model download or installation</value></data>
-  <data name="RecommendedModelPreparingStatus" xml:space="preserve"><value>Checking free space and preparing a safe staging directory…</value></data>
+  <data name="RecommendedModelPreparingStatus" xml:space="preserve"><value>Checking free disk space and preparing a temporary download folder…</value></data>
   <data name="RecommendedModelDownloadingStatus" xml:space="preserve"><value>Downloading model files…</value></data>
-  <data name="RecommendedModelVerifyingStatus" xml:space="preserve"><value>Checking file sizes and SHA-256…</value></data>
+  <data name="RecommendedModelVerifyingStatus" xml:space="preserve"><value>Checking file sizes and SHA-256 hashes…</value></data>
   <data name="RecommendedModelInstallingStatus" xml:space="preserve"><value>Running the local inference self-test and installing…</value></data>
-  <data name="RecommendedModelEnablingStatus" xml:space="preserve"><value>Atomically updating capability slots…</value></data>
+  <data name="RecommendedModelEnablingStatus" xml:space="preserve"><value>Applying model selections…</value></data>
   <data name="RecommendedModelCompletingStatus" xml:space="preserve"><value>Finishing the model operation…</value></data>
   <data name="RecommendedModelInstalledStatusFormat" xml:space="preserve"><value>{0} passed validation and the local self-test and is now enabled.</value></data>
   <data name="RecommendedModelEnabledStatusFormat" xml:space="preserve"><value>{0} was validated and enabled.</value></data>
-  <data name="RecommendedModelCanceledStatus" xml:space="preserve"><value>The model operation was canceled. Installed models and current capability slots were kept; verified downloads can be reused by the next attempt.</value></data>
+  <data name="RecommendedModelCanceledStatus" xml:space="preserve"><value>The model operation was canceled. Installed models and current model selections have not changed. Verified downloads can be reused on the next attempt.</value></data>
   <data name="RecommendedModelInsufficientSpaceStatus" xml:space="preserve"><value>There is not enough free disk space. No download was started and the current model was kept.</value></data>
-  <data name="RecommendedModelDownloadTimedOutStatus" xml:space="preserve"><value>The model download stopped after receiving no data for too long. Incomplete files were cleaned; verified files can be reused by the next attempt.</value></data>
-  <data name="RecommendedModelNetworkFailedStatus" xml:space="preserve"><value>The model file could not be downloaded after multiple attempts. Incomplete files were cleaned; verified files can be reused by the next attempt. Try again when the network is stable.</value></data>
-  <data name="RecommendedModelVerificationFailedStatus" xml:space="preserve"><value>The source, file size, or SHA-256 check failed. The invalid file was cleaned; previously verified files can be reused by the next attempt.</value></data>
-  <data name="RecommendedModelInstallFailedStatus" xml:space="preserve"><value>The model could not be downloaded, imported, or enabled. Incomplete files were cleaned; verified downloads can be reused by the next attempt, and current data was kept.</value></data>
+  <data name="RecommendedModelDownloadTimedOutStatus" xml:space="preserve"><value>The model download stopped because no data was received for too long. Incomplete files were removed; verified files can be reused on the next attempt.</value></data>
+  <data name="RecommendedModelNetworkFailedStatus" xml:space="preserve"><value>The model file could not be downloaded after multiple attempts. Incomplete files were removed; verified files can be reused on the next attempt. Try again when your connection is stable.</value></data>
+  <data name="RecommendedModelVerificationFailedStatus" xml:space="preserve"><value>The source, file size, or SHA-256 check failed. The invalid file was removed; previously verified files can be reused on the next attempt.</value></data>
+  <data name="RecommendedModelInstallFailedStatus" xml:space="preserve"><value>The model could not be downloaded, imported, or enabled. Incomplete files were removed; verified downloads can be reused on the next attempt. Your existing data has not changed.</value></data>
   <data name="RecommendedQwenConfigurationFailedStatus" xml:space="preserve"><value>The Qwen files are complete and hash-verified, but the GenAI configuration does not match the supported package contract. The model was not installed; verified files were kept.</value></data>
   <data name="RecommendedQwenSelfTestFailedStatus" xml:space="preserve"><value>The Qwen files are complete and hash-verified, but the local multimodal inference self-test failed. The model was not enabled; verified files were kept.</value></data>
-  <data name="RecommendedQwenSelfTestOutputMismatchStatus" xml:space="preserve"><value>Local Qwen inference completed but did not return the fixed structured self-test content. The model was not enabled; verified files were kept.</value></data>
+  <data name="RecommendedQwenSelfTestOutputMismatchStatus" xml:space="preserve"><value>Local Qwen inference completed but did not return the expected structured self-test content. The model was not enabled; verified files were kept.</value></data>
   <data name="RecommendedQwenModelLoadFailedStatus" xml:space="preserve"><value>The Qwen files are complete and hash-verified, but ONNX Runtime GenAI could not load the model graphs. The model was not enabled; verified files were kept.</value></data>
-  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>The CUDA Qwen files are hash-verified, but the CUDA provider self-test failed. If the NVIDIA environment is shown as ready, the current GPU driver or virtualization environment may not support this runtime; do not edit PATH manually. The model was not enabled and the previous capability slots were kept.</value></data>
-  <data name="RecommendedQwenDirectMlUnavailableStatus" xml:space="preserve"><value>The DirectML Qwen package does not match the runtime packaged with this app build. The model was not enabled and the current capability slots were kept.</value></data>
+  <data name="RecommendedQwenCudaUnavailableStatus" xml:space="preserve"><value>The CUDA Qwen files are hash-verified, but the CUDA provider self-test failed. If the NVIDIA environment is shown as ready, the current GPU driver or virtualization environment may not support this runtime; do not edit PATH manually. The model was not enabled and your previous model selections have not changed.</value></data>
+  <data name="RecommendedQwenDirectMlUnavailableStatus" xml:space="preserve"><value>The DirectML Qwen package does not match the runtime included in this app build. The model was not enabled and your current model selections have not changed.</value></data>
   <data name="RecommendedQwenModelInspectionFailedStatus" xml:space="preserve"><value>The Qwen model loaded, but the runtime reported an incompatible model type. The model was not enabled; verified files were kept.</value></data>
   <data name="RecommendedQwenProcessorFailedStatus" xml:space="preserve"><value>The Qwen model graphs loaded, but the multimodal processor or tokenizer failed to initialize. The model was not enabled; verified files were kept.</value></data>
   <data name="RecommendedQwenImageInputFailedStatus" xml:space="preserve"><value>The Qwen runtime could not read the built-in self-test image. The model was not enabled; verified files were kept.</value></data>
@@ -547,15 +547,15 @@
   <data name="ReminderNotificationsUnavailableInfo.Message" xml:space="preserve"><value>The reminder remains on this device, but Windows notifications are disabled or unsupported. Reopen this page after enabling notifications to retry scheduling.</value></data>
   <data name="ReminderStatusInfo.Title" xml:space="preserve"><value>Reminder updated</value></data>
   <data name="ReminderErrorInfo.Title" xml:space="preserve"><value>Reminder action failed</value></data>
-  <data name="RemindersLoadingText.Text" xml:space="preserve"><value>Loading candidates and reconciling system notifications…</value></data>
+  <data name="RemindersLoadingText.Text" xml:space="preserve"><value>Loading suggestions and checking notification status…</value></data>
   <data name="RemindersErrorTitle.Text" xml:space="preserve"><value>Reminders could not be loaded</value></data>
-  <data name="RemindersErrorMessage.Text" xml:space="preserve"><value>Local reminder data is temporarily unavailable. Candidates and confirmed reminders have not been deleted.</value></data>
+  <data name="RemindersErrorMessage.Text" xml:space="preserve"><value>Local reminder data is temporarily unavailable. Suggestions and confirmed reminders have not been deleted.</value></data>
   <data name="RemindersRetryButton.Content" xml:space="preserve"><value>Retry</value></data>
   <data name="RemindersRetryButton.AutomationProperties.Name" xml:space="preserve"><value>Retry loading reminders</value></data>
   <data name="RemindersPermissionTitle.Text" xml:space="preserve"><value>Local reminder data is inaccessible</value></data>
   <data name="RemindersPermissionMessage.Text" xml:space="preserve"><value>Check the app data folder permissions, then retry.</value></data>
   <data name="RemindersUnsupportedTitle.Text" xml:space="preserve"><value>Reminder storage is unsupported</value></data>
-  <data name="RemindersUnsupportedMessage.Text" xml:space="preserve"><value>Your images remain saved. Confirm reminders later on a supported Windows environment.</value></data>
+  <data name="RemindersUnsupportedMessage.Text" xml:space="preserve"><value>Your images are still saved. You can confirm reminders later on a supported Windows system.</value></data>
   <data name="ReminderCandidatesHeading.Text" xml:space="preserve"><value>Pending suggestions</value></data>
   <data name="ReminderCandidatesDescription.Text" xml:space="preserve"><value>Review the date, time, time zone, and location.</value></data>
   <data name="ReminderCandidatesEmpty.Text" xml:space="preserve"><value>No pending date suggestions.</value></data>
@@ -564,37 +564,37 @@
   <data name="ConfirmedRemindersEmpty.Text" xml:space="preserve"><value>Confirmed suggestions appear here.</value></data>
   <data name="ConfirmedRemindersList.AutomationProperties.Name" xml:space="preserve"><value>Confirmed reminders</value></data>
   <data name="CandidateSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
-  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>{0} suggestions selected</value></data>
+  <data name="CandidateSelectionCountFormat" xml:space="preserve"><value>Suggestions selected: {0}</value></data>
   <data name="CandidateSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple pending suggestions</value></data>
   <data name="CandidateDismissSelectedButton.Label" xml:space="preserve"><value>Dismiss</value></data>
   <data name="CandidateSelectAllButton.Label" xml:space="preserve"><value>Select all</value></data>
   <data name="CandidateSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>Select all loaded pending suggestions</value></data>
   <data name="CandidateCancelSelectionButton.Label" xml:space="preserve"><value>Cancel selection</value></data>
-  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Leave suggestion selection</value></data>
+  <data name="CandidateCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Exit suggestion selection mode</value></data>
   <data name="CandidateDismissSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Dismiss selected suggestions</value></data>
-  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>Dismissed {0} suggestions; {1} failed.</value></data>
+  <data name="ReminderCandidatesDismissedStatusFormat" xml:space="preserve"><value>Suggestions dismissed: {0}; failed: {1}.</value></data>
   <data name="ReminderSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
   <data name="ReminderSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple confirmed reminders</value></data>
-  <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>Enter multiple selection</value></data>
+  <data name="ReminderSelectionModeButton.ToolTipService.ToolTip" xml:space="preserve"><value>Select multiple reminders</value></data>
   <data name="ReminderSelectAllButton.Label" xml:space="preserve"><value>Select all</value></data>
   <data name="ReminderSelectAllButton.AutomationProperties.Name" xml:space="preserve"><value>Select all confirmed reminders</value></data>
   <data name="ReminderDeleteSelectedButton.Label" xml:space="preserve"><value>Delete</value></data>
   <data name="ReminderDeleteSelectedButton.AutomationProperties.Name" xml:space="preserve"><value>Delete selected reminders</value></data>
   <data name="ReminderCancelSelectionButton.Label" xml:space="preserve"><value>Cancel selection</value></data>
-  <data name="ReminderCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Leave reminder selection</value></data>
-  <data name="ReminderSelectionCountFormat" xml:space="preserve"><value>{0} reminder(s) selected</value></data>
+  <data name="ReminderCancelSelectionButton.AutomationProperties.Name" xml:space="preserve"><value>Exit reminder selection mode</value></data>
+  <data name="ReminderSelectionCountFormat" xml:space="preserve"><value>Reminders selected: {0}</value></data>
   <data name="ReminderEditorPlaceholderTitle.Text" xml:space="preserve"><value>Select a suggestion or reminder</value></data>
-  <data name="ReminderEditorPlaceholderMessage.Text" xml:space="preserve"><value>Review its evidence, date, time, time zone, and location here.</value></data>
+  <data name="ReminderEditorPlaceholderMessage.Text" xml:space="preserve"><value>Check the source information, date, time, time zone, and location here.</value></data>
   <data name="ReminderEditorBackButton.AutomationProperties.Name" xml:space="preserve"><value>Back to reminders</value></data>
   <data name="ReminderEditorBackButton.ToolTipService.ToolTip" xml:space="preserve"><value>Back to reminders</value></data>
   <data name="ReminderEditorImageButton.AutomationProperties.Name" xml:space="preserve"><value>Open the related image details</value></data>
   <data name="ReminderEditorImageButton.ToolTipService.ToolTip" xml:space="preserve"><value>Open this image in the library</value></data>
   <data name="ReminderTitleTextBox.Header" xml:space="preserve"><value>Reminder title</value></data>
-  <data name="ReminderTitleTextBox.PlaceholderText" xml:space="preserve"><value>Enter a recognizable title</value></data>
+  <data name="ReminderTitleTextBox.PlaceholderText" xml:space="preserve"><value>Enter a title you'll recognize later</value></data>
   <data name="ReminderTitleTextBox.AutomationProperties.Name" xml:space="preserve"><value>Reminder title</value></data>
   <data name="ReminderAmbiguityInfo.Title" xml:space="preserve"><value>Review required</value></data>
   <data name="ReminderSummaryHeading.Text" xml:space="preserve"><value>Summary</value></data>
-  <data name="ReminderEvidenceHeading.Text" xml:space="preserve"><value>Recognized evidence</value></data>
+  <data name="ReminderEvidenceHeading.Text" xml:space="preserve"><value>Source information</value></data>
   <data name="ReminderDateLabel.Text" xml:space="preserve"><value>Date</value></data>
   <data name="ReminderDatePicker.PlaceholderText" xml:space="preserve"><value>Choose a date</value></data>
   <data name="ReminderDatePicker.AutomationProperties.Name" xml:space="preserve"><value>Reminder date</value></data>
@@ -637,47 +637,47 @@
   <data name="ReminderDeleteDialogTitle" xml:space="preserve"><value>Delete reminder?</value></data>
   <data name="ReminderDeleteDialogMessageFormat" xml:space="preserve"><value>This deletes the reminder for “{0}” and cancels its system notification. The image and analysis results remain.</value></data>
   <data name="ReminderDeleteBatchDialogTitle" xml:space="preserve"><value>Delete selected reminders?</value></data>
-  <data name="ReminderDeleteBatchDialogMessageFormat" xml:space="preserve"><value>This deletes {0} reminder records and cancels their system notifications. Images and analysis results remain.</value></data>
+  <data name="ReminderDeleteBatchDialogMessageFormat" xml:space="preserve"><value>The selected reminders ({0}) will be deleted and their system notifications canceled. Images and analysis results will be kept.</value></data>
   <data name="ReminderDeleteDialogPrimary" xml:space="preserve"><value>Delete reminder</value></data>
-  <data name="ReminderDeletedStatusFormat" xml:space="preserve"><value>{0} reminder(s) deleted; {1} could not be deleted.</value></data>
+  <data name="ReminderDeletedStatusFormat" xml:space="preserve"><value>Reminders deleted: {0}; could not be deleted: {1}.</value></data>
   <data name="NotificationReminderBody" xml:space="preserve"><value>It is time to review this image.</value></data>
   <data name="NotificationOpenButton" xml:space="preserve"><value>Open image</value></data>
   <data name="NotificationLocationFormat" xml:space="preserve"><value>Location: {0}</value></data>
   <data name="ReminderConfirmedEvidence" xml:space="preserve"><value>Confirmed reminder. Saving changes reschedules its notification.</value></data>
-  <data name="ReminderCancelledEvidence" xml:space="preserve"><value>This reminder is cancelled. Restoring it reschedules its notification.</value></data>
+  <data name="ReminderCancelledEvidence" xml:space="preserve"><value>This reminder is canceled. Restoring it reschedules its notification.</value></data>
   <data name="ReminderManualEvidence" xml:space="preserve"><value>You created this reminder manually from the library. Review the date, time, time zone, and location.</value></data>
   <data name="ReminderManualImageUnavailableError" xml:space="preserve"><value>A reminder cannot be created for an image that was deleted or could not be found.</value></data>
-  <data name="ReminderDateLocationEvidenceFormat" xml:space="preserve"><value>Date evidence: {0}&#xA;Location evidence: {1}</value></data>
+  <data name="ReminderDateLocationEvidenceFormat" xml:space="preserve"><value>Date source: {0}\nLocation source: {1}</value></data>
   <data name="ReminderDateTimeRequiredError" xml:space="preserve"><value>Choose both a date and time. The app will not guess a missing time.</value></data>
   <data name="ReminderUpdatedStatus" xml:space="preserve"><value>The reminder was updated and its system notification is being rescheduled.</value></data>
   <data name="ReminderRestoredStatus" xml:space="preserve"><value>The reminder was restored and its system notification is being rescheduled.</value></data>
   <data name="ReminderConfirmedStatus" xml:space="preserve"><value>The reminder was confirmed and its system notification is being scheduled.</value></data>
-  <data name="ReminderCandidateDismissedStatus" xml:space="preserve"><value>The suggestion was dismissed. Ordinary reanalysis will not silently restore the same evidence.</value></data>
+  <data name="ReminderCandidateDismissedStatus" xml:space="preserve"><value>The suggestion was dismissed. Reanalyzing the image normally will not automatically restore a suggestion based on the same source information.</value></data>
   <data name="ReminderCandidateDismissFailedError" xml:space="preserve"><value>The suggestion could not be dismissed. Try again.</value></data>
-  <data name="ReminderCancelledStatus" xml:space="preserve"><value>The reminder was cancelled and a system-notification cancellation was queued.</value></data>
-  <data name="ReminderCancelFailedError" xml:space="preserve"><value>The reminder could not be cancelled. Try again.</value></data>
+  <data name="ReminderCancelledStatus" xml:space="preserve"><value>The reminder was canceled. Cancellation of its Windows notification is pending.</value></data>
+  <data name="ReminderCancelFailedError" xml:space="preserve"><value>The reminder could not be canceled. Try again.</value></data>
   <data name="ReminderSaveFailedError" xml:space="preserve"><value>The reminder could not be saved. Existing data was not overwritten.</value></data>
-  <data name="MissedReminderReconciledFormat" xml:space="preserve"><value>Startup reconciliation found {0} reminder(s) that missed the delivery window.</value></data>
-  <data name="ReminderLoadFailedError" xml:space="preserve"><value>Reminders could not be loaded or reconciled. Try again.</value></data>
+  <data name="MissedReminderReconciledFormat" xml:space="preserve"><value>Missed reminders found at startup: {0}.</value></data>
+  <data name="ReminderLoadFailedError" xml:space="preserve"><value>Reminders could not be loaded or their notification status checked. Try again.</value></data>
   <data name="ReminderLoadMoreFailedError" xml:space="preserve"><value>More reminders could not be loaded. Try again.</value></data>
   <data name="LoadMoreReminderCandidatesButton.Content" xml:space="preserve"><value>Load more suggestions</value></data>
   <data name="LoadMoreReminderCandidatesButton.AutomationProperties.Name" xml:space="preserve"><value>Load more reminder suggestions</value></data>
   <data name="LoadMoreConfirmedRemindersButton.Content" xml:space="preserve"><value>Load more reminders</value></data>
   <data name="LoadMoreConfirmedRemindersButton.AutomationProperties.Name" xml:space="preserve"><value>Load more confirmed reminders</value></data>
-  <data name="ReminderCandidateSourceMetadata" xml:space="preserve"><value>Image metadata evidence</value></data>
-  <data name="ReminderCandidateSourceOcr" xml:space="preserve"><value>OCR text evidence</value></data>
+  <data name="ReminderCandidateSourceMetadata" xml:space="preserve"><value>Image metadata</value></data>
+  <data name="ReminderCandidateSourceOcr" xml:space="preserve"><value>Recognized text (OCR)</value></data>
   <data name="ReminderCandidateSourceModel" xml:space="preserve"><value>Local model suggestion</value></data>
   <data name="ReminderAmbiguousDateOrder" xml:space="preserve"><value>The month/day order is ambiguous. Choose the intended date manually.</value></data>
-  <data name="ReminderMissingYear" xml:space="preserve"><value>The source omitted a year. The analysis year in the reference time zone is prefilled; review it.</value></data>
-  <data name="ReminderMissingMonthAndDay" xml:space="preserve"><value>The source only specified a year. January 1 is provisionally prefilled for editing; change it to the intended date before confirming.</value></data>
-  <data name="ReminderMissingDay" xml:space="preserve"><value>The source only specified a month. The first day is provisionally prefilled for editing; change it to the intended date before confirming.</value></data>
-  <data name="ReminderDefaultTime" xml:space="preserve"><value>No specific time was recognized. 10:00 AM is provisionally prefilled; review it before confirming.</value></data>
+  <data name="ReminderMissingYear" xml:space="preserve"><value>The source does not include a year. The year when the image was analyzed, in the reference time zone, has been filled in. Check it before confirming.</value></data>
+  <data name="ReminderMissingMonthAndDay" xml:space="preserve"><value>The source specifies only a year. January 1 has been filled in as a placeholder. Change it to the intended date before confirming.</value></data>
+  <data name="ReminderMissingDay" xml:space="preserve"><value>The source specifies only a month. The first day of that month has been filled in as a placeholder. Change it to the intended date before confirming.</value></data>
+  <data name="ReminderDefaultTime" xml:space="preserve"><value>No specific time was recognized. 10:00 AM has been filled in as a placeholder. Check it before confirming.</value></data>
   <data name="ReminderMissingDate" xml:space="preserve"><value>Only a time was recognized. Choose the reminder date before confirming.</value></data>
   <data name="ReminderAmbiguousTimeOfDay" xml:space="preserve"><value>The source does not clearly distinguish AM, PM, or 24-hour time. Review the time.</value></data>
-  <data name="ReminderRelativeDate" xml:space="preserve"><value>The source used a relative date such as “tonight” or “tomorrow.” It was prefilled from the local date at analysis time; review it.</value></data>
-  <data name="ReminderModelInterpretation" xml:space="preserve"><value>An installed local model interpreted this date. Review it against the original evidence.</value></data>
+  <data name="ReminderRelativeDate" xml:space="preserve"><value>The source uses a relative date such as “tonight” or “tomorrow.” The date has been filled in based on the local date when the image was analyzed. Check it before confirming.</value></data>
+  <data name="ReminderModelInterpretation" xml:space="preserve"><value>An installed local model interpreted this date. Check it against the original source.</value></data>
   <data name="ReminderModelOnlyInterpretation" xml:space="preserve"><value>Only the installed local vision model found this date; OCR could not corroborate it. Check the original image carefully.</value></data>
-  <data name="ReminderRemoteVisionNoLocalOcrEvidence" xml:space="preserve"><value>A remote vision model inferred this candidate from the image without local OCR positioning evidence. Check it carefully against the original image.</value></data>
+  <data name="ReminderRemoteVisionNoLocalOcrEvidence" xml:space="preserve"><value>A remote vision model inferred this suggestion from the image. Local OCR was not used to locate supporting text. Check the suggestion carefully against the original image.</value></data>
   <data name="ReminderCandidateNeedsReview" xml:space="preserve"><value>This suggestion is ambiguous. Review it before confirming.</value></data>
   <data name="ReminderTitleRequiredError" xml:space="preserve"><value>Enter a reminder title.</value></data>
   <data name="ReminderTitleTooLongError" xml:space="preserve"><value>The reminder title cannot exceed 300 characters.</value></data>
@@ -685,16 +685,16 @@
   <data name="ReminderDueWithZoneFormat" xml:space="preserve"><value>{0:g} · {1}</value></data>
   <data name="ReminderStateActive" xml:space="preserve"><value>Upcoming</value></data>
   <data name="ReminderStateCompleted" xml:space="preserve"><value>Completed</value></data>
-  <data name="ReminderStateCancelled" xml:space="preserve"><value>Cancelled</value></data>
-  <data name="ReminderStateSuspendedByDeletion" xml:space="preserve"><value>Suspended with image</value></data>
+  <data name="ReminderStateCancelled" xml:space="preserve"><value>Canceled</value></data>
+  <data name="ReminderStateSuspendedByDeletion" xml:space="preserve"><value>Paused because the image was deleted</value></data>
   <data name="ReminderStateMissed" xml:space="preserve"><value>Missed</value></data>
   <data name="ReminderStateNeedsReconfirmation" xml:space="preserve"><value>Needs reconfirmation</value></data>
   <data name="ReminderNotificationStatePending" xml:space="preserve"><value>Waiting for system scheduling</value></data>
   <data name="ReminderNotificationStateScheduled" xml:space="preserve"><value>System notification scheduled</value></data>
   <data name="ReminderNotificationStateFailed" xml:space="preserve"><value>System notification scheduling failed</value></data>
-  <data name="ReminderNotificationStateCancelled" xml:space="preserve"><value>System notification cancelled</value></data>
+  <data name="ReminderNotificationStateCancelled" xml:space="preserve"><value>System notification canceled</value></data>
   <data name="ReminderNotificationStateActivated" xml:space="preserve"><value>Opened from system notification</value></data>
-  <data name="ReminderDueTimeFutureError" xml:space="preserve"><value>The reminder must be in the future.</value></data>
+  <data name="ReminderDueTimeFutureError" xml:space="preserve"><value>Choose a future date and time for the reminder.</value></data>
   <data name="ReminderDstInvalidError" xml:space="preserve"><value>This local time falls in a daylight-saving gap. Choose another time.</value></data>
   <data name="ReminderDstAmbiguousError" xml:space="preserve"><value>This local time occurs twice during a daylight-saving transition. Choose an unambiguous time.</value></data>
   <data name="ReminderTimeZoneError" xml:space="preserve"><value>The selected time zone is unavailable on this Windows installation.</value></data>
@@ -726,18 +726,18 @@
   <data name="OpenApiAnalysisSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>Open API analysis settings</value></data>
   <data name="OpenApiAnalysisSettingsButton.Content" xml:space="preserve"><value>Configure</value></data>
   <data name="ApiAnalysisSettingsEntryTitle.Text" xml:space="preserve"><value>Cloud API</value></data>
-  <data name="ApiAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>Analyze with a cloud service after configuring a provider and credential.</value></data>
+  <data name="ApiAnalysisSettingsEntryDescription.Text" xml:space="preserve"><value>Analyze images with a cloud service after choosing a provider and configuring an API key.</value></data>
   <data name="ApiConfigurationReadyStatus" xml:space="preserve"><value>Configured</value></data>
   <data name="ApiConfigurationMissingStatus" xml:space="preserve"><value>Not configured</value></data>
   <data name="ApiConfigurationUnavailableStatus" xml:space="preserve"><value>Status unavailable</value></data>
   <data name="ExecutionTargetLocal" xml:space="preserve"><value>Local</value></data>
-  <data name="ExecutionTargetLocalDetail" xml:space="preserve"><value>New jobs use the complete local pipeline. Network analysis is off. If API analysis is not configured, choosing it opens setup first.</value></data>
+  <data name="ExecutionTargetLocalDetail" xml:space="preserve"><value>New tasks are analyzed entirely on this device. API analysis is off. If you select API analysis before configuring it, setup opens first.</value></data>
   <data name="ExecutionTargetRemoteOcrText" xml:space="preserve"><value>API · OCR text</value></data>
   <data name="ExecutionTargetRemoteVision" xml:space="preserve"><value>API · image</value></data>
   <data name="ExecutionTargetRemoteDetailFormat" xml:space="preserve"><value>{0} · {1}. This affects new imports and items you explicitly reanalyze.</value></data>
-  <data name="ExecutionTargetRemoteMissingProfileDetail" xml:space="preserve"><value>The selected API profile is unavailable. Return to Local before importing more items.</value></data>
+  <data name="ExecutionTargetRemoteMissingProfileDetail" xml:space="preserve"><value>The selected API profile is unavailable. Switch to local analysis before importing more items.</value></data>
   <data name="ExecutionTargetUnavailable" xml:space="preserve"><value>Unavailable</value></data>
-  <data name="ExecutionTargetUnavailableDetail" xml:space="preserve"><value>Storage is not ready, so the current execution target could not be read.</value></data>
+  <data name="ExecutionTargetUnavailableDetail" xml:space="preserve"><value>Local storage is not ready, so the current analysis mode could not be determined.</value></data>
   <data name="ApiAnalysisSettingsPageTitle.Text" xml:space="preserve"><value>Cloud API</value></data>
   <data name="ApiAnalysisSettingsPageSubtitle.Text" xml:space="preserve"><value>The app connects only after configuration, connection testing, and privacy confirmation are complete.</value></data>
   <data name="ApiProviderSectionTitle.Text" xml:space="preserve"><value>Choose a service</value></data>
@@ -751,11 +751,11 @@
   <data name="ApiInputModeOptions.Header" xml:space="preserve"><value>Choose what is sent to the API</value></data>
   <data name="ApiInputModeOptions.AutomationProperties.Name" xml:space="preserve"><value>Remote input mode</value></data>
   <data name="ApiInputModeOptionsCompact.AutomationProperties.Name" xml:space="preserve"><value>Remote input mode</value></data>
-  <data name="ApiInputModeSectionDescription.Text" xml:space="preserve"><value>Choose the content scope sent to the API.</value></data>
+  <data name="ApiInputModeSectionDescription.Text" xml:space="preserve"><value>Choose what content to send to the API.</value></data>
   <data name="RemoteOcrTextOption.Content" xml:space="preserve"><value>OCR text only</value></data>
-  <data name="RemoteOcrTextOption.AutomationProperties.Name" xml:space="preserve"><value>Send local OCR text to API</value></data>
+  <data name="RemoteOcrTextOption.AutomationProperties.Name" xml:space="preserve"><value>Send locally recognized text to the API</value></data>
   <data name="RemoteVisionOption.Content" xml:space="preserve"><value>Send image</value></data>
-  <data name="RemoteVisionOption.AutomationProperties.Name" xml:space="preserve"><value>Send sanitized analysis image to API</value></data>
+  <data name="RemoteVisionOption.AutomationProperties.Name" xml:space="preserve"><value>Send a processed image with metadata removed to the API</value></data>
   <data name="ApiOutputLanguageSectionTitle.Text" xml:space="preserve"><value>Result language</value></data>
   <data name="ApiOutputLanguageSectionDescription.Text" xml:space="preserve"><value>Choose the language for cloud analysis results. Applies to future cloud analyses; existing results stay unchanged.</value></data>
   <data name="ApiOutputLanguageRowTitle.Text" xml:space="preserve"><value>Preferred language</value></data>
@@ -765,17 +765,17 @@
   <data name="ApiOutputLanguageTraditionalChineseTaiwan.Content" xml:space="preserve"><value>Traditional Chinese (Taiwan)</value></data>
   <data name="ApiOutputLanguageEnglish.Content" xml:space="preserve"><value>English</value></data>
   <data name="ApiOutputLanguageSaveFailedStatus" xml:space="preserve"><value>Couldn't save the result language. The previous selection was restored.</value></data>
-  <data name="ApiPayloadDisclosureInfoBar.Title" xml:space="preserve"><value>Payload boundary</value></data>
+  <data name="ApiPayloadDisclosureInfoBar.Title" xml:space="preserve"><value>What is sent</value></data>
   <data name="ApiRemoteOcrTextPayloadDisclosure" xml:space="preserve"><value>Runs complete local OCR and deterministic entity extraction, then sends only bounded OCR text, language labels, output-language policy, reference date, and time zone. It never sends an image, file name, path, hash, internal ID, EXIF, bounding boxes, or library context.</value></data>
   <data name="ApiRemoteVisionPayloadDisclosure" xml:space="preserve"><value>Skips local OCR and the local vision model, then sends a size-limited pixel copy re-encoded without EXIF/XMP, file name, or path. It does not send local OCR, hashes, internal IDs, or library context. Image content itself can still identify people or places.</value></data>
   <data name="ApiCredentialSectionTitle.Text" xml:space="preserve"><value>API key</value></data>
   <data name="ApiCredentialSectionDescription.Text" xml:space="preserve"><value>Enter and save your API key.</value></data>
   <data name="ApiCredentialPasswordBox.PlaceholderText" xml:space="preserve"><value>Enter API key</value></data>
   <data name="ApiCredentialPasswordBox.AutomationProperties.Name" xml:space="preserve"><value>New API key</value></data>
-  <data name="SaveApiCredentialButton.Content" xml:space="preserve"><value>Save credential</value></data>
-  <data name="SaveApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>Save API credential</value></data>
-  <data name="DeleteApiCredentialButton.Content" xml:space="preserve"><value>Delete credential</value></data>
-  <data name="DeleteApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>Delete API credential and return to local analysis</value></data>
+  <data name="SaveApiCredentialButton.Content" xml:space="preserve"><value>Save API key</value></data>
+  <data name="SaveApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>Save API key</value></data>
+  <data name="DeleteApiCredentialButton.Content" xml:space="preserve"><value>Delete API key</value></data>
+  <data name="DeleteApiCredentialButton.AutomationProperties.Name" xml:space="preserve"><value>Delete API key and return to local analysis</value></data>
   <data name="ApiCredentialSavedState" xml:space="preserve"><value>Saved in Windows Credential Locker. The value is hidden.</value></data>
   <data name="ApiCredentialMissingState" xml:space="preserve"><value>Not saved.</value></data>
   <data name="ApiPolicySectionTitle.Text" xml:space="preserve"><value>Provider policy, limits, and cost</value></data>
@@ -790,61 +790,61 @@
   <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider terms</value></data>
   <data name="ApiPricingLink.Content" xml:space="preserve"><value>Pricing</value></data>
   <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider pricing</value></data>
-  <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>Connection tests use only built-in test content: a fixed phrase in text mode or the bundled licensed cat image in image mode. They never read user images, OCR, or the library. Providers may charge even when a request times out or is cancelled.</value></data>
+  <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>Connection tests use only built-in test content: a fixed phrase in text mode or the bundled licensed cat image in image mode. They never read user images, OCR, or the library. Providers may charge even when a request times out or is canceled.</value></data>
   <data name="ApiConnectionSectionTitle.Text" xml:space="preserve"><value>Connection test</value></data>
   <data name="TestApiConnectionButton.Content" xml:space="preserve"><value>Test connection</value></data>
-  <data name="TestApiConnectionButton.AutomationProperties.Name" xml:space="preserve"><value>Test API with synthetic content</value></data>
+  <data name="TestApiConnectionButton.AutomationProperties.Name" xml:space="preserve"><value>Test the API connection with built-in test content</value></data>
   <data name="ApiConnectionStatusInfoBar.Title" xml:space="preserve"><value>API status</value></data>
-  <data name="ApiValidationUnverified" xml:space="preserve"><value>Not verified. Save a credential, select the intended payload mode, and run the synthetic test.</value></data>
-  <data name="ApiValidationInvalid" xml:space="preserve"><value>The last synthetic test failed. Remote sending is blocked.</value></data>
-  <data name="ApiValidationModelChanged" xml:space="preserve"><value>The model ID has changed locally. Run the synthetic test to save and verify it before enabling.</value></data>
-  <data name="ApiValidationValidFormat" xml:space="preserve"><value>Compatible synthetic response verified at {0:g}.</value></data>
+  <data name="ApiValidationUnverified" xml:space="preserve"><value>Not verified. Save an API key if required, choose what content to send, and run a connection test.</value></data>
+  <data name="ApiValidationInvalid" xml:space="preserve"><value>The last connection test failed. Sending content to the API is blocked.</value></data>
+  <data name="ApiValidationModelChanged" xml:space="preserve"><value>The model ID has changed. Run a connection test to save and verify it before enabling API analysis.</value></data>
+  <data name="ApiValidationValidFormat" xml:space="preserve"><value>Connection test passed with a compatible response at {0:g}.</value></data>
   <data name="ApiActivationSectionTitle.Text" xml:space="preserve"><value>Test and enable</value></data>
-  <data name="ApiActivationSectionDescription.Text" xml:space="preserve"><value>Test the connection, then confirm the content scope and enable it.</value></data>
+  <data name="ApiActivationSectionDescription.Text" xml:space="preserve"><value>Test the connection, then review what content will be sent and enable API analysis.</value></data>
   <data name="EnableRemoteApiButton.Content" xml:space="preserve"><value>Review consent and enable</value></data>
   <data name="EnableRemoteApiButton.AutomationProperties.Name" xml:space="preserve"><value>Review consent and enable selected API mode</value></data>
   <data name="UseLocalAnalysisButton.Content" xml:space="preserve"><value>Use local analysis</value></data>
   <data name="UseLocalAnalysisButton.AutomationProperties.Name" xml:space="preserve"><value>Return new jobs to local analysis</value></data>
   <data name="RevokeApiConsentButton.Content" xml:space="preserve"><value>Revoke consent</value></data>
   <data name="RevokeApiConsentButton.AutomationProperties.Name" xml:space="preserve"><value>Revoke current API consent and return to local analysis</value></data>
-  <data name="ApiShutdownInfoBar.Title" xml:space="preserve"><value>What shutdown can do</value></data>
-  <data name="ApiShutdownInfoBar.Message" xml:space="preserve"><value>Returning to Local, revoking consent, or deleting the credential blocks requests that have not yet been sent. It cannot recall content already received by a provider, undo possible charges, or guarantee cancellation of an in-flight request.</value></data>
+  <data name="ApiShutdownInfoBar.Title" xml:space="preserve"><value>What happens when you turn off API analysis</value></data>
+  <data name="ApiShutdownInfoBar.Message" xml:space="preserve"><value>Switching to local analysis, revoking consent, or deleting the API key blocks requests that have not yet been sent. It cannot recall content already received by a provider, reverse any charges, or guarantee cancellation of a request already in progress.</value></data>
   <data name="ApiRemoteOcrTextModeName" xml:space="preserve"><value>API · OCR text</value></data>
   <data name="ApiRemoteVisionModeName" xml:space="preserve"><value>API · image</value></data>
-  <data name="ApiConsentDialogTitle" xml:space="preserve"><value>Confirm remote analysis boundary</value></data>
+  <data name="ApiConsentDialogTitle" xml:space="preserve"><value>Review what will be sent for API analysis</value></data>
   <data name="ApiConsentDialogPrimary" xml:space="preserve"><value>Enable remote analysis</value></data>
-  <data name="ApiConsentCheckBoxFormat" xml:space="preserve"><value>I choose {0} with {1} for new analysis jobs and accept this disclosed payload.</value></data>
-  <data name="ApiConsentConsequencesText" xml:space="preserve"><value>Consent is versioned for this provider and payload mode. Changing provider, endpoint, policy scope, or mode requires confirmation again. Provider failure never changes mode or provider automatically.</value></data>
+  <data name="ApiConsentCheckBoxFormat" xml:space="preserve"><value>I choose {0} with {1} for new analysis tasks and agree to send the content described above.</value></data>
+  <data name="ApiConsentConsequencesText" xml:space="preserve"><value>Your consent applies to this provider, input mode, and version of the data-sharing terms. If you change the provider, endpoint, data-sharing terms, or input mode, you must confirm again. If a provider fails, the app will not automatically switch to another provider or mode.</value></data>
   <data name="ApiSettingsUnavailableStatus" xml:space="preserve"><value>API settings are unavailable until local storage is ready.</value></data>
-  <data name="ApiCredentialSavedStatus" xml:space="preserve"><value>Credential saved. Remote execution returned to Local until this key passes a synthetic test.</value></data>
-  <data name="ApiCredentialDeletedStatus" xml:space="preserve"><value>Credential and consent deleted. Requests not yet sent are blocked and new jobs use Local.</value></data>
-  <data name="ApiCredentialRequiredStatus" xml:space="preserve"><value>Save a credential before testing this profile.</value></data>
-  <data name="ApiConnectionSucceededStatus" xml:space="preserve"><value>The provider returned a compatible structured result for the selected synthetic payload.</value></data>
-  <data name="ApiConnectionCredentialRejectedStatus" xml:space="preserve"><value>The provider rejected the credential. It will not be retried automatically.</value></data>
-  <data name="ApiConnectionRateLimitedStatus" xml:space="preserve"><value>The synthetic test was rate-limited. Review provider limits before trying again.</value></data>
-  <data name="ApiConnectionTimedOutStatus" xml:space="preserve"><value>The synthetic test timed out and may still have been processed or charged. It was not resent.</value></data>
-  <data name="ApiConnectionNetworkFailedStatus" xml:space="preserve"><value>The synthetic test could not reach the current API address.</value></data>
+  <data name="ApiCredentialSavedStatus" xml:space="preserve"><value>API key saved. Analysis has switched to local mode until this key passes a connection test.</value></data>
+  <data name="ApiCredentialDeletedStatus" xml:space="preserve"><value>API key deleted and consent revoked. Requests not yet sent are blocked, and new tasks use local analysis.</value></data>
+  <data name="ApiCredentialRequiredStatus" xml:space="preserve"><value>Save an API key before testing this profile.</value></data>
+  <data name="ApiConnectionSucceededStatus" xml:space="preserve"><value>The provider returned a compatible structured result for the selected test content.</value></data>
+  <data name="ApiConnectionCredentialRejectedStatus" xml:space="preserve"><value>The provider rejected the API key. The request will not be retried automatically.</value></data>
+  <data name="ApiConnectionRateLimitedStatus" xml:space="preserve"><value>The connection test reached the provider's rate limit. Check the provider's limits before trying again.</value></data>
+  <data name="ApiConnectionTimedOutStatus" xml:space="preserve"><value>The connection test timed out. The provider may still have processed the request or charged for it. The request was not resent.</value></data>
+  <data name="ApiConnectionNetworkFailedStatus" xml:space="preserve"><value>The connection test could not reach the current API address.</value></data>
   <data name="ApiConnectionModelRejectedStatus" xml:space="preserve"><value>The provider rejected the model, selected input mode, or strict output schema.</value></data>
   <data name="ApiConnectionSchemaFailedStatus" xml:space="preserve"><value>The provider replied, but its result did not satisfy PicForLater's strict structured schema.</value></data>
-  <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>The synthetic test failed. No user image or OCR text was sent.</value></data>
-  <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>Run a successful synthetic test for this provider, model, and payload mode before enabling it.</value></data>
-  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>Local OCR is unavailable. Install or repair the local OCR component, or choose Remote vision mode before enabling remote analysis.</value></data>
-  <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>Remote analysis is enabled for new jobs with the selected provider and payload mode.</value></data>
-  <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>New jobs now use Local. Requests not yet sent are blocked.</value></data>
-  <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>Consent revoked and new jobs returned to Local. Content already received by a provider cannot be recalled.</value></data>
+  <data name="ApiConnectionFailedStatus" xml:space="preserve"><value>The connection test failed. No user images or OCR text were sent.</value></data>
+  <data name="ApiConnectionTestRequiredStatus" xml:space="preserve"><value>A connection test must pass for this provider, model, and input mode before you can enable API analysis.</value></data>
+  <data name="ApiLocalOcrUnavailableStatus" xml:space="preserve"><value>Local OCR is unavailable. Install or repair the local OCR component, or select Send image before enabling API analysis.</value></data>
+  <data name="ApiRemoteEnabledStatus" xml:space="preserve"><value>API analysis is enabled for new tasks with the selected provider and input mode.</value></data>
+  <data name="ApiLocalSelectedStatus" xml:space="preserve"><value>New tasks now use local analysis. Requests not yet sent are blocked.</value></data>
+  <data name="ApiConsentRevokedStatus" xml:space="preserve"><value>Consent revoked. New tasks now use local analysis. Content already received by a provider cannot be recalled.</value></data>
   <data name="ApiOperationFailedStatus" xml:space="preserve"><value>The API setting could not be updated. No privacy boundary was changed.</value></data>
   <data name="ApiCategoryRowTitle.Text" xml:space="preserve"><value>Provider category</value></data>
   <data name="ApiCategoryComboBox.AutomationProperties.Name" xml:space="preserve"><value>API provider category</value></data>
-  <data name="ApiCategoryInternational" xml:space="preserve"><value>International official APIs (5)</value></data>
-  <data name="ApiCategoryChina" xml:space="preserve"><value>China official APIs (8)</value></data>
+  <data name="ApiCategoryInternational" xml:space="preserve"><value>Official APIs from international providers (5)</value></data>
+  <data name="ApiCategoryChina" xml:space="preserve"><value>Official APIs from Chinese providers (8)</value></data>
   <data name="ApiCategoryAggregator" xml:space="preserve"><value>Multi-model and high-speed platforms (4)</value></data>
   <data name="ApiCategoryLocalPrivate" xml:space="preserve"><value>Local and private deployment (2)</value></data>
-  <data name="ApiCategoryCustom" xml:space="preserve"><value>Custom interface</value></data>
+  <data name="ApiCategoryCustom" xml:space="preserve"><value>Custom API</value></data>
   <data name="GenericApiRetentionStatement" xml:space="preserve"><value>Retention and training treatment depends on the provider, plan, region, and current account controls. Review the linked provider policies before consenting.</value></data>
   <data name="LoopbackApiRetentionStatement" xml:space="preserve"><value>Requests use only the selected loopback service on this device. Storage and model behavior are controlled by that local server.</value></data>
   <data name="CustomApiRetentionStatement" xml:space="preserve"><value>PicForLater cannot verify a custom service's owner, retention, training, or pricing. Verify the endpoint and its policies yourself before testing or consenting.</value></data>
   <data name="ApiCredentialNotRequiredState" xml:space="preserve"><value>This loopback/custom profile does not send an authentication credential.</value></data>
-  <data name="ApiCustomInterfaceTitle.Text" xml:space="preserve"><value>Custom compatibility contract</value></data>
+  <data name="ApiCustomInterfaceTitle.Text" xml:space="preserve"><value>Custom API compatibility settings</value></data>
   <data name="ApiCustomEndpointTextBox.Header" xml:space="preserve"><value>Complete POST endpoint</value></data>
   <data name="ApiCustomEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiCustomProtocolComboBox.Header" xml:space="preserve"><value>Request protocol</value></data>
@@ -853,7 +853,7 @@
   <data name="ApiCustomAuthenticationComboBox.Header" xml:space="preserve"><value>Authentication</value></data>
   <data name="ApiAuthenticationBearer.Content" xml:space="preserve"><value>Authorization: Bearer</value></data>
   <data name="ApiAuthenticationXApiKey.Content" xml:space="preserve"><value>x-api-key</value></data>
-  <data name="ApiAuthenticationNone.Content" xml:space="preserve"><value>None (loopback only recommended)</value></data>
+  <data name="ApiAuthenticationNone.Content" xml:space="preserve"><value>None (recommended for loopback only)</value></data>
   <data name="ApiCustomStructuredOutputComboBox.Header" xml:space="preserve"><value>Structured output</value></data>
   <data name="ApiStructuredOutputJsonSchema.Content" xml:space="preserve"><value>JSON Schema</value></data>
   <data name="ApiStructuredOutputJsonObject.Content" xml:space="preserve"><value>JSON Object</value></data>
@@ -862,10 +862,10 @@
   <data name="ApiEndpointTrustLoopback.Content" xml:space="preserve"><value>Loopback HTTP/HTTPS only</value></data>
   <data name="ApiCustomEndpointSafetyInfoBar.Title" xml:space="preserve"><value>Restricted custom endpoint</value></data>
   <data name="ApiCustomEndpointSafetyInfoBar.Message" xml:space="preserve"><value>Public mode requires HTTPS and blocks loopback/private/link-local destinations after DNS resolution. Loopback mode accepts only localhost, 127.0.0.1, or ::1. Redirects are rejected.</value></data>
-  <data name="SaveCustomApiProfileButton.Content" xml:space="preserve"><value>Save custom contract</value></data>
-  <data name="SaveCustomApiProfileButton.AutomationProperties.Name" xml:space="preserve"><value>Save custom API compatibility contract</value></data>
-  <data name="ApiCustomProfileSavedStatus" xml:space="preserve"><value>Custom contract saved. Remote sending remains Local until the selected synthetic test succeeds and consent is confirmed.</value></data>
-  <data name="ApiStructuredOutputPromptOnly.Content" xml:space="preserve"><value>Prompt contract only (broader compatibility)</value></data>
+  <data name="SaveCustomApiProfileButton.Content" xml:space="preserve"><value>Save custom settings</value></data>
+  <data name="SaveCustomApiProfileButton.AutomationProperties.Name" xml:space="preserve"><value>Save custom API compatibility settings</value></data>
+  <data name="ApiCustomProfileSavedStatus" xml:space="preserve"><value>Custom API settings saved. Analysis stays in local mode until the connection test passes and you confirm consent.</value></data>
+  <data name="ApiStructuredOutputPromptOnly.Content" xml:space="preserve"><value>Prompt instructions only (broader compatibility)</value></data>
   <data name="ApiAdvancedSettingsExpander.Header" xml:space="preserve"><value>Advanced model parameters</value></data>
   <data name="ApiReasoningRowTitle.Text" xml:space="preserve"><value>Reasoning effort</value></data>
   <data name="ApiReasoningModeComboBox.AutomationProperties.Name" xml:space="preserve"><value>Model reasoning effort</value></data>
@@ -874,7 +874,7 @@
   <data name="ApiReasoningLow" xml:space="preserve"><value>Low</value></data>
   <data name="ApiReasoningMedium" xml:space="preserve"><value>Medium</value></data>
   <data name="ApiReasoningHigh" xml:space="preserve"><value>High</value></data>
-  <data name="ApiReasoningWireFormatComboBox.Header" xml:space="preserve"><value>Custom interface reasoning parameter format</value></data>
+  <data name="ApiReasoningWireFormatComboBox.Header" xml:space="preserve"><value>Reasoning parameter format for the custom API</value></data>
   <data name="ApiReasoningWireNone.Content" xml:space="preserve"><value>Do not send a reasoning parameter</value></data>
   <data name="ApiReasoningWireThinkingObject.Content" xml:space="preserve"><value>thinking.type</value></data>
   <data name="ApiReasoningWireEffort.Content" xml:space="preserve"><value>reasoning_effort</value></data>
@@ -885,7 +885,7 @@
   <data name="ApiAdvancedSettingsDescription.Text" xml:space="preserve"><value>Saving any change invalidates connection verification and prior consent. Higher reasoning, token, or timeout values may increase latency and cost.</value></data>
   <data name="SaveApiAdvancedSettingsButton.Content" xml:space="preserve"><value>Save advanced settings</value></data>
   <data name="SaveApiAdvancedSettingsButton.AutomationProperties.Name" xml:space="preserve"><value>Save advanced API model parameters</value></data>
-  <data name="ApiAdvancedSettingsSavedStatus" xml:space="preserve"><value>Advanced parameters saved. New work remains Local until the connection is tested again and consent is confirmed.</value></data>
+  <data name="ApiAdvancedSettingsSavedStatus" xml:space="preserve"><value>Advanced settings saved. New tasks use local analysis until the connection is tested again and you confirm consent.</value></data>
   <data name="ApiConnectionContentFailedStatus" xml:space="preserve"><value>The provider returned a structured object, but its title or summary was empty or not grounded in the input, so it failed PicForLater's draft quality check. Keep reasoning disabled and verify that the model follows instructions before retrying.</value></data>
   <data name="RecommendedPpOcrDisplayName" xml:space="preserve"><value>Enhanced OCR</value></data>
   <data name="RecommendedQwenCpuDisplayName" xml:space="preserve"><value>CPU vision model</value></data>
@@ -902,19 +902,19 @@
   <data name="InstalledModelInfoButton.ToolTipService.ToolTip" xml:space="preserve"><value>View technical details</value></data>
   <data name="ModelPackagesSectionTitle.Text" xml:space="preserve"><value>Model packages</value></data>
   <data name="AdvancedSettingsSectionTitle.Text" xml:space="preserve"><value>Advanced settings</value></data>
-  <data name="AdvancedSettingsSectionDescription.Text" xml:space="preserve"><value>Capability slots and model packages</value></data>
+  <data name="AdvancedSettingsSectionDescription.Text" xml:space="preserve"><value>Model assignments and packages</value></data>
   <data name="InstalledModelsExpander.AutomationProperties.Name" xml:space="preserve"><value>Installed model packages</value></data>
   <data name="InstalledModelsExpander.AutomationProperties.HelpText" xml:space="preserve"><value>Expand installed model packages</value></data>
   <data name="InstalledModelsExpandHelpText" xml:space="preserve"><value>Expand installed model packages</value></data>
   <data name="InstalledModelsCollapseHelpText" xml:space="preserve"><value>Collapse installed model packages</value></data>
   <data name="ApiConfigurationSectionTitle.Text" xml:space="preserve"><value>API configuration</value></data>
-  <data name="ApiConfigurationSectionDescription.Text" xml:space="preserve"><value>Choose the provider, model, payload boundary, and credential. Editing configuration never enables remote analysis by itself.</value></data>
-  <data name="ApiCustomInterfaceExpander.Header" xml:space="preserve"><value>Custom interface contract</value></data>
-  <data name="ApiConsentSectionTitle.Text" xml:space="preserve"><value>Confirm payload and enable</value></data>
+  <data name="ApiConfigurationSectionDescription.Text" xml:space="preserve"><value>Choose a provider, model, content to send, and API key. Changing these settings does not enable API analysis.</value></data>
+  <data name="ApiCustomInterfaceExpander.Header" xml:space="preserve"><value>Custom API settings</value></data>
+  <data name="ApiConsentSectionTitle.Text" xml:space="preserve"><value>Review content and enable</value></data>
   <data name="ApiPolicyExpander.Header" xml:space="preserve"><value>Review provider policy, limits, and cost</value></data>
-  <data name="ApiConsentMissingState" xml:space="preserve"><value>No consent exists for the current provider and payload mode. User content is not sent even after a successful connection test.</value></data>
-  <data name="ApiConsentGrantedFormat" xml:space="preserve"><value>Consent is current for “{0}”.</value></data>
-  <data name="ApiConsentDifferentModeState" xml:space="preserve"><value>Consent applies to another payload mode. Review and confirm again after switching.</value></data>
+  <data name="ApiConsentMissingState" xml:space="preserve"><value>You have not given consent for the current provider and input mode. Your content will not be sent, even after a successful connection test.</value></data>
+  <data name="ApiConsentGrantedFormat" xml:space="preserve"><value>Your consent for “{0}” is up to date.</value></data>
+  <data name="ApiConsentDifferentModeState" xml:space="preserve"><value>Your consent applies to a different input mode. Review and confirm again after switching.</value></data>
   <data name="InstalledModelsEmptyText.Text" xml:space="preserve"><value>Installed model packages will appear here.</value></data>
   <data name="ApiProviderSectionDescription.Text" xml:space="preserve"><value>Choose a provider and model. Changing a selection never enables network analysis by itself.</value></data>
   <data name="ApiCredentialCardTitle.Text" xml:space="preserve"><value>Windows Credential Locker</value></data>
@@ -923,8 +923,8 @@
   <data name="ApiEndpointRowTitle.Text" xml:space="preserve"><value>Complete API address</value></data>
   <data name="ApiEndpointTextBox.PlaceholderText" xml:space="preserve"><value>https://api.example.com/v1/chat/completions</value></data>
   <data name="ApiEndpointTextBox.AutomationProperties.Name" xml:space="preserve"><value>Complete API address</value></data>
-  <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>Custom interface contract</value></data>
-  <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>Only a custom interface must declare the request protocol, authentication, structured output, and network boundary.</value></data>
+  <data name="ApiCustomContractSectionTitle.Text" xml:space="preserve"><value>Custom API settings</value></data>
+  <data name="ApiCustomContractSectionDescription.Text" xml:space="preserve"><value>For a custom API, specify the request protocol, authentication method, structured output format, and allowed network destinations.</value></data>
   <data name="ApiEndpointChangeDialogTitle" xml:space="preserve"><value>Change the API address?</value></data>
   <data name="ApiEndpointChangeDialogMessageFormat" xml:space="preserve"><value>API requests and credentials will move from “{0}” to “{1}”. Verify the service owner, cost, and privacy policy. The app will still reject redirects and unsafe network destinations.</value></data>
   <data name="ApiEndpointChangeDialogPrimary" xml:space="preserve"><value>Change anyway</value></data>
@@ -936,7 +936,7 @@
   <data name="RemoveLocalInferenceComponentButton.Content" xml:space="preserve"><value>Remove</value></data>
   <data name="RemoveLocalInferenceComponentButton.AutomationProperties.Name" xml:space="preserve"><value>Remove the local analysis component</value></data>
   <data name="LocalInferenceComponentInstallAction" xml:space="preserve"><value>Download and install</value></data>
-  <data name="LocalInferenceComponentRepairAction" xml:space="preserve"><value>Check for update or repair</value></data>
+  <data name="LocalInferenceComponentRepairAction" xml:space="preserve"><value>Check for updates or repair</value></data>
   <data name="LocalInferenceComponentInstalledStatusFormat" xml:space="preserve"><value>Version {0} is installed and verified.</value></data>
   <data name="LocalInferenceComponentNotInstalledStatus" xml:space="preserve"><value>Not installed. Cloud API analysis remains available.</value></data>
   <data name="LocalInferenceComponentTrustUnavailableStatus" xml:space="preserve"><value>Not installed. Secure download is unavailable until the release signing public key is configured; cloud API analysis remains available.</value></data>
@@ -957,7 +957,7 @@
   <data name="LocalInferenceComponentActivatingStatus" xml:space="preserve"><value>Stopping the old worker and atomically activating the verified component…</value></data>
   <data name="LocalInferenceComponentCompletingStatus" xml:space="preserve"><value>Finishing the local analysis component operation…</value></data>
   <data name="LocalInferenceComponentInsufficientSpaceStatus" xml:space="preserve"><value>There is not enough free disk space for both the download and extracted component. The current component was kept.</value></data>
-  <data name="LocalInferenceComponentDownloadTimedOutStatus" xml:space="preserve"><value>The component download timed out after no data was received. The partial staging data was cleaned.</value></data>
+  <data name="LocalInferenceComponentDownloadTimedOutStatus" xml:space="preserve"><value>The component download timed out because no data was received. Temporary download files were removed.</value></data>
   <data name="LocalInferenceComponentNetworkFailedStatus" xml:space="preserve"><value>The component could not be downloaded from GitHub. Try again when the network is stable.</value></data>
   <data name="LocalInferenceComponentSignatureFailedStatus" xml:space="preserve"><value>The component release manifest did not have a valid trusted signature. Nothing was installed.</value></data>
   <data name="LocalInferenceComponentVerificationFailedStatus" xml:space="preserve"><value>The signed manifest, source, size, SHA-256, archive layout, or installed files failed validation. The current component was kept.</value></data>
@@ -965,7 +965,7 @@
   <data name="LocalInferenceComponentErrorCodeFormat" xml:space="preserve"><value>{0} Error code: {1}</value></data>
   <data name="ScreenshotCaptureSectionTitle.Text" xml:space="preserve"><value>Quick screenshot</value></data>
   <data name="ScreenshotCaptureToggleTitle.Text" xml:space="preserve"><value>Import after a system screenshot</value></data>
-  <data name="ScreenshotCaptureToggleDescription.Text" xml:space="preserve"><value>Press the shortcut, then freely choose a capture mode in the Windows Snipping Tool.</value></data>
+  <data name="ScreenshotCaptureToggleDescription.Text" xml:space="preserve"><value>Press the shortcut, then choose a capture mode in the Windows Snipping Tool.</value></data>
   <data name="ScreenshotCaptureAnalysisDisclosure.Text" xml:space="preserve"><value>Only a new image from this short capture session is read and processed with the current analysis settings.</value></data>
   <data name="ScreenshotCaptureToggle.AutomationProperties.Name" xml:space="preserve"><value>Import after a system screenshot</value></data>
   <data name="ScreenshotHotKeyLabel.Text" xml:space="preserve"><value>Screenshot shortcut</value></data>
@@ -980,11 +980,11 @@
   <data name="ScreenshotCaptureStatusImporting" xml:space="preserve"><value>Importing</value></data>
   <data name="ScreenshotCaptureStatusUnavailable" xml:space="preserve"><value>Shortcut unavailable</value></data>
   <data name="ScreenshotCaptureHotKeyConflictMessage" xml:space="preserve"><value>Another app is using this shortcut. Choose a different combination and try again.</value></data>
-  <data name="ScreenshotCaptureRegistrationFailedMessage" xml:space="preserve"><value>Quick screenshot is unavailable. Turn it off and retry, or choose another shortcut.</value></data>
+  <data name="ScreenshotCaptureRegistrationFailedMessage" xml:space="preserve"><value>Quick screenshot is unavailable. Turn it off and on again, or choose another shortcut.</value></data>
   <data name="ScreenshotCapturePreferenceFailedMessage" xml:space="preserve"><value>The quick screenshot setting could not be saved. The existing setting was kept.</value></data>
   <data name="ScreenshotCaptureNotReadyMessage" xml:space="preserve"><value>Quick screenshot is still preparing. Try again shortly.</value></data>
   <data name="ScreenshotCaptureLaunchFailedMessage" xml:space="preserve"><value>The Windows Snipping Tool could not be started. Try again shortly.</value></data>
-  <data name="ScreenshotCaptureClipboardUnavailableMessage" xml:space="preserve"><value>The Clipboard is temporarily unavailable. This screenshot was not imported.</value></data>
+  <data name="ScreenshotCaptureClipboardUnavailableMessage" xml:space="preserve"><value>The clipboard is temporarily unavailable. This screenshot was not imported.</value></data>
   <data name="ScreenshotCaptureUnsupportedImageMessage" xml:space="preserve"><value>The screenshot image is unsupported and was not imported.</value></data>
   <data name="ScreenshotCaptureImportFailedMessage" xml:space="preserve"><value>The screenshot could not be imported. Existing images and settings were not affected.</value></data>
   <data name="ScreenshotCaptureDuplicateMessage" xml:space="preserve"><value>This screenshot already exists and was not imported again.</value></data>
@@ -1015,13 +1015,13 @@
   <data name="ResetScreenshotHotKeyButton.Content" xml:space="preserve"><value>Restore default</value></data>
   <data name="ResetScreenshotHotKeyButton.AutomationProperties.Name" xml:space="preserve"><value>Restore the default shortcut in this form</value></data>
   <data name="ScreenshotHotKeyInvalidMessage" xml:space="preserve"><value>Set a supported primary key.</value></data>
-  <data name="ScreenshotHotKeyUnsupportedKeyMessage" xml:space="preserve"><value>This key is not supported. Press another single key.</value></data>
-  <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>Phone receive</value></data>
+  <data name="ScreenshotHotKeyUnsupportedKeyMessage" xml:space="preserve"><value>This key is not supported. Press a different key.</value></data>
+  <data name="LocalSendSectionTitle.Text" xml:space="preserve"><value>Receive from phone</value></data>
   <data name="LocalSendReceiveToggleTitle.Text" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
   <data name="LocalSendReceiveToggleDescription.Text" xml:space="preserve"><value>Enable this only on a trusted home or personal local network.</value></data>
   <data name="LocalSendAnalysisDisclosure.Text" xml:space="preserve"><value>Received images use the current analysis mode. API analysis may send them to the configured service.</value></data>
   <data name="LocalSendReceiveToggle.AutomationProperties.Name" xml:space="preserve"><value>Automatically receive images through LocalSend</value></data>
-  <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>Phone receive status</value></data>
+  <data name="LocalSendStatusInfoBar.Title" xml:space="preserve"><value>Phone transfer status</value></data>
   <data name="BeginLocalSendPairingButton.Content" xml:space="preserve"><value>Pair a new device</value></data>
   <data name="BeginLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Pair a new device</value></data>
   <data name="LocalSendPairingInstructions.Text" xml:space="preserve"><value>Select PicForLater in LocalSend on your phone, then send at least one supported image.</value></data>
@@ -1029,7 +1029,7 @@
   <data name="CancelLocalSendPairingButton.Content" xml:space="preserve"><value>Cancel pairing</value></data>
   <data name="CancelLocalSendPairingButton.AutomationProperties.Name" xml:space="preserve"><value>Cancel the current phone pairing</value></data>
   <data name="LocalSendTrustedDevicesTitle.Text" xml:space="preserve"><value>Trusted devices</value></data>
-  <data name="LocalSendTrustedDevicesEmpty.Text" xml:space="preserve"><value>No trusted device has been paired.</value></data>
+  <data name="LocalSendTrustedDevicesEmpty.Text" xml:space="preserve"><value>No trusted devices paired yet.</value></data>
   <data name="LocalSendTrustedDevicesList.AutomationProperties.Name" xml:space="preserve"><value>Trusted LocalSend devices</value></data>
   <data name="LocalSendRemoveDeviceButton.Content" xml:space="preserve"><value>Remove</value></data>
   <data name="LocalSendRemoveDeviceAutomationNameFormat" xml:space="preserve"><value>Remove trusted device {0}</value></data>
@@ -1043,15 +1043,15 @@
   <data name="LocalSendStatusStopping" xml:space="preserve"><value>Status: Stopping</value></data>
   <data name="LocalSendStatusFaulted" xml:space="preserve"><value>Status: Service fault</value></data>
   <data name="LocalSendDiscoveryLimitedMessage" xml:space="preserve"><value>Local-network discovery is limited, but the receiver is still running. Check the firewall or network interface settings.</value></data>
-  <data name="LocalSendReceiverFailedMessage" xml:space="preserve"><value>The phone receiver could not start or stop normally. Turn it off and retry; if the problem continues, check the port and firewall.</value></data>
-  <data name="LocalSendReceiverUnavailableMessage" xml:space="preserve"><value>The phone receiver is unavailable. Resolve the local storage initialization issue first.</value></data>
+  <data name="LocalSendReceiverFailedMessage" xml:space="preserve"><value>The service for receiving images from your phone could not start or stop correctly. Turn it off and try again. If the problem continues, check the port and firewall settings.</value></data>
+  <data name="LocalSendReceiverUnavailableMessage" xml:space="preserve"><value>Receiving images from your phone is unavailable until local storage is ready.</value></data>
   <data name="LocalSendPairingRemainingFormat" xml:space="preserve"><value>{0} remaining</value></data>
   <data name="LocalSendTrustedDevicePairedFormat" xml:space="preserve"><value>Paired {0:d}</value></data>
   <data name="LocalSendRemoveDeviceDialogTitle" xml:space="preserve"><value>Remove trusted device?</value></data>
   <data name="LocalSendRemoveDeviceDialogMessageFormat" xml:space="preserve"><value>After “{0}” is removed, its next transfer will be declined until you pair it again.</value></data>
   <data name="LocalSendRemoveDeviceDialogRemove" xml:space="preserve"><value>Remove</value></data>
   <data name="LocalSendLibraryReceivingStatus" xml:space="preserve"><value>Receiving images from a phone…</value></data>
-  <data name="LocalSendLibraryCancelledFormat" xml:space="preserve"><value>The phone cancelled this transfer. Imported {0}; {1} already existed.</value></data>
+  <data name="LocalSendLibraryCancelledFormat" xml:space="preserve"><value>The phone canceled this transfer. Imported {0}; {1} already existed.</value></data>
   <data name="LocalSendLibraryCompletedFormat" xml:space="preserve"><value>Imported {0}; {1} already existed.</value></data>
   <data name="LocalSendLibraryCompletedWithFailuresFormat" xml:space="preserve"><value>Imported {0}; {1} already existed; {2} could not be imported.</value></data>
 </root>
