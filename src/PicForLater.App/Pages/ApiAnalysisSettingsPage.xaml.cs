@@ -147,8 +147,8 @@ public sealed partial class ApiAnalysisSettingsPage : Page
             useMultipleColumns);
         ApplySettingsRowLayout(ApiEndpointRow, ApiEndpointControlColumn, ApiEndpointTextBox, useMultipleColumns);
         ApplySettingsRowLayout(ApiReasoningRow, ApiReasoningControlColumn, ApiReasoningModeComboBox, useMultipleColumns);
-        ApplySettingsRowLayout(ApiMaxOutputTokensRow, ApiMaxOutputTokensControlColumn, ApiMaxOutputTokensNumberBox, useMultipleColumns);
-        ApplySettingsRowLayout(ApiTimeoutRow, ApiTimeoutControlColumn, ApiTimeoutSecondsNumberBox, useMultipleColumns);
+        ApplySettingsRowLayout(ApiMaxOutputTokensRow, ApiMaxOutputTokensControlColumn, ApiMaxOutputTokensTextBox, useMultipleColumns);
+        ApplySettingsRowLayout(ApiTimeoutRow, ApiTimeoutControlColumn, ApiTimeoutSecondsTextBox, useMultipleColumns);
 
         ApiCustomSecondaryColumn.Width = useMultipleColumns
             ? new GridLength(1, GridUnitType.Star)

@@ -87,10 +87,10 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     public partial RemoteReasoningOption? SelectedReasoningOption { get; set; }
 
     [ObservableProperty]
-    public partial double AdvancedMaxOutputTokens { get; set; } = 1_024;
+    public partial string AdvancedMaxOutputTokens { get; set; } = "1024";
 
     [ObservableProperty]
-    public partial double AdvancedTimeoutSeconds { get; set; } = 60;
+    public partial string AdvancedTimeoutSeconds { get; set; } = "60";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanEnableRemote))]
@@ -299,10 +299,10 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
     partial void OnSelectedReasoningOptionChanged(RemoteReasoningOption? value) =>
         MarkAdvancedSettingsDirty();
 
-    partial void OnAdvancedMaxOutputTokensChanged(double value) =>
+    partial void OnAdvancedMaxOutputTokensChanged(string value) =>
         MarkAdvancedSettingsDirty();
 
-    partial void OnAdvancedTimeoutSecondsChanged(double value) =>
+    partial void OnAdvancedTimeoutSecondsChanged(string value) =>
         MarkAdvancedSettingsDirty();
 
     partial void OnEndpointUriTextChanged(string value)
@@ -531,8 +531,8 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
                 item => item.Mode == profile.ReasoningMode)
                 ?? ReasoningOptions.FirstOrDefault();
             SelectedReasoningWireFormatIndex = (int)profile.ReasoningWireFormat;
-            AdvancedMaxOutputTokens = profile.MaxOutputTokens;
-            AdvancedTimeoutSeconds = profile.TimeoutSeconds;
+            AdvancedMaxOutputTokens = profile.MaxOutputTokens.ToString(CultureInfo.InvariantCulture);
+            AdvancedTimeoutSeconds = profile.TimeoutSeconds.ToString(CultureInfo.InvariantCulture);
             AdvancedSettingsDirty = false;
         }
         finally
@@ -1087,13 +1087,11 @@ public partial class ApiAnalysisSettingsPageViewModel : ObservableObject
             throw new RemoteApiProfileException("remote.protocol-settings-invalid");
         }
 
-        var maxOutputTokens = checked((int)Math.Round(
-            AdvancedMaxOutputTokens,
-            MidpointRounding.AwayFromZero));
-        var timeoutSeconds = checked((int)Math.Round(
-            AdvancedTimeoutSeconds,
-            MidpointRounding.AwayFromZero));
-        if (maxOutputTokens is < 128 or > 32_768
+        if (!int.TryParse(AdvancedMaxOutputTokens, NumberStyles.None,
+                CultureInfo.InvariantCulture, out var maxOutputTokens)
+            || !int.TryParse(AdvancedTimeoutSeconds, NumberStyles.None,
+                CultureInfo.InvariantCulture, out var timeoutSeconds)
+            || maxOutputTokens is < 128 or > 32_768
             || timeoutSeconds is < 5 or > 600)
         {
             throw new RemoteApiProfileException("remote.profile-limits-invalid");

@@ -524,19 +524,15 @@
                                     VerticalAlignment="Center"
                                     FontSize="16"
                                     FontWeight="SemiBold" />
-                                <NumberBox
-                                    x:Name="ApiMaxOutputTokensNumberBox"
-                                    x:Uid="ApiMaxOutputTokensNumberBox"
+                                <TextBox
+                                    x:Name="ApiMaxOutputTokensTextBox"
+                                    x:Uid="ApiMaxOutputTokensTextBox"
                                     Grid.Column="1"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Center"
-                                    AutomationProperties.AutomationId="ApiMaxOutputTokensNumberBox"
-                                    Maximum="32768"
-                                    Minimum="128"
-                                    SmallChange="128"
-                                    SpinButtonPlacementMode="Compact"
-                                    ValidationMode="InvalidInputOverwritten"
-                                    Value="{x:Bind ViewModel.AdvancedMaxOutputTokens, Mode=TwoWay}" />
+                                    AutomationProperties.AutomationId="ApiMaxOutputTokensTextBox"
+                                    InputScope="Number"
+                                    Text="{x:Bind ViewModel.AdvancedMaxOutputTokens, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
 
                             <Border Height="1" Background="{ThemeResource AppDividerBrush}" />
@@ -560,19 +556,15 @@
                                     VerticalAlignment="Center"
                                     FontSize="16"
                                     FontWeight="SemiBold" />
-                                <NumberBox
-                                    x:Name="ApiTimeoutSecondsNumberBox"
-                                    x:Uid="ApiTimeoutSecondsNumberBox"
+                                <TextBox
+                                    x:Name="ApiTimeoutSecondsTextBox"
+                                    x:Uid="ApiTimeoutSecondsTextBox"
                                     Grid.Column="1"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Center"
-                                    AutomationProperties.AutomationId="ApiTimeoutSecondsNumberBox"
-                                    Maximum="600"
-                                    Minimum="5"
-                                    SmallChange="5"
-                                    SpinButtonPlacementMode="Compact"
-                                    ValidationMode="InvalidInputOverwritten"
-                                    Value="{x:Bind ViewModel.AdvancedTimeoutSeconds, Mode=TwoWay}" />
+                                    AutomationProperties.AutomationId="ApiTimeoutSecondsTextBox"
+                                    InputScope="Number"
+                                    Text="{x:Bind ViewModel.AdvancedTimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
 
                             <StackPanel
