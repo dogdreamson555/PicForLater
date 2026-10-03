@@ -1,0 +1,42 @@
+{
+  "version": "10.0.12",
+  "releaseMetadataUri": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json",
+  "architectures": {
+    "x64": {
+      "frameworks": {
+        "Microsoft.NETCore.App": {
+          "fileName": "dotnet-runtime-10.0.12-win-x64.exe",
+          "uri": "https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.12/dotnet-runtime-10.0.12-win-x64.exe",
+          "length": 30663104,
+          "sha256": "02ea072c08f890f9dc0d3ac71b5fd4c2bfcdced4e1133e2d917ce5422b025585",
+          "sha512": "b937ae539c4ab21f885b033178dadea98018baad777252c76251e760d81c18463b2f802e86b6a67ea066690e9ede2d66a6bc3c3e614e391505e98c4c41121400"
+        },
+        "Microsoft.AspNetCore.App": {
+          "fileName": "aspnetcore-runtime-10.0.12-win-x64.exe",
+          "uri": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.12/aspnetcore-runtime-10.0.12-win-x64.exe",
+          "length": 11262864,
+          "sha256": "e5d20698ea8cdda55bcf8d6151d5b65097761506a1d8ed9af39910cfc956e5ad",
+          "sha512": "1bd1cf3cc23a05611bf266046281c7bfb6c3231a9690482ddc31ea74ede62eaded12517c362983976aa7e20c57108812dcd04f67884957b85a6829cd56ceaac5"
+        }
+      }
+    },
+    "arm64": {
+      "frameworks": {
+        "Microsoft.NETCore.App": {
+          "fileName": "dotnet-runtime-10.0.12-win-arm64.exe",
+          "uri": "https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.12/dotnet-runtime-10.0.12-win-arm64.exe",
+          "length": 28447832,
+          "sha256": "3d4d1e1b90476a228e2fad8292a60ce85dca988be207ac20936b363f271bb71a",
+          "sha512": "45c8fcf4102c5c0d36bd9a85f9f35f10225f37415bf2479cf85b9f460b8a8e279d9e9210c5e7ac53604aea19e4aafa8ae35279f6bbfaf31816f6f27c1f2750df"
+        },
+        "Microsoft.AspNetCore.App": {
+          "fileName": "aspnetcore-runtime-10.0.12-win-arm64.exe",
+          "uri": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.12/aspnetcore-runtime-10.0.12-win-arm64.exe",
+          "length": 10738408,
+          "sha256": "bdfb5c9be6c7e12a7a15a56f9d7b14ad1bd26f7e27c2b2fcb11bcca6ee261cf3",
+          "sha512": "3d8ae88821a4b223f6943e73b58029072661f5f4a206e03a5c9a5178ae53cd8bca9fe366a13ddccbcbd38a9cc11a025cfb1d3a51eefc2b3d9190d0b0f4b3b7b1"
+        }
+      }
+    }
+  }
+}

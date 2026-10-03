@@ -48,9 +48,17 @@ PicForLater 是一款面向 Windows 的图片资料整理应用，用来保存�
 ## 系统要求与安装
 
 - Windows 10 版本 2004（Build 19041）或更高版本。
-- 前往 [Releases](https://github.com/dogdreamson555/PicForLater/releases/) 下载与设备架构一致的安装程序：
-  - `PicForLater-Setup-<version>-x64.exe`
-  - `PicForLater-Setup-<version>-arm64.exe`
+- 运行时依赖 .NET 10；Windows 10 的受支持范围受 [.NET 官方支持系统列表](https://learn.microsoft.com/dotnet/core/install/windows)约束，目前仅限列出的 LTSC / Enterprise 版本。安装器保留 Build 19041 的 Windows App SDK 最低门槛，但不表示所有 Build 19041 及以上的 Windows 10 版本都受 .NET 10 支持。
+- 前往 [Releases](https://github.com/dogdreamson555/PicForLater/releases/) 下载与设备**原生架构**一致的安装程序：x64 安装器仅用于 x64 Windows；ARM64 设备使用 ARM64 安装器。
+
+| 类型 | x64 | ARM64 |
+| --- | --- | --- |
+| 在线安装器（推荐） | `PicForLater-Setup-<version>-x64.exe` | `PicForLater-Setup-<version>-arm64.exe` |
+| 离线安装器 | `PicForLater-Setup-Offline-<version>-x64.exe` | `PicForLater-Setup-Offline-<version>-arm64.exe` |
+
+在线安装器只在设备缺少满足版本要求的运行库时才下载依赖：.NET 与 ASP.NET Core Runtime 由微软官方下载，Windows App Runtime 与 Visual C++ Runtime 从同一 GitHub Release 下载。已有兼容运行库会复用，因此普通应用更新通常只需下载在线安装器；若新版本提高了最低运行库要求，才会补装对应依赖。首次安装的总下载量取决于设备已有的运行库，可能远大于在线安装器本身的体积。补装 .NET、ASP.NET Core 或 Visual C++ Runtime 时，可能分别出现管理员授权提示。
+
+离线安装器包含上述运行库，无需联网即可安装，但文件更大。应用本身保持 per-user 安装并继续作为 unpackaged WinUI 3 程序运行；安装或更新不需要用户另行安装 .NET SDK，也不会删除 `%LocalAppData%\PicForLater` 中的资料。
 
 > [!WARNING]
 > 当前安装程序未进行代码签名，因此 Windows SmartScreen、Smart App Control 或组织策略可能显示警告或阻止运行。
@@ -242,8 +250,12 @@ dotnet test .\PicForLater.slnx -c Release --no-build --no-restore
 # 真正的 unpackaged publish，并校验 Runtime、PRI/XBF、许可证和禁止文件；不编译 Setup.exe
 .\tools\release\Build-Setup.ps1 -Platform x64 -DryRun
 
-# 安装 Inno Setup 后构建本地 Setup；正式发行物仍只由 GitHub Actions 生成
-.\tools\release\Build-Setup.ps1 -Platform x64
+# 安装 Inno Setup 后构建本地在线 / 离线安装器；正式发行物仍只由 GitHub Actions 生成
+.\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Online
+.\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Offline
+
+# 同一次 publish 产出在线和离线安装器
+.\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Both
 ```
 
 性能基线见 [docs/performance.md](docs/performance.md)。

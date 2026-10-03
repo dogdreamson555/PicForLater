@@ -12,11 +12,13 @@ param(
 
     [string]$InnoCompilerPath,
 
+    [ValidateSet('Online', 'Offline', 'Both')]
+    [string]$Distribution = 'Online',
+
     [switch]$NoRestore,
 
     [switch]$DryRun,
 
-    # Backward-compatible name retained for existing local invocations.
     [switch]$SkipCompile
 )
 
@@ -26,7 +28,10 @@ $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $projectPath = Join-Path $repositoryRoot 'src\PicForLater.App\PicForLater.App.csproj'
 $setupScriptPath = Join-Path $PSScriptRoot 'setup\PicForLater.iss'
-$runtimeManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
+$prerequisitesScriptPath = Join-Path $PSScriptRoot 'setup\Install-Prerequisites.ps1'
+$dependencyBuilderPath = Join-Path $PSScriptRoot 'Build-SetupDependencies.ps1'
+$dotnetManifestPath = Join-Path $PSScriptRoot 'setup\dotnet-runtime.json'
+$windowsAppSdkManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
 $visualCppManifestPath = Join-Path $PSScriptRoot 'setup\visual-cpp-runtime.json'
 $isDryRun = $DryRun -or $SkipCompile
 
@@ -63,7 +68,10 @@ $runtimeCacheRootPath = [IO.Path]::GetFullPath($RuntimeCacheRoot)
 $releaseRoot = Join-Path $outputRootPath "$Version\$architecture"
 $publishRoot = Join-Path $releaseRoot 'app'
 $installerRoot = Join-Path $releaseRoot 'installer'
-$setupPath = Join-Path $installerRoot "PicForLater-Setup-$Version-$architecture.exe"
+$prerequisitesRoot = Join-Path $releaseRoot 'prerequisites'
+$onlineSetupPath = Join-Path $installerRoot "PicForLater-Setup-$Version-$architecture.exe"
+$offlineSetupPath = Join-Path $installerRoot "PicForLater-Setup-Offline-$Version-$architecture.exe"
+$setupPath = if ($Distribution -eq 'Offline') { $offlineSetupPath } else { $onlineSetupPath }
 
 function Assert-PathUnderRoot {
     param(
@@ -80,6 +88,15 @@ function Assert-PathUnderRoot {
 
 Assert-PathUnderRoot -Path $publishRoot -Root $outputRootPath
 Assert-PathUnderRoot -Path $installerRoot -Root $outputRootPath
+Assert-PathUnderRoot -Path $prerequisitesRoot -Root $outputRootPath
+$cachePrefix = [IO.Path]::TrimEndingDirectorySeparator($runtimeCacheRootPath) + [IO.Path]::DirectorySeparatorChar
+$releasePrefix = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($releaseRoot)) + [IO.Path]::DirectorySeparatorChar
+if ([IO.Path]::TrimEndingDirectorySeparator($runtimeCacheRootPath) -ieq
+        [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($releaseRoot)) -or
+    $runtimeCacheRootPath.StartsWith($releasePrefix, [StringComparison]::OrdinalIgnoreCase) -or
+    [IO.Path]::GetFullPath($releaseRoot).StartsWith($cachePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'RuntimeCacheRoot must not overlap the versioned release output directory.'
+}
 
 $setupDefinition = Get-Content -Raw -LiteralPath $setupScriptPath
 foreach ($requiredSetupDirective in @(
@@ -87,108 +104,60 @@ foreach ($requiredSetupDirective in @(
     'DefaultDirName={localappdata}\Programs\PicForLater',
     'MinVersion=10.0.19041',
     'Source: "{#AppPublishDir}\*"',
-    'Source: "{#RuntimeInstallerPath}"',
-    'Source: "{#VisualCppRuntimeInstallerPath}"',
-    'Parameters: "--uninstall-notifications"')) {
+    'Source: "{#PrerequisitesDir}\prerequisites.json"; Flags: dontcopy',
+    'Parameters: "--uninstall-notifications"',
+    '#if Distribution == "Offline"')) {
     if (-not $setupDefinition.Contains($requiredSetupDirective, [StringComparison]::Ordinal)) {
         throw "The Inno Setup definition is missing a required release directive: $requiredSetupDirective"
     }
 }
-if ($setupDefinition -match '(?im)^\s*(DelTree|DeleteFile|DeleteDir)\b' -or
+if ($setupDefinition -match '(?im)^\s*(DelTree|DeleteDir)\b' -or
     $setupDefinition.Contains('{localappdata}\PicForLater', [StringComparison]::OrdinalIgnoreCase)) {
     throw 'The Inno Setup definition must not delete or target the PicForLater user-data root.'
 }
+foreach ($requiredBuildFile in @($prerequisitesScriptPath, $dependencyBuilderPath, $dotnetManifestPath,
+    $windowsAppSdkManifestPath, $visualCppManifestPath)) {
+    if (-not (Test-Path -LiteralPath $requiredBuildFile -PathType Leaf)) {
+        throw "A required setup build file was not found: $requiredBuildFile"
+    }
+}
 
-$runtimeManifest = Get-Content -Raw -LiteralPath $runtimeManifestPath | ConvertFrom-Json
-$visualCppManifest = Get-Content -Raw -LiteralPath $visualCppManifestPath | ConvertFrom-Json
 $appProject = [xml](Get-Content -Raw -LiteralPath $projectPath)
 $windowsAppSdkReference = $appProject.SelectSingleNode(
     "/Project/ItemGroup/PackageReference[@Include='Microsoft.WindowsAppSDK']")
+$windowsAppSdkManifest = Get-Content -Raw -LiteralPath $windowsAppSdkManifestPath | ConvertFrom-Json
 if ($null -eq $windowsAppSdkReference -or
-    $windowsAppSdkReference.GetAttribute('Version') -ne $runtimeManifest.version) {
-    throw 'The pinned Windows App SDK Runtime does not match the App PackageReference.'
+    $windowsAppSdkReference.GetAttribute('Version') -ne [string]$windowsAppSdkManifest.version) {
+    throw 'The pinned Windows App SDK Runtime does not match the app PackageReference.'
 }
 
-$runtimeDefinition = $runtimeManifest.architectures.$architecture
-if ($null -eq $runtimeDefinition) {
-    throw "No Windows App SDK Runtime is pinned for $architecture."
+$dotnetManifest = Get-Content -Raw -LiteralPath $dotnetManifestPath | ConvertFrom-Json
+$visualCppManifest = Get-Content -Raw -LiteralPath $visualCppManifestPath | ConvertFrom-Json
+if ($dotnetManifest.version -notmatch '^\d+\.\d+\.\d+$' -or
+    $visualCppManifest.version -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+    throw 'A prerequisite manifest has an invalid pinned version.'
 }
-$visualCppDefinition = $visualCppManifest.architectures.$architecture
-if ($null -eq $visualCppDefinition) {
-    throw "No Microsoft Visual C++ Runtime is pinned for $architecture."
-}
-
-New-Item -ItemType Directory -Path $runtimeCacheRootPath -Force | Out-Null
-$runtimeInstallerPath = Join-Path $runtimeCacheRootPath (
-    "WindowsAppRuntimeInstall-$architecture-$($runtimeManifest.version).exe")
-$visualCppInstallerPath = Join-Path $runtimeCacheRootPath (
-    "VC_redist-$architecture-$($visualCppManifest.version).exe")
-
-function Test-MicrosoftInstaller {
-    param(
-        [Parameter(Mandatory = $true)][string]$Path,
-        [Parameter(Mandatory = $true)][object]$Definition,
-        [string]$ExpectedFileVersion
-    )
-
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        return $false
-    }
-
-    $file = Get-Item -LiteralPath $Path
-    if ($file.Length -ne [long]$Definition.length) {
-        return $false
-    }
-
-    $hash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
-    if (-not $hash.Equals([string]$Definition.sha256, [StringComparison]::OrdinalIgnoreCase)) {
-        return $false
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($ExpectedFileVersion) -and
-        $file.VersionInfo.FileVersion -ne $ExpectedFileVersion) {
-        return $false
-    }
-
-    $signature = Get-AuthenticodeSignature -FilePath $Path
-    return $signature.Status.ToString() -eq 'Valid' -and
-        $null -ne $signature.SignerCertificate -and
-        $signature.SignerCertificate.Subject -like 'CN=Microsoft Corporation,*'
-}
-
-if (-not (Test-MicrosoftInstaller -Path $runtimeInstallerPath -Definition $runtimeDefinition)) {
-    $temporaryRuntimePath = "$runtimeInstallerPath.$([Guid]::NewGuid().ToString('N')).partial"
-    try {
-        Invoke-WebRequest -Uri $runtimeDefinition.uri -OutFile $temporaryRuntimePath -UseBasicParsing
-        if (-not (Test-MicrosoftInstaller -Path $temporaryRuntimePath -Definition $runtimeDefinition)) {
-            throw 'The downloaded Windows App SDK Runtime failed length, SHA-256, or Microsoft signature validation.'
+foreach ($framework in @('Microsoft.NETCore.App', 'Microsoft.AspNetCore.App')) {
+    foreach ($manifestArchitecture in @('x64', 'arm64')) {
+        $definition = $dotnetManifest.architectures.$manifestArchitecture.frameworks.$framework
+        if ($null -eq $definition -or
+            $definition.fileName -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]*\.exe$' -or
+            $definition.uri -notmatch '^https://builds\.dotnet\.microsoft\.com/' -or
+            [long]$definition.length -le 0 -or
+            $definition.sha256 -notmatch '^[0-9a-f]{64}$' -or
+            $definition.sha512 -notmatch '^[0-9a-f]{128}$') {
+            throw "Invalid $framework prerequisite metadata for $manifestArchitecture."
         }
-
-        Move-Item -LiteralPath $temporaryRuntimePath -Destination $runtimeInstallerPath -Force
-    }
-    finally {
-        Remove-Item -LiteralPath $temporaryRuntimePath -Force -ErrorAction SilentlyContinue
     }
 }
-
-if (-not (Test-MicrosoftInstaller `
-    -Path $visualCppInstallerPath `
-    -Definition $visualCppDefinition `
-    -ExpectedFileVersion $visualCppManifest.version)) {
-    $temporaryVisualCppPath = "$visualCppInstallerPath.$([Guid]::NewGuid().ToString('N')).partial"
-    try {
-        Invoke-WebRequest -Uri $visualCppDefinition.uri -OutFile $temporaryVisualCppPath -UseBasicParsing
-        if (-not (Test-MicrosoftInstaller `
-            -Path $temporaryVisualCppPath `
-            -Definition $visualCppDefinition `
-            -ExpectedFileVersion $visualCppManifest.version)) {
-            throw 'The downloaded Microsoft Visual C++ Runtime failed version, length, SHA-256, or Microsoft signature validation.'
-        }
-
-        Move-Item -LiteralPath $temporaryVisualCppPath -Destination $visualCppInstallerPath -Force
-    }
-    finally {
-        Remove-Item -LiteralPath $temporaryVisualCppPath -Force -ErrorAction SilentlyContinue
+foreach ($manifestArchitecture in @('x64', 'arm64')) {
+    $definition = $visualCppManifest.architectures.$manifestArchitecture
+    if ($null -eq $definition -or
+        $definition.fileName -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]*\.exe$' -or
+        $definition.sourceUri -notmatch '^https://download\.visualstudio\.microsoft\.com/' -or
+        [long]$definition.length -le 0 -or
+        $definition.sha256 -notmatch '^[0-9a-f]{64}$') {
+        throw "Invalid Microsoft Visual C++ prerequisite metadata for $manifestArchitecture."
     }
 }
 
@@ -197,6 +166,9 @@ if (Test-Path -LiteralPath $publishRoot) {
 }
 if (Test-Path -LiteralPath $installerRoot) {
     Remove-Item -LiteralPath $installerRoot -Recurse -Force
+}
+if (Test-Path -LiteralPath $prerequisitesRoot) {
+    Remove-Item -LiteralPath $prerequisitesRoot -Recurse -Force
 }
 New-Item -ItemType Directory -Path $publishRoot,$installerRoot -Force | Out-Null
 
@@ -207,8 +179,9 @@ $publishArguments = @(
     'Release',
     "-p:Platform=$Platform",
     "-p:RuntimeIdentifier=$runtimeIdentifier",
-    '-p:SelfContained=true',
+    '-p:SelfContained=false',
     '-p:WindowsAppSDKSelfContained=false',
+    '-p:AppHostDotNetSearch=Global',
     '-p:PublishReadyToRun=false',
     '-p:PublishTrimmed=false',
     '-p:DebugSymbols=false',
@@ -221,7 +194,7 @@ if ($NoRestore) {
     $publishArguments += '--no-restore'
 }
 
-& dotnet @publishArguments
+& dotnet @publishArguments | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "The core unpackaged publish failed with exit code $LASTEXITCODE."
 }
@@ -249,18 +222,35 @@ foreach ($requiredUiAsset in @('PicForLater.App.pri', 'App.xbf', 'MainWindow.xbf
     }
 }
 
-# LocalSendDotNet.Core brings Microsoft.AspNetCore.App as a framework reference.
-# The unpackaged app is self-contained, so the hosting and Kestrel implementation
-# must be present in the application publish instead of relying on a machine-wide
-# ASP.NET Core runtime.
-foreach ($requiredAspNetCoreAsset in @(
-    'Microsoft.AspNetCore.Hosting.dll',
-    'Microsoft.AspNetCore.Server.Kestrel.Core.dll',
-    'Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll',
-    'Microsoft.Extensions.Hosting.dll')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $publishRoot $requiredAspNetCoreAsset) -PathType Leaf)) {
-        throw "The self-contained publish is missing a LocalSend server dependency: $requiredAspNetCoreAsset"
+$runtimeConfigPath = Join-Path $publishRoot 'PicForLater.App.runtimeconfig.json'
+if (-not (Test-Path -LiteralPath $runtimeConfigPath -PathType Leaf)) {
+    throw 'The framework-dependent publish is missing its runtime configuration.'
+}
+$runtimeConfig = Get-Content -Raw -LiteralPath $runtimeConfigPath | ConvertFrom-Json
+$runtimeFrameworkDefinitions = @($runtimeConfig.runtimeOptions.frameworks)
+$runtimeFrameworkNames = @($runtimeFrameworkDefinitions | ForEach-Object { [string]$_.name })
+$requiredFrameworks = @('Microsoft.NETCore.App', 'Microsoft.AspNetCore.App')
+if ($runtimeFrameworkDefinitions.Count -ne $requiredFrameworks.Count -or
+    @(Compare-Object $requiredFrameworks $runtimeFrameworkNames).Count -ne 0) {
+    throw 'The framework-dependent publish must declare exactly .NET and ASP.NET Core runtimes.'
+}
+$pinnedDotNetVersion = [version]$dotnetManifest.version
+foreach ($framework in $runtimeFrameworkDefinitions) {
+    $declaredFrameworkVersion = [version]$framework.version
+    if ($declaredFrameworkVersion.Major -ne $pinnedDotNetVersion.Major -or
+        $declaredFrameworkVersion.Minor -ne $pinnedDotNetVersion.Minor -or
+        $pinnedDotNetVersion -lt $declaredFrameworkVersion) {
+        throw "The pinned .NET prerequisite $pinnedDotNetVersion cannot satisfy $($framework.name) $declaredFrameworkVersion."
     }
+}
+if ($null -ne $runtimeConfig.runtimeOptions.PSObject.Properties['includedFrameworks']) {
+    throw 'The app publish unexpectedly bundles .NET runtime frameworks.'
+}
+$localRuntimeFiles = @($publishedFiles | Where-Object {
+    $_.Name -in @('coreclr.dll', 'hostfxr.dll', 'hostpolicy.dll', 'System.Private.CoreLib.dll')
+})
+if ($localRuntimeFiles.Count -ne 0) {
+    throw "The framework-dependent app publish contains a local .NET runtime: $($localRuntimeFiles.Name -join ', ')"
 }
 
 $requiredDistributionFiles = @(
@@ -297,66 +287,86 @@ if ($forbiddenPackageFiles.Count -ne 0) {
     throw "The unpackaged publish contains an application package artifact: $($forbiddenPackageFiles.Name -join ', ')"
 }
 
-if ($isDryRun) {
-    [pscustomobject]@{
-        DryRun = $true
-        Version = $Version
-        Architecture = $architecture
-        PublishDirectory = $publishRoot
-        PublishFileCount = $publishedFiles.Count
-        PublishBytes = ($publishedFiles | Measure-Object Length -Sum).Sum
-        RuntimeInstaller = $runtimeInstallerPath
-        VisualCppRuntimeInstaller = $visualCppInstallerPath
-        ExpectedSetup = $setupPath
-        Setup = $null
+$dependencyResult = & $dependencyBuilderPath `
+    -Version $Version `
+    -Architecture $architecture `
+    -WindowsAppSdkVersion ([string]$windowsAppSdkManifest.version) `
+    -PublishDirectory $publishRoot `
+    -PrerequisitesDirectory $prerequisitesRoot `
+    -RuntimeCacheDirectory $runtimeCacheRootPath `
+    -DotNetManifestPath $dotnetManifestPath `
+    -VisualCppManifestPath $visualCppManifestPath
+$prerequisiteFiles = @($dependencyResult.PrerequisiteFiles)
+$visualCppRuntimeInstallerPath = [string]$dependencyResult.VisualCppRuntimeFile
+$runtimeInstallerPath = [string]$dependencyResult.WindowsAppRuntimeFile
+$publishedFiles = @(Get-ChildItem -LiteralPath $publishRoot -File -Recurse)
+
+if (-not $isDryRun) {
+    if ([string]::IsNullOrWhiteSpace($InnoCompilerPath)) {
+        $compilerCandidates = @(
+            (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1),
+            (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
+            'C:\Program Files\Inno Setup 7\ISCC.exe',
+            'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
+            'C:\Program Files\Inno Setup 6\ISCC.exe'
+        ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        $InnoCompilerPath = $compilerCandidates |
+            Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+            Select-Object -First 1
     }
-    exit
+    if ([string]::IsNullOrWhiteSpace($InnoCompilerPath) -or
+        -not (Test-Path -LiteralPath $InnoCompilerPath -PathType Leaf)) {
+        throw 'Inno Setup Compiler (ISCC.exe) was not found. Install Inno Setup or pass -InnoCompilerPath.'
+    }
+
+    $distributionsToBuild = if ($Distribution -eq 'Both') { @('Online', 'Offline') } else { @($Distribution) }
+    foreach ($currentDistribution in $distributionsToBuild) {
+        $compilerArguments = @(
+            '/Qp',
+            "/DAppVersion=$Version",
+            "/DAppArchitecture=$architecture",
+            "/DAppPublishDir=$publishRoot",
+            "/DPrerequisitesDir=$prerequisitesRoot",
+            "/DPrerequisitesScriptPath=$prerequisitesScriptPath",
+            "/DDistribution=$currentDistribution",
+            "/DSetupOutputDir=$installerRoot",
+            "/DRepositoryRoot=$repositoryRoot"
+        )
+        & $InnoCompilerPath @compilerArguments $setupScriptPath | Out-Host
+        if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup compilation failed for $currentDistribution with exit code $LASTEXITCODE."
+        }
+    }
+
+    foreach ($expectedPath in @(
+        if ($Distribution -in @('Online', 'Both')) { $onlineSetupPath }
+        if ($Distribution -in @('Offline', 'Both')) { $offlineSetupPath }
+    )) {
+        if (-not (Test-Path -LiteralPath $expectedPath -PathType Leaf)) {
+            throw "The expected Setup executable was not produced: $expectedPath"
+        }
+    }
 }
 
-if ([string]::IsNullOrWhiteSpace($InnoCompilerPath)) {
-    $compilerCandidates = @(
-        (Get-Command ISCC.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1),
-        (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
-        'C:\Program Files\Inno Setup 7\ISCC.exe',
-        'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
-        'C:\Program Files\Inno Setup 6\ISCC.exe'
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $InnoCompilerPath = $compilerCandidates |
-        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
-        Select-Object -First 1
-}
-if ([string]::IsNullOrWhiteSpace($InnoCompilerPath) -or
-    -not (Test-Path -LiteralPath $InnoCompilerPath -PathType Leaf)) {
-    throw 'Inno Setup Compiler (ISCC.exe) was not found. Install Inno Setup or pass -InnoCompilerPath.'
-}
-
-& $InnoCompilerPath `
-    '/Qp' `
-    "/DAppVersion=$Version" `
-    "/DAppArchitecture=$architecture" `
-    "/DAppPublishDir=$publishRoot" `
-    "/DRuntimeInstallerPath=$runtimeInstallerPath" `
-    "/DVisualCppRuntimeInstallerPath=$visualCppInstallerPath" `
-    "/DSetupOutputDir=$installerRoot" `
-    "/DRepositoryRoot=$repositoryRoot" `
-    $setupScriptPath
-if ($LASTEXITCODE -ne 0) {
-    throw "Inno Setup compilation failed with exit code $LASTEXITCODE."
-}
-
-if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
-    throw "The expected Setup executable was not produced: $setupPath"
-}
-
-[pscustomobject]@{
-    DryRun = $false
+$result = [ordered]@{
+    DryRun = $isDryRun
     Version = $Version
     Architecture = $architecture
+    Distribution = $Distribution
     PublishDirectory = $publishRoot
     PublishFileCount = $publishedFiles.Count
     PublishBytes = ($publishedFiles | Measure-Object Length -Sum).Sum
+    PrerequisitesDirectory = $prerequisitesRoot
+    PrerequisiteFiles = $prerequisiteFiles
     RuntimeInstaller = $runtimeInstallerPath
-    VisualCppRuntimeInstaller = $visualCppInstallerPath
-    Setup = $setupPath
-    SetupBytes = (Get-Item -LiteralPath $setupPath).Length
+    VisualCppRuntimeInstaller = $visualCppRuntimeInstallerPath
+    Setup = if (-not $isDryRun) { $setupPath } else { $null }
+    SetupBytes = if (-not $isDryRun) { (Get-Item -LiteralPath $setupPath).Length } else { $null }
+    OfflineSetup = if (-not $isDryRun -and $Distribution -in @('Offline', 'Both')) { $offlineSetupPath } else { $null }
+    OfflineSetupBytes = if (-not $isDryRun -and $Distribution -in @('Offline', 'Both')) { (Get-Item -LiteralPath $offlineSetupPath).Length } else { $null }
 }
+if ($isDryRun) {
+    $result['ExpectedSetup'] = $setupPath
+    $result['ExpectedOfflineSetup'] = if ($Distribution -in @('Offline', 'Both')) { $offlineSetupPath } else { $null }
+}
+[pscustomobject]$result

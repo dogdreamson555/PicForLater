@@ -15,6 +15,8 @@ $componentBuildPath = Join-Path $PSScriptRoot 'Publish-LocalInferenceComponent.p
 $setupDefinitionPath = Join-Path $PSScriptRoot 'setup\PicForLater.iss'
 $runtimeManifestPath = Join-Path $PSScriptRoot 'setup\windows-app-runtime.json'
 $visualCppManifestPath = Join-Path $PSScriptRoot 'setup\visual-cpp-runtime.json'
+$dotNetManifestPath = Join-Path $PSScriptRoot 'setup\dotnet-runtime.json'
+$prerequisitesScriptPath = Join-Path $PSScriptRoot 'setup\Install-Prerequisites.ps1'
 $appProjectPath = Join-Path $repositoryRoot 'src\PicForLater.App\PicForLater.App.csproj'
 $arm64ComponentLockPath = Join-Path $repositoryRoot 'src\PicForLater.LocalInference\packages.arm64.lock.json'
 
@@ -26,6 +28,8 @@ foreach ($requiredPath in @(
     $setupDefinitionPath,
     $runtimeManifestPath,
     $visualCppManifestPath,
+    $dotNetManifestPath,
+    $prerequisitesScriptPath,
     $appProjectPath,
     $arm64ComponentLockPath,
     (Join-Path $repositoryRoot 'global.json'))) {
@@ -101,9 +105,13 @@ foreach ($requiredReleaseToken in @(
     'local-inference-$arch.release.json',
     'artifacts/github/${{ matrix.artifact_arch }}/*',
     'if-no-files-found: error',
-    'Expected exactly four release assets',
+    'Expected exactly seven release assets',
     'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c',
-    'Expected exactly eight GitHub Release assets',
+    'Expected exactly fourteen GitHub Release assets',
+    '-Distribution Both',
+    'PicForLater-Setup-Offline-$env:APP_VERSION-$arch.exe',
+    'WindowsAppRuntime-$env:WINDOWS_APP_RUNTIME_VERSION-$arch.zip',
+    'VC_redist-$arch-$env:VISUAL_CPP_VERSION.exe',
     'contents: write',
     'gh release create')) {
     if (-not $release.Contains($requiredReleaseToken, [StringComparison]::Ordinal)) {
@@ -113,6 +121,7 @@ foreach ($requiredReleaseToken in @(
 
 $runtimeManifest = Get-Content -Raw -LiteralPath $runtimeManifestPath | ConvertFrom-Json
 $visualCppManifest = Get-Content -Raw -LiteralPath $visualCppManifestPath | ConvertFrom-Json
+$dotNetManifest = Get-Content -Raw -LiteralPath $dotNetManifestPath | ConvertFrom-Json
 $appProject = [xml](Get-Content -Raw -LiteralPath $appProjectPath)
 $windowsAppSdkReference = $appProject.SelectSingleNode(
     "/Project/ItemGroup/PackageReference[@Include='Microsoft.WindowsAppSDK']")
@@ -138,19 +147,21 @@ if ($null -eq $applicationIcon -or $applicationIcon.InnerText -ne 'Assets\AppIco
     throw 'The App executable must embed Assets\AppIcon.ico for installed shortcuts.'
 }
 foreach ($architecture in @('x64', 'arm64')) {
-    $definition = $runtimeManifest.architectures.$architecture
-    if ($null -eq $definition -or
-        [long]$definition.length -le 0 -or
-        [string]$definition.sha256 -notmatch '^[0-9a-f]{64}$' -or
-        [string]$definition.uri -notmatch '^https://') {
-        throw "The offline Runtime definition is incomplete for $architecture."
+    foreach ($framework in @('Microsoft.NETCore.App', 'Microsoft.AspNetCore.App')) {
+        $definition = $dotNetManifest.architectures.$architecture.frameworks.$framework
+        if ($null -eq $definition -or [long]$definition.length -le 0 -or
+            [string]$definition.sha256 -notmatch '^[0-9a-f]{64}$' -or
+            [string]$definition.sha512 -notmatch '^[0-9a-f]{128}$' -or
+            [string]$definition.uri -notmatch '^https://builds\.dotnet\.microsoft\.com/') {
+            throw "The $framework definition is incomplete for $architecture."
+        }
     }
 
     $visualCppDefinition = $visualCppManifest.architectures.$architecture
     if ($null -eq $visualCppDefinition -or
         [long]$visualCppDefinition.length -le 0 -or
         [string]$visualCppDefinition.sha256 -notmatch '^[0-9a-f]{64}$' -or
-        [string]$visualCppDefinition.uri -notmatch '^https://') {
+        [string]$visualCppDefinition.sourceUri -notmatch '^https://download\.visualstudio\.microsoft\.com/') {
         throw "The Microsoft Visual C++ Runtime definition is incomplete for $architecture."
     }
 }
@@ -161,7 +172,7 @@ if ([string]$visualCppManifest.version -notmatch '^\d+\.\d+\.\d+\.\d+$') {
 $setupBuild = Get-Content -Raw -LiteralPath $setupBuildPath
 $setupDefinition = Get-Content -Raw -LiteralPath $setupDefinitionPath
 foreach ($requiredVisualCppToken in @(
-    'VisualCppRuntimeInstallerPath',
+    'PrerequisitesDir',
     '/install /quiet /norestart',
     'ShellExec(',
     "'runas'")) {
@@ -170,6 +181,14 @@ foreach ($requiredVisualCppToken in @(
         throw "The Setup pipeline is missing a Visual C++ Runtime invariant: $requiredVisualCppToken"
     }
 }
+
+if (-not $setupBuild.Contains("'-p:SelfContained=false'", [StringComparison]::Ordinal) -or
+    -not $setupBuild.Contains("'-p:AppHostDotNetSearch=Global'", [StringComparison]::Ordinal) -or
+    -not $setupDefinition.Contains('RunHelper', [StringComparison]::Ordinal)) {
+    throw 'Setup must publish framework-dependent and detect prerequisites before installing the app.'
+}
+& (Join-Path $PSScriptRoot 'Test-SetupPrerequisites.ps1') | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'Prerequisite behavior checks failed.' }
 
 $globalJson = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'global.json') | ConvertFrom-Json
 if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne 'patch') {
@@ -182,9 +201,10 @@ if ($globalJson.sdk.version -ne '10.0.302' -or $globalJson.sdk.rollForward -ne '
     ActionsPinnedToFullSha = $usesLines.Count
     ReleaseTrigger = 'workflow_dispatch only'
     ArtifactArchitectures = 'x64, arm64'
-    ArtifactFilesPerArchitecture = 'Setup.exe, signed local-inference manifest/signature/archive'
-    GitHubRelease = 'v<Version>, 8 assets'
+    ArtifactFilesPerArchitecture = 'Online/Offline Setup, Windows Runtime ZIP, VC++ EXE, signed local-inference manifest/signature/archive'
+    GitHubRelease = 'v<Version>, 14 assets'
     WindowsAppRuntime = $runtimeManifest.version
     VisualCppRuntime = $visualCppManifest.version
     DotNetSdk = $globalJson.sdk.version
+    DotNetRuntime = $dotNetManifest.version
 }

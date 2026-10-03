@@ -18,10 +18,12 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
 1. 正式发行改为真正的 unpackaged WinUI 3。应用以
    `WindowsPackageType=None` 构建并从普通 `.exe` 启动，不生成或安装应用 MSIX，
    运行时不假定 package identity。
-2. GitHub Release 提供传统 `Setup.exe`，并为按需本地分析提供架构专用的签名组件清单、
-   detached signature 和组件 ZIP；不额外上传 checksum sidecar。首版允许用户从 GitHub
-   手动获取应用更新，不在本次迁移中新增后台自动更新器。未签名状态和 SmartScreen 预期
-   必须在 README 与 Release 说明中如实披露。
+2. GitHub Release 为 x64 和 ARM64 分别提供在线 Setup、离线 Setup、对应的 Windows App
+   Runtime ZIP、Visual C++ Runtime 安装器，以及按需本地分析所需的签名组件清单、detached
+   signature 和组件 ZIP；不额外上传 checksum sidecar。在线 Setup 仅从同一 Release 下载
+   不满足最低版本要求的 Windows App Runtime / Visual C++ 依赖；.NET Runtime 安装器由微软官方来源按需
+   下载。用户仍从 GitHub 手动获取应用更新，不新增后台自动更新器。未签名状态和
+   SmartScreen 预期必须在 README 与 Release 说明中如实披露。
 3. 生产数据根固定为 `%LocalAppData%\PicForLater`。数据库、原图、缓存、staging、
    模型、设置和可选组件都位于该用户目录下，不放入安装目录；核心程序覆盖升级和普通
    卸载不得默认删除这些用户数据。Core 与 Infrastructure 继续只接收注入的绝对根路径。
@@ -42,16 +44,21 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
    `component.json` 的逐文件 SHA-256 只用于安装后完整性检查，不能独立证明发布来源；
    一键下载必须先验证由 App 内置信任根认证的外层 release manifest，再解压、复验并
    原子切换 `active.json`。在信任根和稳定 Release URL 确认前，不启用可执行组件下载。
-8. 核心采用 `.NET self-contained + Windows App SDK framework-dependent`。正式安装器
-   使用 Inno Setup 生成架构专用的离线 `Setup.exe`：x64 Setup 只携带微软签名的 x64
-   Windows App Runtime 2.3.1 安装器及 Microsoft Visual C++ 运行库，ARM64 Setup 只携带
-   ARM64 安装器。构建脚本固定其长度、SHA-256 和 Microsoft Authenticode 签名，并以
-   `--quiet --msix` 为当前用户注册
-   framework、Main、Singleton 和 DDLM 包；PicForLater 本身始终不注册为 MSIX。
+8. 核心采用 `.NET framework-dependent + Windows App SDK framework-dependent`。在线
+   Setup 检查兼容的 `Microsoft.NETCore.App` 和 `Microsoft.AspNetCore.App` 10.0 runtime；
+   仅在缺少满足要求的版本时从微软官方来源获取相应运行时 EXE，最终用户不需要安装
+   .NET SDK。Windows App Runtime 与 Visual C++ 运行库也只在缺少满足要求的版本时安装：在线 Setup 从当前 GitHub Release
+   获取架构专用 Windows App Runtime ZIP 与 VC redist；离线 Setup 则包含完整前置运行库，
+   不需要网络。运行库版本由各自 manifest 锁定，兼容的已安装服务补丁版本直接复用。
+   构建脚本校验微软运行时载荷的长度、SHA-256 和 Authenticode 签名，并以
+   `--quiet --msix` 为当前用户注册适用的 framework、Main、Singleton 和 DDLM 包；PicForLater
+   本身始终不注册为 MSIX。
 9. Setup 是 per-user、`PrivilegesRequired=lowest` 且不允许提升覆盖，默认安装到
-   `%LocalAppData%\Programs\PicForLater`。开始复制程序前先安装 Runtime；创建开始菜单
-   快捷方式并提供可选桌面快捷方式；覆盖安装复用目录和任务选择；卸载删除程序、快捷
-   方式、通知注册和卸载项，但保留 `%LocalAppData%\PicForLater` 用户数据。
+   `%LocalAppData%\Programs\PicForLater`。安装器保持应用安装为 per-user；补装 .NET、
+   ASP.NET Core 或 VC redist 时按各自安装要求请求管理员授权，Windows App Runtime 则
+   注册给当前用户。完成运行库检测后才复制应用文件；创建开始菜单快捷方式并提供可选
+   桌面快捷方式；覆盖安装复用目录和任务选择；卸载删除程序、快捷方式、通知注册和
+   卸载项，但保留 `%LocalAppData%\PicForLater` 用户数据。
 10. Release publish 必须包含同一次 WinUI 构建生成的 `PicForLater.App.pri` 和全部 XBF。
     构建脚本对 PRI、关键 XBF、主 EXE 和禁止的本地推理文件执行硬校验，避免生成可安装
     但在 WinUI 启动期崩溃的残缺布局。
@@ -75,6 +82,8 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
 
 - 纯云端用户的核心下载可以不再包含 ONNX/CUDA payload；本地用户在明确启用时再下载
   对应架构组件和模型。
+- 新机器首次安装时只下载缺失的运行库；已有兼容运行库时，后续应用更新无需重复下载。
+  离线 Setup 可用于无法联网的首次安装或维护。
 - Windows 不再提供应用 MSIX 的安装、更新、回滚、完整性和卸载生命周期，这些责任由
   Setup、组件安装器和应用内校验共同承担。
 - 每个未签名新版本可能重新触发 SmartScreen 文件信誉提示；企业策略或 Smart App
