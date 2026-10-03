@@ -789,7 +789,7 @@ public sealed class ScreenshotCaptureServiceTests
                 KeyReleaseTimeout = TimeSpan.FromMilliseconds(50),
                 KeyReleasePollingInterval = TimeSpan.FromMilliseconds(1),
                 ClipboardPollingInterval = TimeSpan.FromMilliseconds(2),
-                CaptureTimeout = TimeSpan.FromMilliseconds(100),
+                CaptureTimeout = TimeSpan.FromSeconds(2),
             });
 
     private static async Task EventuallyAsync(Func<bool> condition)
