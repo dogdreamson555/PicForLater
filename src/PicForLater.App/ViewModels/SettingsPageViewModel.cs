@@ -50,19 +50,19 @@ public partial class SettingsPageViewModel : ObservableObject
             ?? throw new ArgumentNullException(nameof(localInferenceComponentStoreAccessor));
         SelectedThemeIndex = (int)_themePreferenceService.CurrentPreference;
         InferenceAccelerationOptions.Add(
-            InferenceAccelerationOptionItem.FromMode(InferenceAccelerationMode.Automatic));
+            new(InferenceAccelerationMode.Automatic));
         if (_inferenceAcceleration.IsDirectMlAvailable)
         {
             InferenceAccelerationOptions.Add(
-                InferenceAccelerationOptionItem.FromMode(InferenceAccelerationMode.DirectMlGpu));
+                new(InferenceAccelerationMode.DirectMlGpu));
         }
 
         InferenceAccelerationOptions.Add(
-            InferenceAccelerationOptionItem.FromMode(InferenceAccelerationMode.Cpu));
+            new(InferenceAccelerationMode.Cpu));
         if (_inferenceAcceleration.IsCudaAvailable)
         {
             InferenceAccelerationOptions.Add(
-                InferenceAccelerationOptionItem.FromMode(InferenceAccelerationMode.CudaGpu));
+                new(InferenceAccelerationMode.CudaGpu));
         }
 
         SelectedInferenceAccelerationIndex = Math.Max(

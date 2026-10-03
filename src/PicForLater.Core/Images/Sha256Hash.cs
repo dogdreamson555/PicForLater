@@ -60,11 +60,6 @@ public sealed record Sha256Hash
             return false;
         }
 
-        if (bytes.Length != ByteLength)
-        {
-            return false;
-        }
-
         hash = FromBytes(bytes);
         return true;
     }

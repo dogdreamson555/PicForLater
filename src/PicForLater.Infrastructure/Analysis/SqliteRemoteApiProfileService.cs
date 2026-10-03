@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Data.Sqlite;
 using PicForLater.Core.Analysis;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.Infrastructure.Storage.SqliteOperations;
 
 namespace PicForLater.Infrastructure.Analysis;
 
@@ -953,24 +954,6 @@ public sealed class SqliteRemoteApiProfileService : IRemoteApiProfileService, ID
             }.ToString());
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
         return connection;
-    }
-
-    private static async Task<int> ExecuteAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        string sql,
-        CancellationToken cancellationToken,
-        params (string Name, object? Value)[] parameters)
-    {
-        await using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = sql;
-        foreach (var (name, value) in parameters)
-        {
-            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-        }
-
-        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static string ProfileColumns(string? alias = null)

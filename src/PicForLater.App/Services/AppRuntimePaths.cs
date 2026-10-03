@@ -6,10 +6,6 @@ internal static class AppRuntimePaths
 {
     public static AppDataPaths Paths { get; } = CreatePaths();
 
-    public static string UserDataRootPath => Paths.RootPath;
-
-    public static string SettingsFilePath => Paths.SettingsFilePath;
-
     private static AppDataPaths CreatePaths()
     {
 #if PICFORLATER_UI_TESTING

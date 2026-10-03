@@ -141,7 +141,7 @@ static double Percentile(IReadOnlyList<double> sortedSamples, double percentile)
 
 static async Task<Guid[]> SeedAsync(string databasePath, int fixtureSize)
 {
-    await using var connection = await OpenAsync(databasePath);
+    await using var connection = await SqliteOperations.OpenConnectionAsync(databasePath, CancellationToken.None);
     await using var transaction = connection.BeginTransaction(deferred: false);
     var categoryIds = Enumerable.Range(1, 20)
         .Select(index => DeterministicGuid(4, index))
@@ -258,17 +258,10 @@ static async Task<IReadOnlyList<string>> ExplainAsync(
     string databasePath,
     LibraryQuery query)
 {
-    await using var connection = await OpenAsync(databasePath);
+    await using var connection = await SqliteOperations.OpenConnectionAsync(databasePath, CancellationToken.None);
     await using var command = connection.CreateCommand();
-    command.CommandText = "EXPLAIN QUERY PLAN " + CreateQuerySql(query);
-    var search = query.SearchText?.Trim() ?? string.Empty;
-    command.Parameters.AddWithValue(
-        "@categoryId",
-        query.CategoryId?.ToString("D", CultureInfo.InvariantCulture) ?? (object)DBNull.Value);
-    command.Parameters.AddWithValue("@search", search);
-    command.Parameters.AddWithValue("@pattern", $"%{search}%");
-    command.Parameters.AddWithValue("@limit", query.Limit + 1);
-    command.Parameters.AddWithValue("@offset", query.Offset);
+    SqliteLibraryStore.ConfigureQueryCommand(command, query);
+    command.CommandText = "EXPLAIN QUERY PLAN " + command.CommandText;
 
     var details = new List<string>();
     await using var reader = await command.ExecuteReaderAsync();
@@ -278,84 +271,6 @@ static async Task<IReadOnlyList<string>> ExplainAsync(
     }
 
     return details;
-}
-
-static string CreateQuerySql(LibraryQuery query)
-{
-    // This diagnostic copy is used only for EXPLAIN output; timings above always call the
-    // production LibraryService. Keep it aligned with SqliteLibraryStore.QueryAsync.
-    var direction = query.SortDirection == LibrarySortDirection.Ascending ? "ASC" : "DESC";
-    var orderBy = query.SortField switch
-    {
-        LibrarySortField.CreatedAt => $"i.CreatedAtUtc {direction}, i.Id ASC",
-        LibrarySortField.Title =>
-            $"i.Title COLLATE NOCASE {direction}, i.CreatedAtUtc DESC, i.Id ASC",
-        LibrarySortField.ByteLength =>
-            $"a.ByteLength {direction}, i.CreatedAtUtc DESC, i.Id ASC",
-        LibrarySortField.Category =>
-            $"""
-            CASE WHEN EXISTS (
-                SELECT 1 FROM ImageCategories oic WHERE oic.ImageItemId = i.Id
-            ) THEN 0 ELSE 1 END ASC,
-            (SELECT MIN(oc.Name) FROM ImageCategories oic
-             INNER JOIN Categories oc ON oc.Id = oic.CategoryId
-             WHERE oic.ImageItemId = i.Id) COLLATE NOCASE {direction},
-            i.CreatedAtUtc DESC, i.Id ASC
-            """,
-        _ => throw new ArgumentOutOfRangeException(nameof(query)),
-    };
-
-    return
-        $"""
-        SELECT
-            i.Id, i.AssetId, i.OriginalFileName, i.SourceKind, i.Title, i.Summary,
-            i.TitleSource, i.SummarySource, i.AnalysisState, i.Revision,
-            i.CreatedAtUtc, i.UpdatedAtUtc, i.DeletedAtUtc,
-            a.Id, a.ContentHash, a.OriginalRelativePath, a.ThumbnailRelativePath,
-            a.MediaType, a.ByteLength, a.PixelWidth, a.PixelHeight, a.CreatedAtUtc
-        FROM ImageItems i
-        INNER JOIN ImageAssets a ON a.Id = i.AssetId
-        WHERE i.DeletedAtUtc IS NULL
-          AND (@categoryId IS NULL OR EXISTS (
-                SELECT 1 FROM ImageCategories ic
-                WHERE ic.ImageItemId = i.Id AND ic.CategoryId = @categoryId))
-          AND (@search = ''
-               OR i.Title LIKE @pattern ESCAPE '\' COLLATE NOCASE
-               OR i.Summary LIKE @pattern ESCAPE '\' COLLATE NOCASE
-               OR EXISTS (
-                    SELECT 1 FROM AnalysisStageResults ar
-                    WHERE ar.ImageItemId = i.Id
-                      AND ar.Stage = 1
-                      AND ar.FactText LIKE @pattern ESCAPE '\' COLLATE NOCASE)
-               OR EXISTS (
-                    SELECT 1 FROM ImageCategories sic
-                    INNER JOIN Categories sc ON sc.Id = sic.CategoryId
-                    WHERE sic.ImageItemId = i.Id
-                      AND sc.Name LIKE @pattern ESCAPE '\' COLLATE NOCASE)
-               OR EXISTS (
-                    SELECT 1 FROM Reminders r
-                    WHERE r.ImageItemId = i.Id
-                      AND r.ConfirmedLocation LIKE @pattern ESCAPE '\' COLLATE NOCASE))
-        ORDER BY {orderBy}
-        LIMIT @limit OFFSET @offset;
-        """;
-}
-
-static async Task<SqliteConnection> OpenAsync(string databasePath)
-{
-    var connection = new SqliteConnection(
-        new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWrite,
-            Cache = SqliteCacheMode.Private,
-            Pooling = false,
-        }.ToString());
-    await connection.OpenAsync();
-    await using var command = connection.CreateCommand();
-    command.CommandText = "PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;";
-    await command.ExecuteNonQueryAsync();
-    return connection;
 }
 
 internal sealed record BenchmarkWorkload(string Name, LibraryQuery Query);

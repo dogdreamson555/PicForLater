@@ -4,6 +4,7 @@ using Microsoft.Data.Sqlite;
 using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.Infrastructure.Storage.SqliteOperations;
 
 namespace PicForLater.Infrastructure.Analysis;
 
@@ -136,19 +137,7 @@ public sealed class SqliteAnalysisReanalysisService : IAnalysisReanalysisService
 
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
-        var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = _paths.DatabasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Cache = SqliteCacheMode.Private,
-                Pooling = false,
-            }.ToString());
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;";
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        return connection;
+        return await OpenConnectionAsync(_paths.DatabasePath, cancellationToken).ConfigureAwait(false);
     }
 
     private static string ToDb(Guid value) => value.ToString("D", CultureInfo.InvariantCulture);

@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using PicForLater.Infrastructure.Storage;
 
 namespace PicForLater.IntegrationTests;
@@ -16,6 +17,27 @@ internal sealed class TemporaryAppDataRoot : IDisposable
     public string RootPath { get; }
 
     public AppDataPaths Paths { get; }
+
+    internal static async Task<SqliteConnection> OpenAsync(string databasePath)
+    {
+        var connection = new SqliteConnection(
+            new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Mode = SqliteOpenMode.ReadWrite,
+                Pooling = false,
+            }.ToString());
+        try
+        {
+            await connection.OpenAsync();
+            return connection;
+        }
+        catch
+        {
+            await connection.DisposeAsync();
+            throw;
+        }
+    }
 
     public void Dispose()
     {

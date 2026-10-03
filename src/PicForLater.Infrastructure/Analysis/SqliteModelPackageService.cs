@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Data.Sqlite;
 using PicForLater.Core.Analysis;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.Infrastructure.Storage.SqliteOperations;
 
 namespace PicForLater.Infrastructure.Analysis;
 
@@ -913,37 +914,7 @@ public sealed class SqliteModelPackageService :
 
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
-        var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = _paths.DatabasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Cache = SqliteCacheMode.Private,
-                Pooling = false,
-            }.ToString());
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;";
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        return connection;
-    }
-
-    private static async Task<int> ExecuteAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        string sql,
-        CancellationToken cancellationToken,
-        params (string Name, object? Value)[] parameters)
-    {
-        await using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = sql;
-        foreach (var (name, value) in parameters)
-        {
-            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-        }
-
-        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await OpenConnectionAsync(_paths.DatabasePath, cancellationToken).ConfigureAwait(false);
     }
 
     private static string ToDb(DateTimeOffset value) =>

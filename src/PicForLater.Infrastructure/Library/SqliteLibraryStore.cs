@@ -4,6 +4,7 @@ using PicForLater.Core.Analysis;
 using PicForLater.Core.Images;
 using PicForLater.Core.Library;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.Infrastructure.Storage.SqliteOperations;
 
 namespace PicForLater.Infrastructure.Library;
 
@@ -50,6 +51,30 @@ internal sealed class SqliteLibraryStore
 
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
+        ConfigureQueryCommand(command, query);
+
+        var entries = new List<LibraryEntry>(query.Limit + 1);
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                entries.Add(ReadEntry(reader));
+            }
+        }
+
+        var hasMore = entries.Count > query.Limit;
+        if (hasMore)
+        {
+            entries.RemoveAt(entries.Count - 1);
+        }
+
+        return new LibraryQueryResult(
+            await AttachCategoriesAsync(connection, entries, cancellationToken).ConfigureAwait(false),
+            hasMore);
+    }
+
+    internal static void ConfigureQueryCommand(SqliteCommand command, LibraryQuery query)
+    {
         command.CommandText =
             $"""
             SELECT {EntryColumns}
@@ -88,25 +113,6 @@ internal sealed class SqliteLibraryStore
         command.Parameters.AddWithValue("@pattern", $"%{EscapeLike(search)}%");
         command.Parameters.AddWithValue("@limit", query.Limit + 1);
         command.Parameters.AddWithValue("@offset", query.Offset);
-
-        var entries = new List<LibraryEntry>(query.Limit + 1);
-        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
-        {
-            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
-                entries.Add(ReadEntry(reader));
-            }
-        }
-
-        var hasMore = entries.Count > query.Limit;
-        if (hasMore)
-        {
-            entries.RemoveAt(entries.Count - 1);
-        }
-
-        return new LibraryQueryResult(
-            await AttachCategoriesAsync(connection, entries, cancellationToken).ConfigureAwait(false),
-            hasMore);
     }
 
     private static string CreateOrderByClause(
@@ -874,37 +880,7 @@ internal sealed class SqliteLibraryStore
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
         _paths.EnsureSafePath(_paths.DatabasePath);
-        var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = _paths.DatabasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Cache = SqliteCacheMode.Private,
-                Pooling = false,
-            }.ToString());
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;";
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        return connection;
-    }
-
-    private static async Task<int> ExecuteAsync(
-        SqliteConnection connection,
-        SqliteTransaction? transaction,
-        string sql,
-        CancellationToken cancellationToken,
-        params (string Name, object? Value)[] parameters)
-    {
-        await using var command = connection.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText = sql;
-        foreach (var (name, value) in parameters)
-        {
-            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-        }
-
-        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await OpenConnectionAsync(_paths.DatabasePath, cancellationToken).ConfigureAwait(false);
     }
 
     private static LibraryEntry ReadEntry(SqliteDataReader reader)

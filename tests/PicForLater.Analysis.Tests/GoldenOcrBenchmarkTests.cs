@@ -1,4 +1,4 @@
-using PicForLater.Analysis.Benchmarking;
+using PicForLater.Analysis.Tests.Benchmarking;
 using PicForLater.Core.Analysis;
 
 namespace PicForLater.Analysis.Tests;

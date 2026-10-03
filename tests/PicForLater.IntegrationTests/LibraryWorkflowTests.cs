@@ -3,6 +3,7 @@ using PicForLater.Core.Images;
 using PicForLater.Core.Library;
 using PicForLater.Infrastructure.Library;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.IntegrationTests.TemporaryAppDataRoot;
 
 namespace PicForLater.IntegrationTests;
 
@@ -615,19 +616,6 @@ public sealed class LibraryWorkflowTests
         Assert.Equal(
             [large.ImageItemId, small.ImageItemId, uncategorized.ImageItemId],
             byCategory.Items.Select(entry => entry.Item.Id));
-    }
-
-    private static async Task<SqliteConnection> OpenAsync(string databasePath)
-    {
-        var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = databasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Pooling = false,
-            }.ToString());
-        await connection.OpenAsync();
-        return connection;
     }
 
     private static async Task<long> ScalarAsync(SqliteConnection connection, string sql)
