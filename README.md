@@ -4,8 +4,6 @@ PicForLater 是一款面向 Windows 的图片资料整理应用，用来保存�
 
 导入图片后，PicForLater 会保留不可变原图，并可通过**本地分析**或用户明确启用的**第三方 API**生成标题、简介、分类和提醒候选；分析结果由用户确认后再写入资料库或创建提醒。
 
-当前发行目标是 **unpackaged WinUI 3 桌面程序**：仅通过 GitHub Releases 提供按架构区分的传统 `Setup.exe`，不发布应用 MSIX，也不在安装包中内置大型模型或本地 ONNX/CUDA 推理组件。
-
 ## 使用场景
 
 例如，你在浏览贴文时看到一条值得细读的内容，但当下没有时间：
@@ -47,22 +45,16 @@ PicForLater 是一款面向 Windows 的图片资料整理应用，用来保存�
 
 ## 系统要求与安装
 
-- Windows 10 版本 2004（Build 19041）或更高版本。
-- 运行时依赖 .NET 10；Windows 10 的受支持范围受 [.NET 官方支持系统列表](https://learn.microsoft.com/dotnet/core/install/windows)约束，目前仅限列出的 LTSC / Enterprise 版本。安装器保留 Build 19041 的 Windows App SDK 最低门槛，但不表示所有 Build 19041 及以上的 Windows 10 版本都受 .NET 10 支持。
-- 前往 [Releases](https://github.com/dogdreamson555/PicForLater/releases/) 下载与设备**原生架构**一致的安装程序：x64 安装器仅用于 x64 Windows；ARM64 设备使用 ARM64 安装器。
+系统要求：Windows 11，或 [.NET 10 支持的 Windows 10 LTSC / Enterprise 版本](https://learn.microsoft.com/dotnet/core/install/windows)。
 
-| 类型 | x64 | ARM64 |
-| --- | --- | --- |
-| 在线安装器（推荐） | `PicForLater-Setup-<version>-x64.exe` | `PicForLater-Setup-<version>-arm64.exe` |
-| 离线安装器 | `PicForLater-Setup-Offline-<version>-x64.exe` | `PicForLater-Setup-Offline-<version>-arm64.exe` |
+前往 [Releases](https://github.com/dogdreamson555/PicForLater/releases/) 下载安装程序：Intel / AMD 电脑选择 `PicForLater-Setup-<version>-x64.exe`，ARM64 电脑选择 `PicForLater-Setup-<version>-arm64.exe`。
 
-在线安装器只在设备缺少满足版本要求的运行库时才下载依赖：.NET 与 ASP.NET Core Runtime 由微软官方下载，Windows App Runtime 与 Visual C++ Runtime 从同一 GitHub Release 下载。已有兼容运行库会复用，因此普通应用更新通常只需下载在线安装器；若新版本提高了最低运行库要求，才会补装对应依赖。首次安装的总下载量取决于设备已有的运行库，可能远大于在线安装器本身的体积。补装 .NET、ASP.NET Core 或 Visual C++ Runtime 时，可能分别出现管理员授权提示。
-
-离线安装器包含上述运行库，无需联网即可安装，但文件更大。应用本身保持 per-user 安装并继续作为 unpackaged WinUI 3 程序运行；安装或更新不需要用户另行安装 .NET SDK，也不会删除 `%LocalAppData%\PicForLater` 中的资料。
+- **首次安装**：保持联网，安装器会自动下载并安装所需运行库；如有管理员授权提示，选择“是”。
+- **后续更新**：下载新版在线安装器，直接安装即可。
+- **离线安装**：下载文件名包含 `Setup-Offline` 的同架构安装器，再复制到目标电脑运行。
 
 > [!WARNING]
-> 当前安装程序未进行代码签名，因此 Windows SmartScreen、Smart App Control 或组织策略可能显示警告或阻止运行。
-> 如果你信任本项目并确认安装包来自本仓库的 GitHub Releases，可在 SmartScreen 中选择“更多信息” → “仍要运行”。项目代码已全部开源。
+> 安装器暂未签名。确认安装包来自本仓库 Releases 后，如遇 SmartScreen 提示，可选择“更多信息” → “仍要运行”。
 
 ## 快速启用分析
 
@@ -240,21 +232,13 @@ PicForLater 默认在本地处理和保存图片，无账号、无广告、无�
 - PowerShell 7；
 - .NET SDK 10.0.302 或同一 10.0.3xx feature band 的更高补丁版本（由 `global.json` 约束）。
 
-生成完整 Setup 还需要 Inno Setup 6；普通 build / test 和 Setup dry run 不要求本机安装 Inno。发布 workflow 的本地静态检查使用 actionlint 1.7.12，可通过 `-ActionlintPath` 指向经官方 SHA-256 校验的可执行文件，无需把该工具提交到仓库。
+构建安装器还需要 Inno Setup 6。
 
 ```powershell
 dotnet restore .\PicForLater.slnx --locked-mode
 dotnet build .\PicForLater.slnx -c Release --no-restore
 dotnet test .\PicForLater.slnx -c Release --no-build --no-restore
 
-# 真正的 unpackaged publish，并校验 Runtime、PRI/XBF、许可证和禁止文件；不编译 Setup.exe
-.\tools\release\Build-Setup.ps1 -Platform x64 -DryRun
-
-# 安装 Inno Setup 后构建本地在线 / 离线安装器；正式发行物仍只由 GitHub Actions 生成
-.\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Online
-.\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Offline
-
-# 同一次 publish 产出在线和离线安装器
 .\tools\release\Build-Setup.ps1 -Platform x64 -Distribution Both
 ```
 
