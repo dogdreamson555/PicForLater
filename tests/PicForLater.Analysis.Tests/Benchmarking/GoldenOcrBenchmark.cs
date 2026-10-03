@@ -3,9 +3,9 @@ using System.Text;
 using System.Text.Json;
 using PicForLater.Core.Analysis;
 
-namespace PicForLater.Analysis.Benchmarking;
+namespace PicForLater.Analysis.Tests.Benchmarking;
 
-public sealed class GoldenOcrSample
+internal sealed class GoldenOcrSample
 {
     public string Id { get; init; } = string.Empty;
 
@@ -26,7 +26,7 @@ public sealed class GoldenOcrSample
     public string License { get; init; } = string.Empty;
 }
 
-public sealed record GoldenOcrSampleResult(
+internal sealed record GoldenOcrSampleResult(
     string Id,
     bool ProviderClaimsSupport,
     bool SupportExpectationMet,
@@ -38,7 +38,7 @@ public sealed record GoldenOcrSampleResult(
     long PrivateMemoryDeltaBytes,
     IReadOnlyList<string> Warnings);
 
-public sealed record GoldenOcrBenchmarkReport(
+internal sealed record GoldenOcrBenchmarkReport(
     string ProviderId,
     DateTimeOffset GeneratedAtUtc,
     IReadOnlyList<GoldenOcrSampleResult> Samples)
@@ -56,7 +56,7 @@ public sealed record GoldenOcrBenchmarkReport(
             .Average();
 }
 
-public static class GoldenOcrBenchmark
+internal static class GoldenOcrBenchmark
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -102,7 +102,7 @@ public static class GoldenOcrBenchmark
             }
 
             var imagePath = ResolveUnderRoot(root, sample.Image);
-            var process = Process.GetCurrentProcess();
+            using var process = Process.GetCurrentProcess();
             process.Refresh();
             var memoryBefore = process.PrivateMemorySize64;
             var stopwatch = Stopwatch.StartNew();

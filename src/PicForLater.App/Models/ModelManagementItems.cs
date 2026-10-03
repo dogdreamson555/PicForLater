@@ -9,10 +9,7 @@ public sealed record ModelPackageOption(
     string DisplayName,
     string Description);
 
-public sealed record InferenceAccelerationOptionItem(InferenceAccelerationMode Mode)
-{
-    public static InferenceAccelerationOptionItem FromMode(InferenceAccelerationMode mode) => new(mode);
-}
+public sealed record InferenceAccelerationOptionItem(InferenceAccelerationMode Mode);
 
 public partial class RecommendedModelItem : ObservableObject
 {

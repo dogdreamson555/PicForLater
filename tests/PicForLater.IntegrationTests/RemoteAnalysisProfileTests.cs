@@ -7,6 +7,7 @@ using PicForLater.Core.Library;
 using PicForLater.Infrastructure.Analysis;
 using PicForLater.Infrastructure.Library;
 using PicForLater.Infrastructure.Storage;
+using static PicForLater.IntegrationTests.TemporaryAppDataRoot;
 
 namespace PicForLater.IntegrationTests;
 
@@ -748,19 +749,6 @@ public sealed class RemoteAnalysisProfileTests
         }
 
         await command.ExecuteNonQueryAsync();
-    }
-
-    private static async Task<SqliteConnection> OpenAsync(string databasePath)
-    {
-        var connection = new SqliteConnection(
-            new SqliteConnectionStringBuilder
-            {
-                DataSource = databasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Pooling = false,
-            }.ToString());
-        await connection.OpenAsync();
-        return connection;
     }
 
     private sealed class NeverUsedModelValidator : IModelPackageValidator

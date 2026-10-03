@@ -77,19 +77,8 @@ internal static class StartupLanguageResolver
             _ => ResolveApplicationLanguage(systemLanguageTag),
         };
 
-    internal static string ResolveAvailableApplicationLanguage(string? languageTag)
-    {
-        var requestedLanguageTag = ResolveApplicationLanguage(languageTag);
-
-        // All three application resource sets are now available.
-        return requestedLanguageTag switch
-        {
-            SimplifiedChineseLanguageTag or
-                TraditionalChineseLanguageTag or
-                EnglishLanguageTag => requestedLanguageTag,
-            _ => EnglishLanguageTag,
-        };
-    }
+    internal static string ResolveAvailableApplicationLanguage(string? languageTag) =>
+        ResolveApplicationLanguage(languageTag);
 
     internal static string? ResolveSystemLanguageTag(ushort languageId)
     {
