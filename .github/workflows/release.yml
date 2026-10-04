@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 45
     outputs:
       version: ${{ steps.version.outputs.version }}
+      windows_app_runtime_version: ${{ steps.version.outputs.windows_app_runtime_version }}
+      visual_cpp_version: ${{ steps.version.outputs.visual_cpp_version }}
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -46,7 +48,17 @@ jobs:
           if ($version -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$') {
             throw "Invalid release version: $version"
           }
+          $windowsAppRuntimeManifest = Get-Content -Raw .\tools\release\setup\windows-app-runtime.json | ConvertFrom-Json
+          $visualCppManifest = Get-Content -Raw .\tools\release\setup\visual-cpp-runtime.json | ConvertFrom-Json
+          $windowsAppRuntimeVersion = [string]$windowsAppRuntimeManifest.version
+          $visualCppVersion = [string]$visualCppManifest.version
+          if ($windowsAppRuntimeVersion -notmatch '^\d+\.\d+\.\d+(?:\.\d+)?$' -or
+              $visualCppVersion -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            throw 'A prerequisite manifest has an invalid version.'
+          }
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "windows_app_runtime_version=$windowsAppRuntimeVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "visual_cpp_version=$visualCppVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Restore locked dependencies
         shell: pwsh
@@ -59,6 +71,14 @@ jobs:
       - name: Run automated tests
         shell: pwsh
         run: dotnet test .\PicForLater.slnx -c Release --no-build --no-restore --logger "trx;LogFilePrefix=release"
+
+      - name: Verify installer prerequisites and legacy cleanup
+        shell: powershell
+        run: .\tools\release\Test-SetupPrerequisites.ps1
+
+      - name: Verify parallel component downloads
+        shell: powershell
+        run: .\tools\release\Test-SetupDownload.ps1
 
   package:
     name: Release assets ${{ matrix.artifact_arch }}
@@ -77,6 +97,8 @@ jobs:
             rid: win-arm64
     env:
       APP_VERSION: ${{ needs.validate.outputs.version }}
+      WINDOWS_APP_RUNTIME_VERSION: ${{ needs.validate.outputs.windows_app_runtime_version }}
+      VISUAL_CPP_VERSION: ${{ needs.validate.outputs.visual_cpp_version }}
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
     steps:
@@ -109,6 +131,11 @@ jobs:
           }
           "INNO_COMPILER=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Verify prerequisite progress and process exit codes
+        if: matrix.platform == 'x64'
+        shell: pwsh
+        run: .\tools\release\Test-SetupProgress.ps1 -InnoCompilerPath $env:INNO_COMPILER
+
       - name: Restore locked release dependencies
         shell: pwsh
         run: |
@@ -128,6 +155,7 @@ jobs:
             -OutputRoot $outputRoot `
             -RuntimeCacheRoot $runtimeCache `
             -InnoCompilerPath $env:INNO_COMPILER `
+            -Distribution Both `
             -NoRestore
 
       - name: Build signed local inference component
@@ -161,19 +189,30 @@ jobs:
         run: |
           $arch = '${{ matrix.artifact_arch }}'
           $setupName = "PicForLater-Setup-$env:APP_VERSION-$arch.exe"
+          $offlineSetupName = "PicForLater-Setup-Offline-$env:APP_VERSION-$arch.exe"
+          $windowsAppRuntimeArchiveName = "WindowsAppRuntime-$env:WINDOWS_APP_RUNTIME_VERSION-$arch.zip"
+          $visualCppRuntimeName = "VC_redist-$arch-$env:VISUAL_CPP_VERSION.exe"
           $componentArchiveName = "PicForLater.LocalInference-$arch-$env:APP_VERSION.zip"
           $manifestName = "local-inference-$arch.release.json"
           $expectedNames = @(
             $setupName,
+            $offlineSetupName,
+            $windowsAppRuntimeArchiveName,
+            $visualCppRuntimeName,
             $componentArchiveName,
             $manifestName,
             "$manifestName.sig"
           )
 
-          $setupPath = Join-Path $env:RUNNER_TEMP "PicForLater-release\$env:APP_VERSION\$arch\installer\$setupName"
+          $releaseArchRoot = Join-Path $env:RUNNER_TEMP "PicForLater-release\$env:APP_VERSION\$arch"
+          $installerRoot = Join-Path $releaseArchRoot 'installer'
+          $prerequisitesRoot = Join-Path $releaseArchRoot 'prerequisites'
           $componentRoot = Join-Path $env:RUNNER_TEMP "PicForLater-components\$arch"
           $sourcePaths = @(
-            $setupPath,
+            (Join-Path $installerRoot $setupName),
+            (Join-Path $installerRoot $offlineSetupName),
+            (Join-Path $prerequisitesRoot $windowsAppRuntimeArchiveName),
+            (Join-Path $prerequisitesRoot $visualCppRuntimeName),
             (Join-Path $componentRoot $componentArchiveName),
             (Join-Path $componentRoot $manifestName),
             (Join-Path $componentRoot "$manifestName.sig")
@@ -193,9 +232,9 @@ jobs:
               Select-Object -ExpandProperty Name
           )
           $sortedExpectedNames = @($expectedNames | Sort-Object)
-          if ($collectedNames.Count -ne 4 -or
+          if ($collectedNames.Count -ne 7 -or
               (Compare-Object $sortedExpectedNames $collectedNames).Count -ne 0) {
-            throw "Expected exactly four release assets for $arch; found $($collectedNames -join ', ')."
+            throw "Expected exactly seven release assets for $arch; found $($collectedNames -join ', ')."
           }
 
       - name: Upload release candidate
@@ -215,6 +254,8 @@ jobs:
       contents: write
     env:
       APP_VERSION: ${{ needs.validate.outputs.version }}
+      WINDOWS_APP_RUNTIME_VERSION: ${{ needs.validate.outputs.windows_app_runtime_version }}
+      VISUAL_CPP_VERSION: ${{ needs.validate.outputs.visual_cpp_version }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Download verified release candidates
@@ -229,7 +270,13 @@ jobs:
         run: |
           $expectedNames = @(
             "PicForLater-Setup-$env:APP_VERSION-x64.exe",
+            "PicForLater-Setup-Offline-$env:APP_VERSION-x64.exe",
+            "WindowsAppRuntime-$env:WINDOWS_APP_RUNTIME_VERSION-x64.zip",
+            "VC_redist-x64-$env:VISUAL_CPP_VERSION.exe",
             "PicForLater-Setup-$env:APP_VERSION-arm64.exe",
+            "PicForLater-Setup-Offline-$env:APP_VERSION-arm64.exe",
+            "WindowsAppRuntime-$env:WINDOWS_APP_RUNTIME_VERSION-arm64.zip",
+            "VC_redist-arm64-$env:VISUAL_CPP_VERSION.exe",
             "PicForLater.LocalInference-x64-$env:APP_VERSION.zip",
             "PicForLater.LocalInference-arm64-$env:APP_VERSION.zip",
             'local-inference-x64.release.json',
@@ -239,8 +286,8 @@ jobs:
           ) | Sort-Object
           $assets = @(Get-ChildItem -LiteralPath .\artifacts\release -File | Sort-Object Name)
           $assetNames = @($assets | Select-Object -ExpandProperty Name)
-          if ($assets.Count -ne 8 -or (Compare-Object $expectedNames $assetNames).Count -ne 0) {
-            throw "Expected exactly eight GitHub Release assets; found $($assetNames -join ', ')."
+          if ($assets.Count -ne 14 -or (Compare-Object $expectedNames $assetNames).Count -ne 0) {
+            throw "Expected exactly fourteen GitHub Release assets; found $($assetNames -join ', ')."
           }
           if (@($assets | Where-Object Length -le 0).Count -ne 0) {
             throw 'A GitHub Release asset is empty.'

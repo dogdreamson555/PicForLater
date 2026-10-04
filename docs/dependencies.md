@@ -1,46 +1,58 @@
 # Dependency register
 
-This document lists the primary direct and release-relevant transitive dependencies.
-Complete attribution and redistribution notices are in [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
+Primary direct and release-relevant transitive dependencies are listed below.
+Attribution and terms are in [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md);
+fixed license texts are mapped in [licenses/README.md](../licenses/README.md).
 
-| Dependency | Version | Purpose | License / terms | Release scope |
-| --- | ---: | --- | --- | --- |
-| Microsoft.WindowsAppSDK | 2.3.1 | Unpackaged WinUI 3 and Windows App SDK integration | Microsoft Software License Terms supplied with the package | Core application; architecture runtime is installed by Setup |
-| Microsoft.Web.WebView2 | Transitive | Windows App SDK transitive integration; PicForLater does not directly host WebView2 | Microsoft WebView2 SDK redistribution terms | Transitive |
-| Microsoft.Windows.SDK.BuildTools | 10.0.26100.8249 | Repeatable Windows SDK build tooling | Microsoft Windows SDK terms | Build time |
-| Microsoft.Windows.SDK.BuildTools.WinApp | 0.4.0 | Windows application build tooling | Microsoft package terms | Build time |
-| CommunityToolkit.Mvvm | 8.4.2 | MVVM observable and command infrastructure | MIT | Core application |
-| CommunityToolkit.WinUI.Notifications | 7.1.2 | Unpackaged desktop notification scheduling and activation | MIT | Core application |
-| H.NotifyIcon.WinUI | 2.4.1 | Native system-tray icon and PopupMenu integration | MIT | Core application |
-| LocalSendDotNet.Core | 0.2.0-preview.5 | UI-independent LocalSend v2.2-compatible LAN discovery, TLS and receive-node implementation | Apache-2.0 | Core application; independent compatibility implementation, not an official LocalSend component |
-| Microsoft.AspNetCore.App | .NET 10 framework reference (10.0.11 in the locally verified publish) | Kestrel HTTPS server and hosting primitives required by the LocalSend receive node | MIT and .NET third-party notices | Version is resolved by the pinned .NET 10.0.3xx SDK; included in the unpackaged self-contained publish, so no separately installed ASP.NET Core runtime is required |
-| System.Drawing.Common | 10.0.11 | Security override for a vulnerable transitive version | MIT | Core application |
-| Microsoft.Recognizers.Text.DateTime | 1.8.13 | Local natural-language date/time candidates | MIT | Core application; no model or network runtime |
-| NuGet.CommandLine | 7.6.0 (`PrivateAssets=all`) | Security override for an obsolete build dependency | Apache-2.0 | Build only; command-line tools are not published |
-| Microsoft.Data.Sqlite | 10.0.10 | Local SQLite access and migrations | MIT | Core application |
-| SQLitePCLRaw.lib.e_sqlite3 | 3.53.3 | Patched native SQLite library | Apache-2.0 and SQLite public-domain components | Core application |
-| Microsoft.ML.OnnxRuntimeGenAI.Cuda | 0.14.1 | Optional x64 Qwen/PP-OCR worker | MIT | Optional local-analysis component only |
-| Microsoft.ML.OnnxRuntime.Managed and Microsoft.ML.OnnxRuntime.Gpu.Windows | 1.26.0 | Optional x64 CUDA/CPU inference runtime | MIT | Optional local-analysis component only |
-| Microsoft.ML.OnnxRuntimeGenAI.DirectML | 0.14.1 | Optional ARM64 DirectML/CPU worker | MIT | Optional local-analysis component only |
+| Dependency | Version | Purpose | Distribution |
+| --- | --- | --- | --- |
+| Microsoft.WindowsAppSDK | 2.3.1 | Unpackaged WinUI 3 | Core; runtime registered per-user by Setup |
+| Microsoft.Web.WebView2 | Transitive | Windows App SDK integration; no app-hosted WebView | Core transitive dependency |
+| Microsoft.Windows.SDK.BuildTools | 10.0.26100.8249 | Windows SDK build tooling | Build only |
+| Microsoft.Windows.SDK.BuildTools.WinApp | 0.4.0 | Windows app build tooling | Build only |
+| CommunityToolkit.Mvvm | 8.4.2 | Observable properties and commands | Core |
+| CommunityToolkit.WinUI.Notifications | 7.1.2 | Unpackaged notifications | Core |
+| H.NotifyIcon.WinUI | 2.4.1 | Tray icon and native PopupMenu | Core |
+| LocalSendDotNet.Core | 0.2.0-preview.5 | Independent LocalSend v2.2-compatible LAN receiver | Core |
+| Microsoft.NETCore.App | .NET 10 framework reference | Framework-dependent app runtime | Setup prerequisite |
+| Microsoft.AspNetCore.App | .NET 10 framework reference | Kestrel HTTPS for the LAN receiver | Setup prerequisite |
+| System.Drawing.Common | 10.0.11 | Security override for an older transitive version | Core |
+| Microsoft.Recognizers.Text.DateTime | 1.8.13 | Local date/time candidates | Core |
+| NuGet.CommandLine | 7.6.0 (`PrivateAssets=all`) | Security override for an obsolete build dependency | Build only; tools not published |
+| Microsoft.Data.Sqlite | 10.0.10 | SQLite access and migrations | Core |
+| SQLitePCLRaw.lib.e_sqlite3 | 3.53.3 | Patched native SQLite | Core |
+| Microsoft Visual C++ Redistributable | [Pinned manifest](../tools/release/setup/visual-cpp-runtime.json) | Native runtime dependencies | Machine-wide; installed only if required |
+| Microsoft.ML.OnnxRuntimeGenAI.Cuda | 0.14.1 | x64 Qwen/PP-OCR worker | Optional local component |
+| Microsoft.ML.OnnxRuntime.Managed / Microsoft.ML.OnnxRuntime.Gpu.Windows | 1.26.0 | x64 CUDA/CPU runtime | Optional local component |
+| Microsoft.ML.OnnxRuntimeGenAI.DirectML | 0.14.1 | ARM64 DirectML/CPU worker | Optional local component |
+
+## Runtime deployment
+
+[ADR 0015](adr/0015-github-unpackaged-setup-and-optional-local-runtime.md) defines the
+online/offline Setup, privilege, verification and update rules. The app depends on
+both .NET and ASP.NET Core frameworks; end users do not need the SDK.
+
+- Online Setup downloads only missing/incompatible prerequisites: .NET installers
+  from Microsoft, Windows App Runtime and VC redist from the same GitHub Release.
+  Offline Setup contains all prerequisites; compatible installed versions are reused.
+- .NET minimums come from the published `runtimeconfig.json` and the selected ASP.NET
+  Core runtime's .NET dependency. The [pinned download](../tools/release/setup/dotnet-runtime.json)
+  is a fallback, not a forced servicing upgrade. Binary compatibility and security
+  servicing recommendations are separate requirements.
+- Windows App Runtime minimums come from signed MSIX identities. Compatible stable
+  DDLM packages are reused despite versioned identity names. The [VC manifest](../tools/release/setup/visual-cpp-runtime.json)
+  retains a conservative threshold; an earlier compatible toolchain minimum has not
+  been established.
+- The installer declares OS build 19041, but .NET 10 supports a narrower set of
+  Windows versions; see [README system requirements](../README.md#系统要求与安装).
 
 ## Dependency boundaries
 
-- Remote API support uses framework HTTP and JSON APIs rather than provider SDKs.
-- API credentials are stored through Windows user credential storage and are never part
-  of dependency manifests, logs, or published artifacts.
-- Local inference runtimes and model files are excluded from the core application publish.
-- LocalSendDotNet.Core contributes a `Microsoft.AspNetCore.App` framework reference. The
-  self-contained publish must carry the resolved ASP.NET Core/Kestrel assemblies, while
-  Windows App SDK remains an architecture-specific offline Setup prerequisite.
-- LocalSend-compatible receive traffic is confined to the local network. A received image
-  becomes an ordinary PicForLater library item, so a later user-selected remote analysis
-  action may send derived text or a re-encoded image to that configured API under the same
-  consent and data-boundary rules as any other imported image.
-- Optional component manifests are authenticated and their declared sizes, hashes, paths,
-  and file sets are checked before activation.
-- Repository and CI builds treat NuGet vulnerability warnings `NU1901` through `NU1904`
-  as errors and review direct and transitive dependencies.
-- Signing secrets and local trust material are not repository or runtime assets.
-
-Test-only packages such as xUnit, Microsoft.NET.Test.Sdk, and coverlet remain confined to
-test projects and are not included in the application or Setup output.
+- Remote APIs use framework HTTP/JSON rather than provider SDKs; credential and
+  data boundaries are defined in [PRIVACY.md](../PRIVACY.md).
+- Inference runtimes and model files are excluded from core publish. Optional
+  executable components require authenticated manifests and verification before activation.
+- NuGet vulnerability warnings `NU1901`–`NU1904` are errors in repository and CI builds;
+  direct and transitive dependencies are reviewed.
+- Test packages (xUnit, Microsoft.NET.Test.Sdk, coverlet), signing secrets and local
+  trust material are excluded from app/Setup output.

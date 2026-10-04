@@ -44,3 +44,7 @@ jobs:
       - name: Run automated tests
         shell: pwsh
         run: dotnet test .\PicForLater.slnx -c Release --no-build --no-restore --logger "trx;LogFilePrefix=ci"
+
+      - name: Verify installer prerequisites and legacy cleanup
+        shell: powershell
+        run: .\tools\release\Test-SetupPrerequisites.ps1

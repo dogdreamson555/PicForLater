@@ -1,13 +1,11 @@
 # 远程 API preset、第三方政策与契约核验
 
-完整核验日期：2026-08-01；预设增量更新：2026-09-21。本文记录工程事实，不代表供应商对隐私、可用性、价格或
-模型寿命的保证。模型、套餐、地区、保留/训练控制及价格都可能变化；设置页始终
-显示供应商链接，合成连接测试通过且用户完成当前版本同意之前不会发送用户内容。
+完整核验：2026-08-01；预设增量更新：2026-09-21。本文记录工程事实，不保证供应商
+隐私、价格、可用性或模型寿命。发送用户内容前，须通过合成连接测试并完成当前版本同意。
 
-除“自定义接口”外，preset 固定 endpoint、协议、鉴权方式和安全请求策略。普通
-配置只需要用户提供自己的 API key（Ollama/vLLM 可无 key）和可编辑的 model ID；
-高级区可调整该 preset 明确声明支持的思考档位、最大输出 token 和超时。固定字段
-或高级参数变化会切回 `Local` 并使连接验证与旧同意失效。
+除自定义接口外，preset 固定 endpoint、协议、鉴权和安全请求策略；用户提供 API key
+（Ollama/vLLM 可无 key）及 model ID，并可调整明确支持的思考档位、token 上限和超时。
+固定字段或高级参数变化会切回 `Local`，使连接验证及旧同意失效。
 
 ## 契约矩阵
 
@@ -34,107 +32,17 @@
 | 本机/私有 | vLLM | `127.0.0.1:8000/v1/chat/completions` | `Qwen/Qwen3-VL-4B-Instruct` | 文字、图片 | OpenAI / JSON Schema | 供应商默认 |
 | 自定义 | 自定义接口 | 用户输入；仅公共 HTTPS 或严格 loopback | 用户输入 | 文字、图片（需自行验证） | OpenAI 或 Messages；JSON Schema/JSON Object/仅提示契约 | 用户选择显式 wire format；连接测试把关 |
 
-`PromptOnly` 不降低本地 parser 标准：它只是不向不声明 `response_format` 的接口发送
-可能导致 HTTP 400 的字段；返回仍必须通过相同的八键 shape、非空且有依据的标题/
-简介、实体、语言、长度和草稿质量检查。所有模式禁用 tools/function calling，且
-不会因失败切换供应商、输入模式或本地/远程执行位置。
+`PromptOnly` 仅省略供应商不支持的 `response_format`，返回仍须通过相同的八键 shape、
+非空且有依据的标题/简介、实体、语言、长度及草稿质量检查。所有模式禁用 tools/function calling，
+失败不切换供应商、输入模式或执行位置。
 
-OpenAI-compatible 图片请求只发送标准的 `text` 与 `image_url.url`（data URL）部分。
-不会发送可选的 `image_url.detail`，也不会显式发送默认值 `n=1`；这两个字段并非所有
-兼容层都承诺接收。图片在此之前仍由 PicForLater 本地缩放、重编码并移除元数据，
-输出数量仍由本地严格 parser 和 `max_tokens` 上限共同约束。
-
-## 2026-09-21 百度、MiniMax、Perplexity 图片扩展
-
-- 百度默认模型由 `ernie-4.5-turbo-128k` 迁移到 `ernie-5.0`，开放图片输入，
-  保留 OpenAI 兼容端点和 JSON Object。
-- MiniMax 默认模型由 `MiniMax-M2.7` 迁移到 `MiniMax-M3`，开放图片输入，
-  使用官方当前的 `https://api.minimax.cn/anthropic/v1/messages` 端点。
-  保留 Bearer 鉴权、Anthropic 图片内容块和 PromptOnly；M3 官方默认关闭思考。
-- Perplexity 保留默认 `sonar`，开放图片连接测试和图片模式，继续发送
-  `disable_search=true` 与 JSON Schema。是否可以启用以当前账号、模型的实际
-  图片连接测试结果为准，不以文档缺少该型号的示例禁用入口。
-
-这里迁移百度和 MiniMax 的旧默认值是为了提供视觉默认模型，不表示旧模型已下线。
-用户填写的其他模型及自定义端点继续保留。输入能力、模型或端点变化会使旧验证和
-同意失效；图片模式必须重新通过连接测试及同意，测试失败不能启用。
-本次使用本地自动化测试检查迁移和启用限制，未进行供应商付费实测。
-
-依据：[百度模型及输入模态](https://cloud.baidu.com/doc/qianfan-api/s/Dmba8k71y)、
-[MiniMax Anthropic 兼容与 M3 图片支持](https://platform.minimax.cn/docs/api-reference/text-anthropic-api)、
-[Perplexity 图片请求格式](https://docs.perplexity.ai/docs/sonar/media)。
-
-## 2026-09-21 四项预设更新
-
-- DeepSeek 默认模型改为 `deepseek-flash`，开放图片输入。旧 `deepseek-v4-flash`
-  和 `deepseek-v4-flash-vision-exp` 已由新版 Flash 承接，迁移时统一名称。
-  保留 JSON Object 与 `thinking.type=disabled`。
-- 腾讯混元 `hy3-preview` 已下线，默认值与旧配置迁移到 `hy3`，保留文字输入、
-  JSON Schema 和 `reasoning_effort`。
-- SiliconFlow 的 `Pro/zai-org/GLM-4.7` 已下线，迁移到 `Pro/zai-org/GLM-5.1`，
-  保留文字输入和 JSON Object，按平台 API 使用 `enable_thinking=false`。
-- Groq 的 Llama 4 Scout 已对普通账户停服，迁移到支持图片的 `qwen/qwen3.8-27b`
-  （官方标记为 Preview），保留 JSON Object；新配置默认 `reasoning_effort=none`。
-  已有配置保留仍受支持的思考选择。
-
-启动同步仅替换迁移清单中的旧模型名称，保留其他用户填写的模型。
-模型、输入能力或请求参数改变时，现有配置服务会清除连接验证和同意，并将选中的
-远程执行切回本地；需重新连接测试和同意后启用。启用图片能力不会自动选择图片上传。
-此次仅核验模型及请求契约，未更新第三方隐私政策核验日期，也未调用付费 API。
-
-依据：[DeepSeek 模型与图片能力](https://api-docs.deepseek.com/quick_start/pricing/)、
-[混元下线公告](https://cloud.tencent.com/announce/detail/2391)、
-[SiliconFlow 下线公告](https://docs.siliconflow.cn/docs/release-notes/overview)、
-[SiliconFlow 模型中心](https://www.siliconflow.cn/models)、
-[SiliconFlow API 参数](https://docs.siliconflow.cn/docs/api/chat-completions-post)、
-[Groq 下线公告](https://console.groq.com/docs/deprecations)、
-[Groq Qwen3.8](https://console.groq.com/docs/model/qwen/qwen3.8-27b)。
-
-## 2026-08-01 官方契约复核结论（历史记录）
-
-- 腾讯云已公告旧混元平台迁往 TokenHub，`hunyuan-turbos-latest` 已在旧模型下线
-  清单中；preset 已改为广州 TokenHub 的 `hy3-preview`，并使用其文档声明的 Chat
-  Completions、JSON Schema 和 `reasoning_effort`。旧 endpoint、旧默认 model、旧验证
-  与同意不会沿用。新加坡地域账户需使用“自定义接口”填写官方国际 endpoint，固定
-  preset 不会自动跨地域路由。
-- 火山方舟将 `doubao-seed-2-0-lite-260215` 声明为支持文字、图片、视频等输入的
-  多模态模型；preset 现允许 `API · 图片`，仍只发送一张去元数据的受限分析副本。
-- Together 的 `Qwen/Qwen3.5-9B` 官方模型页和结构化视觉示例均声明图片输入；preset
-  现允许 `API · 图片`，并保留其官方示例使用的 JSON Schema 与
-  `reasoning.enabled=false`。
-- OpenAI、Anthropic、Gemini、xAI、DeepSeek、Qwen、GLM、百度千帆、MiniMax、
-  OpenRouter、Groq、Ollama 与 vLLM 的当前 preset endpoint、鉴权形状和声明能力与
-  本轮查阅的官方文档一致。Kimi 的 `kimi-k2.5` 仍在官方模型列表且声明图片输入；
-  官方当前示例多使用 `kimi-k2.6`，因此保留用户可编辑 model ID，不强制迁移仍可用
-  的 2.5 配置。
-- Perplexity Sonar 的当前 endpoint 为 `/v1/sonar`，支持 `disable_search=true` 与
-  JSON Schema；PicForLater 显式关闭搜索，避免把当前图片分析扩展成未获同意的联网
-  检索。
-
-本轮协议结论以供应商官方文档为依据，包括：
-
-- [OpenAI 图片输入](https://developers.openai.com/api/docs/guides/images-vision)、
-  [结构化输出](https://developers.openai.com/api/docs/guides/structured-outputs)；
-- [Anthropic Messages](https://platform.claude.com/docs/en/build-with-claude/working-with-messages)、
-  [结构化输出](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)；
-- [Gemini OpenAI 兼容层](https://ai.google.dev/gemini-api/docs/openai)、
-  [Gemini 3.5 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash)；
-- [腾讯云旧平台迁移公告](https://cloud.tencent.com/document/product/1729/131925)、
-  [TokenHub Chat API](https://cloud.tencent.com/document/product/1823/130078)；
-- [豆包 Seed 2.0](https://www.volcengine.com/docs/82379/1795150)、
-  [百炼 Chat Completions](https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions)、
-  [MiniMax 文本生成](https://platform.minimaxi.com/docs/guides/text-generation)；
-- [OpenRouter 图片输入](https://openrouter.ai/docs/guides/overview/multimodal/image-understanding)、
-  [Groq Vision](https://console.groq.com/docs/vision)、
-  [Together 视觉结构化提取](https://docs.together.ai/docs/inference/vision/structured-extraction)；
-- [Ollama OpenAI 兼容层](https://docs.ollama.com/api/openai-compatibility)、
-  [vLLM 多模态输入](https://docs.vllm.ai/en/stable/features/multimodal_inputs/)。
+OpenAI-compatible 图片请求只发送 `text` 与 `image_url.url`（data URL），省略可选
+`image_url.detail` 和默认 `n=1`。只发送单张经本地缩放、重编码和去元数据的图片，输出受 parser
+及 `max_tokens` 约束。
 
 ## 政策与价格链接
 
-设置页使用以下供应商资源。PicForLater 只显示“政策处理取决于供应商、套餐、地区
-和账户控制”的保守声明，不把链接存在等同于 zero retention、禁训练、数据地区或
-可删除保证。
+政策取决于供应商、套餐、地区和账户控制；链接不构成零保留、禁训练、固定数据地区或可删除保证。
 
 | Preset | 隐私 | 条款 | 价格/模型 |
 |---|---|---|---|
@@ -158,29 +66,58 @@ OpenAI-compatible 图片请求只发送标准的 `text` 与 `image_url.url`（da
 | Ollama | [Privacy](https://ollama.com/privacy) | [Terms](https://ollama.com/terms) | [Models](https://ollama.com/search) |
 | vLLM | [Security](https://docs.vllm.ai/en/latest/security.html) | [Governance](https://docs.vllm.ai/en/latest/community/governance.html) | [OpenAI server](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) |
 
-loopback 只表示网络目标在本机；服务进程、模型、日志和保留行为仍由用户运行的
-Ollama/vLLM 实例控制。自定义接口的所有者、政策、证书、兼容性和价格无法由本
-项目预先核验。
+loopback 只表示网络目标在本机，日志和保留行为仍由用户运行的服务控制。自定义接口的
+所有者、政策、证书、兼容性与价格无法由本项目预先核验。
 
 ## 验证等级与已知边界
 
-- 全部 preset：生产 transport 的确定性 fake handler、真实 loopback HTTP 集成、
-  严格 parser、最大响应体、鉴权脱敏、redirect/SSRF 与无图片文字模式测试。
-- DeepSeek `RemoteOcrText`：使用专用测试 key 和合成 OCR 的显式真实 contract。
-  2026-08-01 的三次测量通过；随后一次复测得到 HTTP 200 但空标题，暴露了提示中
-  “空骨架”会被模型照抄的问题。该骨架已删除，连接测试现改为运行完整 parser；
-  受审批通道中断影响，修正后的真实复测尚未完成，不能宣称所有真实调用必过。
-- 阿里云百炼 / Qwen `RemoteVision`：2026-08-01 使用专用测试 key、
-  `qwen3-vl-flash-2026-01-22` 和内置 640×960 授权猫图复测。保留
-  `response_format=json_object` 和 `enable_thinking=false`，同时省略可选的
-  `detail` 与默认的 `n=1`，得到 HTTP 200，约 3.16 秒返回全部八个结构化根字段。
-  原内置 1×1 PNG 对同一
-  model 返回 HTTP 400，因此故障不是 key、model ID、`detail` 或 JSON Object。
-  生产 parser 复测又暴露 JSON Object 提示未写明数组数量/长度上限；补齐后
-  真实响应仍返回 4 条 `visualFacts`（上限 3，最长单项 47 字符）。现仅对
-  “恰好多一条低风险视觉事实”保留前三条并写警告；更大溢出和其他字段仍
-  严格拒绝。最终生产载荷形状的真实 contract 与回归测试均已通过。
-- 其他云 preset：本轮只做官方契约核对和 fake HTTP，不使用未经提供的真实 key，
-  因而不标记为真实 API 合格。用户输入 model 后仍须通过无用户内容的合成测试。
-- 价格估算只在供应商返回可靠 usage 且定价已核验时成立；聚合平台还可能因上游、
-  地区、缓存和套餐不同而变化。
+| 范围 | 验证记录 | 限制 |
+| --- | --- | --- |
+| 全部 preset | 生产 transport 的确定性 fake handler、真实 loopback HTTP 集成；覆盖 parser、响应体上限、鉴权脱敏、redirect/SSRF 和文字模式不发送图片 | 不代表云端真实 API 合格 |
+| DeepSeek `RemoteOcrText` | 2026-08-01 三次真实合成 OCR 测量通过，后续复测得到 HTTP 200 但标题为空 | 提示及完整 parser 已修正，修正后的真实复测尚未完成 |
+| 百炼 / Qwen `RemoteVision` | 2026-08-01，以 `qwen3-vl-flash-2026-01-22` 和内置 640×960 授权猫图验证；HTTP 200，约 3.16 秒返回八个根字段，最终生产载荷 contract 与回归通过 | 使用 `json_object`、`enable_thinking=false`，省略 `detail` / `n=1`；仅对恰好多一条低风险 `visualFacts` 保留前三条并警告，其他越界严格拒绝 |
+| 其他云 preset | 官方契约核对及 fake HTTP | 未做付费实测；用户所填 model 仍须通过无用户内容的合成测试 |
+
+该轮 Qwen 测试中的 1×1 PNG 曾返回 HTTP 400，后续图片连接测试改用上述已验证的授权猫图。
+
+真实测试使用专用凭据和固定样例，执行方式见 [tests/README.md](../tests/README.md)。
+价格估算仅在 usage 可靠且定价已核验时成立；聚合平台还受上游、地区、缓存和套餐影响。
+
+## 预设迁移记录（2026-09-21）
+
+仅迁移下表中的旧默认模型，保留其他用户填写的模型及自定义端点。模型、输入能力或
+请求参数变化会清除验证/同意并切回本地；图片能力开放不自动选择上传，重新测试和同意
+后才能启用。本轮仅核对模型/请求契约并做本地自动化测试，未更新隐私政策核验日期或调用付费 API。
+
+| Preset | 旧默认 → 新默认 | 增量与依据 |
+| --- | --- | --- |
+| 百度千帆 | `ernie-4.5-turbo-128k` → `ernie-5.0` | 开放图片，保留 OpenAI / JSON Object；[模型与模态](https://cloud.baidu.com/doc/qianfan-api/s/Dmba8k71y) |
+| MiniMax | `MiniMax-M2.7` → `MiniMax-M3` | 开放图片，使用矩阵中的 Anthropic 端点、Bearer 和 PromptOnly，默认关闭思考；[兼容契约](https://platform.minimax.cn/docs/api-reference/text-anthropic-api) |
+| Perplexity | `sonar` 不变 | 开放图片，保持关闭搜索和 JSON Schema，以当前账号/model 的图片连接测试把关，不因缺少该型号文档示例禁用入口；[图片格式](https://docs.perplexity.ai/docs/sonar/media) |
+| DeepSeek | `deepseek-v4-flash` / `deepseek-v4-flash-vision-exp` → `deepseek-flash` | 新 Flash 承接旧模型并开放图片；[模型与能力](https://api-docs.deepseek.com/quick_start/pricing/) |
+| 腾讯混元 | `hy3-preview` → `hy3` | 旧预览已下线，保留文字、JSON Schema 和思考档位；[公告](https://cloud.tencent.com/announce/detail/2391) |
+| SiliconFlow | `Pro/zai-org/GLM-4.7` → `Pro/zai-org/GLM-5.1` | 旧型号已下线，保留文字/JSON Object 和关闭思考；[公告](https://docs.siliconflow.cn/docs/release-notes/overview)、[模型](https://www.siliconflow.cn/models)、[参数](https://docs.siliconflow.cn/docs/api/chat-completions-post) |
+| Groq | Llama 4 Scout → `qwen/qwen3.8-27b` | Scout 对普通账户停服；新版支持图片，标记 Preview，新配置关闭思考，已有配置保留受支持档位；[下线公告](https://console.groq.com/docs/deprecations)、[模型](https://console.groq.com/docs/model/qwen/qwen3.8-27b) |
+
+百度与 MiniMax 的迁移用于提供视觉默认模型，不表示旧模型已下线。
+
+<details>
+<summary>2026-08-01 契约核验与历史来源</summary>
+
+- 混元从旧平台的 `hunyuan-turbos-latest` 迁到广州 TokenHub 的 `hy3-preview`，
+  不沿用旧 endpoint、验证或同意；9 月再迁至 `hy3`。固定 preset 不跨地域路由，
+  新加坡账号需用自定义接口配置国际 endpoint。
+- 豆包与 Together 按官方多模态/结构化视觉契约开放图片。Kimi `kimi-k2.5` 当时仍可用，
+  因此未强制迁到官方示例的 2.6；model ID 保持可编辑。
+
+其余 endpoint、鉴权与能力按当时官方文档核对，来源包括：
+
+- OpenAI：[图片输入](https://developers.openai.com/api/docs/guides/images-vision)、[结构化输出](https://developers.openai.com/api/docs/guides/structured-outputs)。
+- Anthropic：[Messages](https://platform.claude.com/docs/en/build-with-claude/working-with-messages)、[结构化输出](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)。
+- Gemini：[兼容层](https://ai.google.dev/gemini-api/docs/openai)、[3.5 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash)。
+- 混元：[旧平台迁移](https://cloud.tencent.com/document/product/1729/131925)、[TokenHub API](https://cloud.tencent.com/document/product/1823/130078)。
+- 豆包：[Seed 2.0](https://www.volcengine.com/docs/82379/1795150)；百炼：[Chat API](https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions)；MiniMax：[文本生成](https://platform.minimaxi.com/docs/guides/text-generation)。
+- OpenRouter：[图片输入](https://openrouter.ai/docs/guides/overview/multimodal/image-understanding)；Groq：[Vision](https://console.groq.com/docs/vision)；Together：[结构化视觉提取](https://docs.together.ai/docs/inference/vision/structured-extraction)。
+- Ollama：[兼容层](https://docs.ollama.com/api/openai-compatibility)；vLLM：[多模态输入](https://docs.vllm.ai/en/stable/features/multimodal_inputs/)。
+
+</details>

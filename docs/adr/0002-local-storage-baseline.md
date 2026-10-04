@@ -33,14 +33,12 @@ staging/
 
 ## 依赖
 
-- `Microsoft.Data.Sqlite 10.0.10`：MIT；使用直接 ADO.NET API，不引入 ORM。
-- `SQLitePCLRaw.lib.e_sqlite3 3.53.3`：Apache-2.0/SQLite public-domain components；显式覆盖 `Microsoft.Data.Sqlite` 当前传递引入的脆弱 2.1.11 原生库。
-
-NuGet 安全审计覆盖直接和传递依赖，`NU1901`–`NU1904` 作为构建错误。依赖版本、许可证、替代方案和 Release 包体影响记录在 `docs/dependencies.md` 与 `THIRD-PARTY-NOTICES.md`。
+SQLite 直接使用 ADO.NET，不引入 ORM；显式固定修复版本的原生库，覆盖脆弱的传递版本。
+版本与安全审计见[依赖清单](../dependencies.md)，许可证见[第三方说明](../../THIRD-PARTY-NOTICES.md)。
 
 ## 结果
 
 - 所有自动化测试必须注入独立临时根目录，并在连接释放后清理；禁止访问真实用户数据根。
-- 以后导入事务可以依赖持久化 job、唯一 hash 和稳定相对路径实现幂等恢复。
+- 持久化 job、唯一 hash 和稳定相对路径支持导入事务的幂等恢复。
 - 集成测试必须覆盖等待迁移锁期间数据库由另一初始化器创建的竞态，并验证升级者仍基于锁内状态创建 v1 快照；路径测试必须验证目录和文件重解析点被拒绝且外部目标不被修改。
-- SQLite 原生库会增加 Windows Release 包体；阶段 1 完成前必须测量实际增量，不能只引用 NuGet 下载大小。
+- SQLite 对 Release 包体的影响以发布产物实测为准，不能用 NuGet 下载大小代替。

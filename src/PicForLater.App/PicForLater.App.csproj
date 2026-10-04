@@ -177,7 +177,8 @@
     <ItemGroup>
       <_UnpackagedWinUiPri Include="$(TargetDir)$(TargetName).pri"
                            Condition="Exists('$(TargetDir)$(TargetName).pri')" />
-      <_UnpackagedWinUiXbf Include="$(TargetDir)**\*.xbf" />
+      <_UnpackagedWinUiXbf Include="$(TargetDir)**\*.xbf"
+                         Exclude="$(TargetDir)publish\**\*.xbf;$(PublishDir)**\*.xbf" />
       <ResolvedFileToPublish Include="@(_UnpackagedWinUiPri)">
         <RelativePath>$(TargetName).pri</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
