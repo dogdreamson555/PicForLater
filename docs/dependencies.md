@@ -37,10 +37,25 @@ Complete attribution and redistribution notices are in [`THIRD-PARTY-NOTICES.md`
   downloads only frameworks that do not meet the required version from Microsoft's official
   installer URLs. Offline Setup carries both installers. The .NET SDK is a development
   prerequisite only.
+- .NET minimum versions come from the published `runtimeconfig.json`, currently `10.0.0`
+  for both frameworks. The pinned `10.0.12` download is used when a runtime is missing;
+  it is not an enforced upgrade for existing compatible installations. The detector also
+  reads the selected ASP.NET Core runtime's own .NET dependency: ASP.NET Core `10.0.11`
+  needs .NET `10.0.11` or a newer patch in the same minor line. Binary compatibility
+  and recommended security servicing versions are separate requirements.
 - Windows App Runtime 2.3.1 is deployed as the applicable Microsoft-signed MSIX packages for
   the native architecture. Online Setup downloads the architecture-specific ZIP and VC runtime
   from the same GitHub Release; Offline Setup includes them. The WinUI app itself remains
   unpackaged, and Windows App Runtime packages are registered for the current user.
+- Windows App Runtime's actual framework minimum is `2.3.1.0`, derived from signed MSIX
+  identities. Newer stable DDLM packages in the same major and architecture are reused;
+  their versioned identity names must not cause redundant installation.
+- The VC++ installer currently retains the conservative `14.51.36247.0` threshold.
+  An earlier compatible minimum has not been established from the native toolchain;
+  the recommended download version alone does not prove a binary compatibility floor.
+- Prerequisite exit code `3010` is followed by a fresh availability check. Setup continues
+  when all dependencies are usable; it requests a restart only if the affected dependency
+  is still unavailable. `1641` still stops Setup because a restart has already been initiated.
 - Compatible .NET servicing versions are reused across app updates. Runtime assets are only
   refreshed when a release changes its minimum dependency version; ordinary application
   updates do not require downloading the full runtime set again.

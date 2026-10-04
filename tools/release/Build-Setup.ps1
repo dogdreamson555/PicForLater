@@ -234,15 +234,6 @@ if ($runtimeFrameworkDefinitions.Count -ne $requiredFrameworks.Count -or
     @(Compare-Object $requiredFrameworks $runtimeFrameworkNames).Count -ne 0) {
     throw 'The framework-dependent publish must declare exactly .NET and ASP.NET Core runtimes.'
 }
-$pinnedDotNetVersion = [version]$dotnetManifest.version
-foreach ($framework in $runtimeFrameworkDefinitions) {
-    $declaredFrameworkVersion = [version]$framework.version
-    if ($declaredFrameworkVersion.Major -ne $pinnedDotNetVersion.Major -or
-        $declaredFrameworkVersion.Minor -ne $pinnedDotNetVersion.Minor -or
-        $pinnedDotNetVersion -lt $declaredFrameworkVersion) {
-        throw "The pinned .NET prerequisite $pinnedDotNetVersion cannot satisfy $($framework.name) $declaredFrameworkVersion."
-    }
-}
 if ($null -ne $runtimeConfig.runtimeOptions.PSObject.Properties['includedFrameworks']) {
     throw 'The app publish unexpectedly bundles .NET runtime frameworks.'
 }

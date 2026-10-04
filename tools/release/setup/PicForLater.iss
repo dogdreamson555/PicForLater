@@ -136,6 +136,7 @@ var
   Index, Count, ResultCode: Integer;
   Section, Id, Name, FileName, Hash, Kind, PayloadPath: String;
   Started: Boolean;
+  RestartRequired: array[0..3] of Boolean;
 begin
   Result := '';
   if PrerequisitesReady then exit;
@@ -154,6 +155,7 @@ begin
   end;
   for Index := 0 to Count - 1 do
   begin
+    RestartRequired[Index] := False;
     Section := IntToStr(Index);
     if GetIniInt(Section, 'Needed', 1, 0, 1, StatePath) = 0 then continue;
     Id := GetIniString(Section, 'Id', '', StatePath);
@@ -198,13 +200,19 @@ begin
           Result := Name + ' could not be installed. Allow the administrator prompt or use a machine with the required component installed.';
           exit;
         end;
-        if (ResultCode = 3010) or (ResultCode = 1641) then
+        Log(Name + ' installer exited with code ' + IntToStr(ResultCode) + '.');
+        if ResultCode = 1641 then
         begin
           NeedsRestart := True;
           Result := Name + ' requires a restart. Restart Windows and run Setup again; the existing application has not been replaced.';
           exit;
         end;
-        if (ResultCode <> 0) and (ResultCode <> 1638) then
+        if ResultCode = 3010 then
+        begin
+          RestartRequired[Index] := True;
+          Log(Name + ' was installed with a pending restart; checking availability before replacing the application.');
+        end;
+        if (ResultCode <> 0) and (ResultCode <> 1638) and (ResultCode <> 3010) then
         begin
           Result := Name + ' installation failed with exit code ' + IntToStr(ResultCode) + '.';
           exit;
@@ -223,8 +231,14 @@ begin
   for Index := 0 to Count - 1 do
     if GetIniInt(IntToStr(Index), 'Needed', 1, 0, 1, StatePath) <> 0 then
     begin
-      Result := GetIniString(IntToStr(Index), 'Name', 'A required component', StatePath) +
-        ' is still unavailable. Setup has not replaced the existing application.';
+      Name := GetIniString(IntToStr(Index), 'Name', 'A required component', StatePath);
+      if RestartRequired[Index] then
+      begin
+        NeedsRestart := True;
+        Result := Name + ' is not yet available. Restart Windows and run Setup again; the existing application has not been replaced.';
+      end
+      else
+        Result := Name + ' is still unavailable. Setup has not replaced the existing application.';
       exit;
     end;
   if not RunHelper('CaptureLegacy', '-InstallDirectory "' + ExpandConstant('{app}') +

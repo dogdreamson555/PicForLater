@@ -49,7 +49,8 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
    仅在缺少满足要求的版本时从微软官方来源获取相应运行时 EXE，最终用户不需要安装
    .NET SDK。Windows App Runtime 与 Visual C++ 运行库也只在缺少满足要求的版本时安装：在线 Setup 从当前 GitHub Release
    获取架构专用 Windows App Runtime ZIP 与 VC redist；离线 Setup 则包含完整前置运行库，
-   不需要网络。运行库版本由各自 manifest 锁定，兼容的已安装服务补丁版本直接复用。
+   不需要网络。下载载荷由各自 manifest 锁定；.NET 最低版本从实际发布的 runtimeconfig
+   推导，兼容的已安装服务补丁版本直接复用，并核对 ASP.NET Core 自身要求的基础 .NET 版本。
    构建脚本校验微软运行时载荷的长度、SHA-256 和 Authenticode 签名，并以
    `--quiet --msix` 为当前用户注册适用的 framework、Main、Singleton 和 DDLM 包；PicForLater
    本身始终不注册为 MSIX。
@@ -59,6 +60,8 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
    注册给当前用户。完成运行库检测后才复制应用文件；创建开始菜单快捷方式并提供可选
    桌面快捷方式；覆盖安装复用目录和任务选择；卸载删除程序、快捷方式、通知注册和
    卸载项，但保留 `%LocalAppData%\PicForLater` 用户数据。
+   前置安装返回 3010 后先复检可用性，依赖已就绪则继续安装应用；只有对应组件仍不可用时
+   才要求重启后继续。1641 表示已启动重启，仍立即停止安装。此流程不清除系统待重启记录。
 10. Release publish 必须包含同一次 WinUI 构建生成的 `PicForLater.App.pri` 和全部 XBF。
     构建脚本对 PRI、关键 XBF、主 EXE 和禁止的本地推理文件执行硬校验，避免生成可安装
     但在 WinUI 启动期崩溃的残缺布局。

@@ -37,12 +37,12 @@ function Read-SetupManifest {
 }
 
 function Test-CompatibleRuntimeVersion {
-    param([string]$Installed, [string]$Minimum)
+    param([string]$Installed, [string]$Minimum, [ValidateSet('Minor', 'LatestPatch')][string]$RollForward = 'Minor')
     $version = $null
     if (-not [version]::TryParse($Installed, [ref]$version)) { return $false }
     $required = [version]$Minimum
     return $version.Major -eq $required.Major -and
-        $version.Minor -eq $required.Minor -and $version -ge $required
+        $version -ge $required -and ($RollForward -eq 'Minor' -or $version.Minor -eq $required.Minor)
 }
 
 function Get-GlobalDotNetPath {
@@ -63,15 +63,50 @@ function Get-GlobalDotNetPath {
     return Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'dotnet\dotnet.exe'
 }
 
+function Get-AspNetCoreDependency {
+    param($Runtime)
+    if ($null -eq $Runtime) { return $null }
+    $configPath = Join-Path (Join-Path $Runtime.Directory $Runtime.Version.ToString()) 'Microsoft.AspNetCore.App.runtimeconfig.json'
+    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) { return $null }
+    try {
+        $options = (Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json).runtimeOptions
+        $dependency = $options.framework
+        if ($dependency.name -ne 'Microsoft.NETCore.App') { return $null }
+        $rollForward = if ($null -ne $options.PSObject.Properties['rollForward']) { [string]$options.rollForward } else { 'Minor' }
+        if ($rollForward -notin @('Minor', 'LatestPatch')) { return $null }
+        return [pscustomobject]@{ Version = [version]$dependency.version; RollForward = $rollForward }
+    } catch { return $null }
+}
+
 function Test-DotNetPrerequisite {
-    param($Item, [string]$Architecture)
+    param($Item, [string]$Architecture, $AspNetRuntime = $null)
     $hostPath = Get-GlobalDotNetPath $Architecture
     if (-not (Test-Path -LiteralPath $hostPath -PathType Leaf)) { return $false }
     $runtimes = @(& $hostPath --list-runtimes 2>&1)
     if ($LASTEXITCODE -ne 0) { throw 'The registered .NET host could not enumerate runtimes.' }
-    foreach ($line in $runtimes) {
-        if ([string]$line -match '^([^ ]+) ([^ ]+) \[' -and $Matches[1] -eq $Item.framework -and
-            (Test-CompatibleRuntimeVersion $Matches[2] $Item.minimumVersion)) { return $true }
+    $definitions = @(foreach ($line in $runtimes) {
+        $version = $null
+        if ([string]$line -match '^([^ ]+) ([^ ]+) \[(.+)\]$' -and [version]::TryParse($Matches[2], [ref]$version)) {
+            [pscustomobject]@{ Name = $Matches[1]; Version = $version; Directory = $Matches[3] }
+        }
+    })
+    if ($Item.framework -eq 'Microsoft.AspNetCore.App' -or $null -ne $AspNetRuntime) {
+        $aspMinimum = if ($Item.framework -eq 'Microsoft.AspNetCore.App') { $Item.minimumVersion } else { $AspNetRuntime.minimumVersion }
+        $selectedAsp = $definitions | Where-Object {
+            $_.Name -eq 'Microsoft.AspNetCore.App' -and (Test-CompatibleRuntimeVersion $_.Version.ToString() $aspMinimum)
+        } | Sort-Object @{ Expression = { $_.Version.Minor } }, @{ Expression = { $_.Version }; Descending = $true } | Select-Object -First 1
+        $dependency = Get-AspNetCoreDependency $selectedAsp
+        if ($Item.framework -eq 'Microsoft.AspNetCore.App') { return $null -ne $dependency }
+        if ($null -eq $dependency) {
+            $installVersion = if ($null -ne $AspNetRuntime.PSObject.Properties['installVersion']) { $AspNetRuntime.installVersion } else { $AspNetRuntime.minimumVersion }
+            $dependency = [pscustomobject]@{ Version = [version]$installVersion; RollForward = 'LatestPatch' }
+        }
+    } else { $dependency = $null }
+    foreach ($runtime in $definitions) {
+        if ($runtime.Name -eq $Item.framework -and (Test-CompatibleRuntimeVersion $runtime.Version.ToString() $Item.minimumVersion) -and
+            ($null -eq $dependency -or (Test-CompatibleRuntimeVersion $runtime.Version.ToString() $dependency.Version.ToString() $dependency.RollForward))) {
+            return $true
+        }
     }
     return $false
 }
@@ -94,7 +129,12 @@ function Test-VisualCppPrerequisite {
 
 function Test-WindowsRuntimePackage {
     param($Definition)
-    foreach ($package in @(Get-AppxPackage -Name $Definition.name -PackageTypeFilter Framework, Main)) {
+    $ddlm = [regex]::Match($Definition.name, '^Microsoft\.WinAppRuntime\.DDLM\.(\d+)\.\d+\.\d+\.\d+-(x6|x8|a6)$')
+    $name = if ($ddlm.Success) { "Microsoft.WinAppRuntime.DDLM.$($ddlm.Groups[1].Value).*" } else { $Definition.name }
+    foreach ($package in @(Get-AppxPackage -Name $name -PackageTypeFilter Framework, Main)) {
+        if ($ddlm.Success -and ([version]$package.Version).Major -ne ([version]$Definition.version).Major) { continue }
+        if ($ddlm.Success -and $package.Name -notmatch
+            ('^Microsoft\.WinAppRuntime\.DDLM\.' + $ddlm.Groups[1].Value + '\.\d+\.\d+\.\d+-' + $ddlm.Groups[2].Value + '$')) { continue }
         if ([string]$package.Architecture -ieq $Definition.architecture -and
             [version]$package.Version -ge [version]$Definition.version -and
             $package.PublisherId -eq '8wekyb3d8bbwe' -and $package.Status -eq 'Ok') { return $true }
@@ -103,9 +143,9 @@ function Test-WindowsRuntimePackage {
 }
 
 function Test-SetupPrerequisite {
-    param($Item, [string]$Architecture)
+    param($Item, [string]$Architecture, $AspNetRuntime = $null)
     switch ($Item.id) {
-        'dotnet-runtime' { return Test-DotNetPrerequisite $Item $Architecture }
+        'dotnet-runtime' { return Test-DotNetPrerequisite $Item $Architecture $AspNetRuntime }
         'aspnetcore-runtime' { return Test-DotNetPrerequisite $Item $Architecture }
         'visual-cpp-runtime' { return Test-VisualCppPrerequisite $Item $Architecture }
         'windows-app-runtime' {
@@ -122,8 +162,9 @@ function Write-DetectionResult {
     param($Manifest, [string]$Path)
     $lines = @('[Prerequisites]', "Count=$(@($Manifest.prerequisites).Count)")
     $index = 0
+    $aspNetRuntime = @($Manifest.prerequisites | Where-Object id -EQ 'aspnetcore-runtime')[0]
     foreach ($item in $Manifest.prerequisites) {
-        $needed = if (Test-SetupPrerequisite $item $Manifest.architecture) { 0 } else { 1 }
+        $needed = if (Test-SetupPrerequisite $item $Manifest.architecture $aspNetRuntime) { 0 } else { 1 }
         $lines += @("[$index]", "Id=$($item.id)", "Name=$($item.name)", "Needed=$needed",
             "FileName=$($item.fileName)", "Uri=$($item.uri)", "Sha256=$($item.sha256)",
             "Kind=$($item.kind)")

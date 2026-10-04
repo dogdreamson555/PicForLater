@@ -236,6 +236,27 @@ if ($null -eq $dotnetArchitecture -or $null -eq $visualCppArchitecture) {
     throw "A prerequisite is not pinned for $Architecture."
 }
 
+$runtimeConfig = Get-Content -LiteralPath (Join-Path $absolutePublishDirectory 'PicForLater.App.runtimeconfig.json') -Raw | ConvertFrom-Json
+if ($null -ne $runtimeConfig.runtimeOptions.PSObject.Properties['rollForward'] -and $runtimeConfig.runtimeOptions.rollForward -ne 'Minor') {
+    throw 'The prerequisite detector requires the app default Minor roll-forward policy.'
+}
+$frameworkMinimums = @{}
+foreach ($framework in $runtimeConfig.runtimeOptions.frameworks) {
+    if ($null -ne $framework.PSObject.Properties['rollForward'] -and $framework.rollForward -ne 'Minor') {
+        throw 'The prerequisite detector requires the app default Minor roll-forward policy.'
+    }
+    $minimum = [version]$framework.version
+    $downloadVersion = [version]$dotnetManifest.version
+    if ($minimum.Major -ne $downloadVersion.Major -or $minimum.Minor -ne $downloadVersion.Minor -or
+        $minimum -gt $downloadVersion) {
+        throw "The pinned .NET download cannot satisfy $($framework.name) $minimum."
+    }
+    $frameworkMinimums[$framework.name] = $minimum.ToString()
+}
+foreach ($framework in @('Microsoft.NETCore.App', 'Microsoft.AspNetCore.App')) {
+    if (-not $frameworkMinimums.ContainsKey($framework)) { throw "The app runtime configuration is missing $framework." }
+}
+
 $publishFiles = @(Get-ChildItem -LiteralPath $absolutePublishDirectory -File -Recurse)
 if ($publishFiles.Count -eq 0) { throw 'The app publish directory contains no files.' }
 $publishPrefix = [IO.Path]::TrimEndingDirectorySeparator($absolutePublishDirectory) + [IO.Path]::DirectorySeparatorChar
@@ -280,6 +301,7 @@ foreach ($payload in $prerequisitePayloads) {
 
 $windowsAppSdkPackageRoot = Get-WindowsAppSdkPackageRoot -PackageVersion $WindowsAppSdkVersion
 $windowsAppSdkPackages = @(Get-WindowsAppSdkPackages -PackageRoot $windowsAppSdkPackageRoot -TargetArchitecture $Architecture)
+$windowsAppSdkMinimum = @($windowsAppSdkPackages | Where-Object name -Like 'Microsoft.WindowsAppRuntime.*')[0].version
 $windowsAppSdkArchiveName = "WindowsAppRuntime-$WindowsAppSdkVersion-$Architecture.zip"
 $windowsAppSdkArchivePath = Join-Path $absolutePrerequisitesDirectory $windowsAppSdkArchiveName
 $windowsAppSdkArchive = New-WindowsAppSdkArchive -Packages $windowsAppSdkPackages -Path $windowsAppSdkArchivePath
@@ -294,7 +316,7 @@ $prerequisites = @(
         uri = [string]$dotnetRuntime.uri
         length = [long]$dotnetRuntimeFile.Length
         sha256 = [string]$dotnetRuntime.sha256
-        minimumVersion = [string]$dotnetManifest.version
+        minimumVersion = $frameworkMinimums['Microsoft.NETCore.App']
         framework = 'Microsoft.NETCore.App'
     },
     [ordered]@{
@@ -305,7 +327,8 @@ $prerequisites = @(
         uri = [string]$aspNetCoreRuntime.uri
         length = [long]$aspNetCoreRuntimeFile.Length
         sha256 = [string]$aspNetCoreRuntime.sha256
-        minimumVersion = [string]$dotnetManifest.version
+        minimumVersion = $frameworkMinimums['Microsoft.AspNetCore.App']
+        installVersion = [string]$dotnetManifest.version
         framework = 'Microsoft.AspNetCore.App'
     },
     [ordered]@{
@@ -326,7 +349,7 @@ $prerequisites = @(
         uri = "$releaseUriRoot/$windowsAppSdkArchiveName"
         length = [long]$windowsAppSdkArchive.file.Length
         sha256 = [string]$windowsAppSdkArchive.sha256
-        minimumVersion = [string]$WindowsAppSdkVersion
+        minimumVersion = [string]$windowsAppSdkMinimum
         packages = @($windowsAppSdkPackages | ForEach-Object {
             [ordered]@{
                 fileName = [string]$_.fileName
