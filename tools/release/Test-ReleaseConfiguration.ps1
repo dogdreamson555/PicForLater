@@ -174,8 +174,9 @@ $setupDefinition = Get-Content -Raw -LiteralPath $setupDefinitionPath
 foreach ($requiredVisualCppToken in @(
     'PrerequisitesDir',
     '/install /quiet /norestart',
-    'ShellExec(',
-    "'runas'")) {
+    'ShellExecuteExW@shell32.dll',
+    'GetExitCodeProcess@kernel32.dll',
+    "RunWithProgress('runas', PayloadPath")) {
     if (-not $setupBuild.Contains($requiredVisualCppToken, [StringComparison]::Ordinal) -and
         -not $setupDefinition.Contains($requiredVisualCppToken, [StringComparison]::Ordinal)) {
         throw "The Setup pipeline is missing a Visual C++ Runtime invariant: $requiredVisualCppToken"

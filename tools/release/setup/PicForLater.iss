@@ -64,6 +64,7 @@ UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile={#RepositoryRoot}\LICENSE.txt
 Compression=lzma2/max
 SolidCompression=yes
+SetupLogging=yes
 WizardStyle=modern
 CloseApplications=yes
 CloseApplicationsFilter={#AppExeName}
@@ -74,13 +75,13 @@ ChangesAssociations=no
 ChangesEnvironment=no
 
 [Files]
-Source: "{#AppPublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#PrerequisitesDir}\prerequisites.json"; Flags: dontcopy
-Source: "{#PrerequisitesScriptPath}"; Flags: dontcopy
+Source: "{#PrerequisitesDir}\prerequisites.json"; Flags: dontcopy nocompression
+Source: "{#PrerequisitesScriptPath}"; Flags: dontcopy nocompression
 #if Distribution == "Offline"
-Source: "{#PrerequisitesDir}\*.exe"; Flags: dontcopy
-Source: "{#PrerequisitesDir}\*.zip"; Flags: dontcopy
+Source: "{#PrerequisitesDir}\*.exe"; Flags: dontcopy nocompression
+Source: "{#PrerequisitesDir}\*.zip"; Flags: dontcopy nocompression
 #endif
+Source: "{#AppPublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs solidbreak
 
 [Icons]
 Name: "{autoprograms}\PicForLater"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
@@ -96,9 +97,99 @@ Filename: "{app}\{#AppExeName}"; Description: "Launch PicForLater"; WorkingDir: 
 Filename: "{app}\{#AppExeName}"; Parameters: "--uninstall-notifications"; WorkingDir: "{app}"; Flags: runhidden waituntilterminated skipifdoesntexist
 
 [Code]
+const
+  SEE_MASK_NOCLOSEPROCESS = $00000040;
+  SEE_MASK_NOASYNC = $00000100;
+  SEE_MASK_FLAG_NO_UI = $00000400;
+  WAIT_OBJECT_0 = 0;
+  WAIT_TIMEOUT = 258;
+
+type
+  TShellExecuteInfo = record
+    Size, Mask: LongWord;
+    Window: HWND;
+    Verb, FileName, Parameters, Directory: String;
+    Show: Integer;
+    Instance: THandle;
+    IdList: LongWord;
+    ClassName: String;
+    ClassKey: THandle;
+    HotKey: LongWord;
+    Icon, Process: THandle;
+  end;
+
 var
   DownloadPage: TDownloadWizardPage;
+  PrerequisitePage: TOutputMarqueeProgressWizardPage;
+  PrerequisiteStatus: String;
   PrerequisitesReady: Boolean;
+
+function ShellExecuteEx(var Info: TShellExecuteInfo): Boolean;
+  external 'ShellExecuteExW@shell32.dll stdcall';
+function WaitForSingleObject(Handle: THandle; Milliseconds: LongWord): LongWord;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+function GetExitCodeProcess(Handle: THandle; var ExitCode: LongWord): Boolean;
+  external 'GetExitCodeProcess@kernel32.dll stdcall';
+function CloseHandle(Handle: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+function GetTickCount64: Int64;
+  external 'GetTickCount64@kernel32.dll stdcall';
+
+procedure SetPrerequisiteStatus(const Status: String);
+begin
+  PrerequisiteStatus := Status;
+  Log(Status);
+  PrerequisitePage.SetText(Status, 'This can take a few minutes. Please keep this window open.');
+end;
+
+function RunWithProgress(const Verb, FileName, Parameters: String; var ResultCode: Integer): Boolean;
+var
+  Info: TShellExecuteInfo;
+  StartedAt: Int64;
+  WaitResult, ExitCode: LongWord;
+begin
+  Result := False;
+  StartedAt := GetTickCount64;
+  Info.Size := SizeOf(Info);
+  Info.Mask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_NOASYNC or SEE_MASK_FLAG_NO_UI;
+  Info.Window := WizardForm.Handle;
+  Info.Verb := Verb;
+  Info.FileName := FileName;
+  Info.Parameters := Parameters;
+  Info.Directory := ExpandConstant('{tmp}');
+  Info.Show := SW_HIDE;
+  if not ShellExecuteEx(Info) then
+  begin
+    ResultCode := DLLGetLastError;
+    Log(PrerequisiteStatus + ' could not start: ' + SysErrorMessage(ResultCode));
+    exit;
+  end;
+  if Info.Process = 0 then
+  begin
+    ResultCode := 6;
+    Log(PrerequisiteStatus + ' did not return a process handle.');
+    exit;
+  end;
+  try
+    repeat
+      PrerequisitePage.SetText(PrerequisiteStatus,
+        'Elapsed: ' + IntToStr((GetTickCount64 - StartedAt) div 1000) +
+        ' seconds. This can take a few minutes; please wait.');
+      WaitResult := WaitForSingleObject(Info.Process, 100);
+    until WaitResult <> WAIT_TIMEOUT;
+    if (WaitResult = WAIT_OBJECT_0) and GetExitCodeProcess(Info.Process, ExitCode) then
+    begin
+      ResultCode := ExitCode;
+      Result := True;
+    end
+    else
+      ResultCode := DLLGetLastError;
+  finally
+    CloseHandle(Info.Process);
+  end;
+  Log(PrerequisiteStatus + ' finished after ' + IntToStr(GetTickCount64 - StartedAt) +
+    ' ms, code ' + IntToStr(ResultCode) + '.');
+end;
 
 function StatePath: String;
 begin
@@ -115,19 +206,21 @@ var
   PowerShellPath, Parameters: String;
   ResultCode: Integer;
 begin
-  PowerShellPath := ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe');
+  PowerShellPath := ExpandConstant('{sysnative}\WindowsPowerShell\v1.0\powershell.exe');
   Parameters := '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' +
     ExpandConstant('{tmp}\Install-Prerequisites.ps1') + '" -Action ' + Action +
     ' -ManifestPath "' + ExpandConstant('{tmp}\prerequisites.json') +
     '" -OutputPath "' + StatePath + '" ' + ExtraParameters;
   DeleteFile(StatePath + '.error.ini');
-  Result := Exec(PowerShellPath, Parameters, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := RunWithProgress('open', PowerShellPath, Parameters, ResultCode);
   if Result then Result := ResultCode = 0;
 end;
 
 procedure InitializeWizard;
 begin
-  DownloadPage := CreateDownloadPage('Installing required components',
+  PrerequisitePage := CreateOutputMarqueeProgressPage('Installing required components',
+    'If an administrator prompt appears, choose Yes to continue.');
+  DownloadPage := CreateDownloadPage('Downloading required components',
     'Only missing or outdated components will be downloaded.', nil);
 end;
 
@@ -140,6 +233,9 @@ var
 begin
   Result := '';
   if PrerequisitesReady then exit;
+  PrerequisitePage.Show;
+  try
+  SetPrerequisiteStatus('Checking installed components...');
   ExtractTemporaryFile('prerequisites.json');
   ExtractTemporaryFile('Install-Prerequisites.ps1');
   if not RunHelper('Detect', '') then
@@ -166,6 +262,7 @@ begin
     PayloadPath := ExpandConstant('{tmp}\') + FileName;
     try
 #if Distribution == "Offline"
+      SetPrerequisiteStatus('Extracting ' + Name + '...');
       ExtractTemporaryFile(FileName);
 #else
       DownloadPage.Clear;
@@ -177,14 +274,9 @@ begin
         DownloadPage.Hide;
       end;
 #endif
-      if not RunHelper('Verify', '-PrerequisiteId "' + Id + '" -PayloadPath "' + PayloadPath + '"') then
-      begin
-        Result := HelperError;
-        exit;
-      end;
-      WizardForm.StatusLabel.Caption := 'Installing ' + Name + '...';
       if Kind = 'msixZip' then
       begin
+        SetPrerequisiteStatus('Verifying and installing ' + Name + '...');
         if not RunHelper('InstallWindowsRuntime', '-PrerequisiteId "' + Id + '" -PayloadPath "' + PayloadPath + '"') then
         begin
           Result := HelperError;
@@ -193,8 +285,14 @@ begin
       end
       else
       begin
-        Started := ShellExec('runas', PayloadPath, '/install /quiet /norestart', '',
-          SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        SetPrerequisiteStatus('Verifying ' + Name + '...');
+        if not RunHelper('Verify', '-PrerequisiteId "' + Id + '" -PayloadPath "' + PayloadPath + '"') then
+        begin
+          Result := HelperError;
+          exit;
+        end;
+        SetPrerequisiteStatus('Installing ' + Name + '...');
+        Started := RunWithProgress('runas', PayloadPath, '/install /quiet /norestart', ResultCode);
         if not Started then
         begin
           Result := Name + ' could not be installed. Allow the administrator prompt or use a machine with the required component installed.';
@@ -223,6 +321,7 @@ begin
       exit;
     end;
   end;
+  SetPrerequisiteStatus('Checking installed components...');
   if not RunHelper('Detect', '') then
   begin
     Result := HelperError;
@@ -241,6 +340,7 @@ begin
         Result := Name + ' is still unavailable. Setup has not replaced the existing application.';
       exit;
     end;
+  SetPrerequisiteStatus('Preparing the application update...');
   if not RunHelper('CaptureLegacy', '-InstallDirectory "' + ExpandConstant('{app}') +
     '" -LegacyPath "' + ExpandConstant('{tmp}\legacy-runtime.json') + '"') then
   begin
@@ -248,12 +348,23 @@ begin
     exit;
   end;
   PrerequisitesReady := True;
+  finally
+    PrerequisitePage.Hide;
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
+  begin
+    PrerequisitePage.Show;
+    try
+      SetPrerequisiteStatus('Finishing the application update...');
     if not RunHelper('CleanupLegacy', '-InstallDirectory "' + ExpandConstant('{app}') +
       '" -LegacyPath "' + ExpandConstant('{tmp}\legacy-runtime.json') + '"') then
       Log('Legacy runtime cleanup: ' + HelperError);
+    finally
+      PrerequisitePage.Hide;
+    end;
+  end;
 end;

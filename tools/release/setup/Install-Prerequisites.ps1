@@ -78,18 +78,23 @@ function Get-AspNetCoreDependency {
     } catch { return $null }
 }
 
-function Test-DotNetPrerequisite {
-    param($Item, [string]$Architecture, $AspNetRuntime = $null)
+function Get-DotNetRuntimes {
+    param([string]$Architecture)
     $hostPath = Get-GlobalDotNetPath $Architecture
-    if (-not (Test-Path -LiteralPath $hostPath -PathType Leaf)) { return $false }
+    if (-not (Test-Path -LiteralPath $hostPath -PathType Leaf)) { return @() }
     $runtimes = @(& $hostPath --list-runtimes 2>&1)
     if ($LASTEXITCODE -ne 0) { throw 'The registered .NET host could not enumerate runtimes.' }
-    $definitions = @(foreach ($line in $runtimes) {
+    foreach ($line in $runtimes) {
         $version = $null
         if ([string]$line -match '^([^ ]+) ([^ ]+) \[(.+)\]$' -and [version]::TryParse($Matches[2], [ref]$version)) {
             [pscustomobject]@{ Name = $Matches[1]; Version = $version; Directory = $Matches[3] }
         }
-    })
+    }
+}
+
+function Test-DotNetPrerequisite {
+    param($Item, [string]$Architecture, $AspNetRuntime = $null, $RuntimeDefinitions = $null)
+    $definitions = if ($null -eq $RuntimeDefinitions) { @(Get-DotNetRuntimes $Architecture) } else { $RuntimeDefinitions }
     if ($Item.framework -eq 'Microsoft.AspNetCore.App' -or $null -ne $AspNetRuntime) {
         $aspMinimum = if ($Item.framework -eq 'Microsoft.AspNetCore.App') { $Item.minimumVersion } else { $AspNetRuntime.minimumVersion }
         $selectedAsp = $definitions | Where-Object {
@@ -143,10 +148,10 @@ function Test-WindowsRuntimePackage {
 }
 
 function Test-SetupPrerequisite {
-    param($Item, [string]$Architecture, $AspNetRuntime = $null)
+    param($Item, [string]$Architecture, $AspNetRuntime = $null, $RuntimeDefinitions = $null)
     switch ($Item.id) {
-        'dotnet-runtime' { return Test-DotNetPrerequisite $Item $Architecture $AspNetRuntime }
-        'aspnetcore-runtime' { return Test-DotNetPrerequisite $Item $Architecture }
+        'dotnet-runtime' { return Test-DotNetPrerequisite $Item $Architecture $AspNetRuntime $RuntimeDefinitions }
+        'aspnetcore-runtime' { return Test-DotNetPrerequisite $Item $Architecture -RuntimeDefinitions $RuntimeDefinitions }
         'visual-cpp-runtime' { return Test-VisualCppPrerequisite $Item $Architecture }
         'windows-app-runtime' {
             foreach ($package in $Item.packages) {
@@ -163,8 +168,9 @@ function Write-DetectionResult {
     $lines = @('[Prerequisites]', "Count=$(@($Manifest.prerequisites).Count)")
     $index = 0
     $aspNetRuntime = @($Manifest.prerequisites | Where-Object id -EQ 'aspnetcore-runtime')[0]
+    $runtimeDefinitions = @(Get-DotNetRuntimes $Manifest.architecture)
     foreach ($item in $Manifest.prerequisites) {
-        $needed = if (Test-SetupPrerequisite $item $Manifest.architecture $aspNetRuntime) { 0 } else { 1 }
+        $needed = if (Test-SetupPrerequisite $item $Manifest.architecture $aspNetRuntime $runtimeDefinitions) { 0 } else { 1 }
         $lines += @("[$index]", "Id=$($item.id)", "Name=$($item.name)", "Needed=$needed",
             "FileName=$($item.fileName)", "Uri=$($item.uri)", "Sha256=$($item.sha256)",
             "Kind=$($item.kind)")

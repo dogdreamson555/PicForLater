@@ -45,8 +45,10 @@ try {
     Assert-True (-not (Test-CompatibleRuntimeVersion '10.0.12-preview.1' '10.0.12')) 'A preview runtime must not satisfy a stable requirement.'
 
     $script:mockHost = Join-Path $testRoot 'dotnet.ps1'
+    $script:hostDetections = 0
     function Get-GlobalDotNetPath {
         param([string]$Architecture)
+        $script:hostDetections++
         if ($Architecture -eq 'x64') { return $script:mockHost }
         return Join-Path $testRoot 'missing-dotnet.exe'
     }
@@ -99,6 +101,36 @@ $global:LASTEXITCODE = 0
     Set-MockRuntimes -Core @('10.0.11') -Asp @('10.0.11')
     [IO.File]::WriteAllText((Join-Path $sharedRoot 'Microsoft.AspNetCore.App\10.0.11\Microsoft.AspNetCore.App.runtimeconfig.json'), 'corrupt')
     Assert-True (-not (Test-DotNetPrerequisite $appAsp 'x64')) 'A damaged ASP.NET runtime definition must not be reused.'
+
+    function Test-VisualCppPrerequisite { return $false }
+    $script:installedPackages = @()
+    $detectItems = @(foreach ($id in @('dotnet-runtime', 'aspnetcore-runtime', 'visual-cpp-runtime', 'windows-app-runtime')) {
+        @{ id = $id; name = $id; minimumVersion = '10.0.0'; fileName = "$id.exe";
+            uri = 'https://example.invalid/fixture'; sha256 = '0' * 64; kind = 'exe' }
+    })
+    $detectItems[0].framework = 'Microsoft.NETCore.App'
+    $detectItems[1].framework = 'Microsoft.AspNetCore.App'
+    $detectItems[1].installVersion = '10.0.12'
+    $detectItems[3].kind = 'msixZip'
+    $detectItems[3].packages = @([pscustomobject]@{
+        name = 'Microsoft.WindowsAppRuntime.Test'; architecture = 'x64'; version = '2.0.0.0'
+    })
+    $detectManifest = [pscustomobject]@{ architecture = 'x64'; prerequisites = $detectItems }
+    $detectionPath = Join-Path $testRoot 'detection.ini'
+    Set-MockRuntimes -Core @('10.0.12') -Asp @('10.0.12')
+    $script:hostDetections = 0
+    Write-DetectionResult $detectManifest $detectionPath
+    Assert-True ($script:hostDetections -eq 1) 'One detection must enumerate the .NET host only once.'
+    Assert-True ((Get-Content -LiteralPath $detectionPath -Raw) -match '\[0\][^\[]*Needed=0') 'Shared runtime enumeration must preserve the compatibility result.'
+    Set-MockRuntimes -Core @('10.0.9') -Asp @('10.0.12')
+    $script:hostDetections = 0
+    Write-DetectionResult $detectManifest $detectionPath
+    Assert-True ($script:hostDetections -eq 1) 'A later detection must obtain one fresh runtime enumeration.'
+    Assert-True ((Get-Content -LiteralPath $detectionPath -Raw) -match '\[0\][^\[]*Needed=1') 'A later detection must not reuse an earlier compatible runtime snapshot.'
+    $detectManifest.architecture = 'arm64'
+    $script:hostDetections = 0
+    Write-DetectionResult $detectManifest $detectionPath
+    Assert-True ($script:hostDetections -eq 1) 'A missing native host must not cause repeated enumeration attempts.'
 
     $definition = [pscustomobject]@{
         name = 'Microsoft.WindowsAppRuntime.Test'; architecture = 'x64'; version = '2.0.0.0'
