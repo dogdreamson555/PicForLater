@@ -76,6 +76,10 @@ jobs:
         shell: powershell
         run: .\tools\release\Test-SetupPrerequisites.ps1
 
+      - name: Verify parallel component downloads
+        shell: powershell
+        run: .\tools\release\Test-SetupDownload.ps1
+
   package:
     name: Release assets ${{ matrix.artifact_arch }}
     needs: validate

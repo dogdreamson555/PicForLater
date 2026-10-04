@@ -51,6 +51,10 @@ ONNX Runtime、GenAI 和 CUDA/DirectML native runtime，所有用户都会承担
    获取架构专用 Windows App Runtime ZIP 与 VC redist；离线 Setup 则包含完整前置运行库，
    不需要网络。下载载荷由各自 manifest 锁定；.NET 最低版本从实际发布的 runtimeconfig
    推导，兼容的已安装服务补丁版本直接复用，并核对 ASP.NET Core 自身要求的基础 .NET 版本。
+   在线载荷使用系统 .NET 网络库按 8 段并发下载，显示总进度与速度，并允许停止下载；服务器
+   不支持 Range 时复用单连接响应。分段逐一检查响应范围与长度，合并后复用安装前的完整
+   SHA-256 校验，每个载荷只计算一次；长度或 Range 正确不能证明内容一致。失败或取消时
+   清理临时分段，不保留断点。已完成 GitHub 重定向的地址供剩余分段复用，避免重复跳转。
    构建脚本校验微软运行时载荷的长度、SHA-256 和 Authenticode 签名，并以
    `--quiet --msix` 为当前用户注册适用的 framework、Main、Singleton 和 DDLM 包；PicForLater
    本身始终不注册为 MSIX。

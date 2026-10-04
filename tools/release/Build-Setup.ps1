@@ -115,7 +115,8 @@ if ($setupDefinition -match '(?im)^\s*(DelTree|DeleteDir)\b' -or
     $setupDefinition.Contains('{localappdata}\PicForLater', [StringComparison]::OrdinalIgnoreCase)) {
     throw 'The Inno Setup definition must not delete or target the PicForLater user-data root.'
 }
-foreach ($requiredBuildFile in @($prerequisitesScriptPath, $dependencyBuilderPath, $dotnetManifestPath,
+foreach ($requiredBuildFile in @($prerequisitesScriptPath, $dependencyBuilderPath,
+    (Join-Path $PSScriptRoot 'setup\Download-Prerequisite.cs'), $dotnetManifestPath,
     $windowsAppSdkManifestPath, $visualCppManifestPath)) {
     if (-not (Test-Path -LiteralPath $requiredBuildFile -PathType Leaf)) {
         throw "A required setup build file was not found: $requiredBuildFile"

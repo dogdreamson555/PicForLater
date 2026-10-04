@@ -80,6 +80,8 @@ Source: "{#PrerequisitesScriptPath}"; Flags: dontcopy nocompression
 #if Distribution == "Offline"
 Source: "{#PrerequisitesDir}\*.exe"; Flags: dontcopy nocompression
 Source: "{#PrerequisitesDir}\*.zip"; Flags: dontcopy nocompression
+#else
+Source: "{#RepositoryRoot}\tools\release\setup\Download-Prerequisite.cs"; Flags: dontcopy nocompression
 #endif
 Source: "{#AppPublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs solidbreak
 
@@ -122,6 +124,7 @@ var
   DownloadPage: TDownloadWizardPage;
   PrerequisitePage: TOutputMarqueeProgressWizardPage;
   PrerequisiteStatus: String;
+  DownloadCancelled: Boolean;
   PrerequisitesReady: Boolean;
 
 function ShellExecuteEx(var Info: TShellExecuteInfo): Boolean;
@@ -135,6 +138,11 @@ function CloseHandle(Handle: THandle): Boolean;
 function GetTickCount64: Int64;
   external 'GetTickCount64@kernel32.dll stdcall';
 
+function StatePath: String;
+begin
+  Result := ExpandConstant('{tmp}\prerequisites.ini');
+end;
+
 procedure SetPrerequisiteStatus(const Status: String);
 begin
   PrerequisiteStatus := Status;
@@ -142,13 +150,26 @@ begin
   PrerequisitePage.SetText(Status, 'This can take a few minutes. Please keep this window open.');
 end;
 
-function RunWithProgress(const Verb, FileName, Parameters: String; var ResultCode: Integer): Boolean;
+procedure StopDownload(Sender: TObject);
+begin
+  if SuppressibleMsgBox(SetupMessage(msgStopDownload), mbConfirmation, MB_YESNO, IDYES) = IDYES then
+  begin
+    DownloadCancelled := True;
+    SetIniString('Cancel', 'Requested', '1', StatePath + '.download.ini.cancel');
+    DownloadPage.AbortButton.Enabled := False;
+  end;
+end;
+
+function RunWithProgress(const Verb, FileName, Parameters: String; var ResultCode: Integer;
+  Downloading: Boolean): Boolean;
 var
   Info: TShellExecuteInfo;
   StartedAt: Int64;
   WaitResult, ExitCode: LongWord;
+  ProgressPath: String;
 begin
   Result := False;
+  ProgressPath := StatePath + '.download.ini';
   StartedAt := GetTickCount64;
   Info.Size := SizeOf(Info);
   Info.Mask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_NOASYNC or SEE_MASK_FLAG_NO_UI;
@@ -172,9 +193,17 @@ begin
   end;
   try
     repeat
-      PrerequisitePage.SetText(PrerequisiteStatus,
-        'Elapsed: ' + IntToStr((GetTickCount64 - StartedAt) div 1000) +
-        ' seconds. This can take a few minutes; please wait.');
+      if Downloading then
+      begin
+        DownloadPage.SetText(PrerequisiteStatus + ' ' +
+          GetIniString('Download', 'Status', 'Connecting...', ProgressPath),
+          GetIniString('Download', 'Detail', 'Waiting for the server...', ProgressPath));
+        DownloadPage.SetProgress(GetIniInt('Download', 'Progress', 0, 0, 1000, ProgressPath), 1000);
+      end
+      else
+        PrerequisitePage.SetText(PrerequisiteStatus,
+          'Elapsed: ' + IntToStr((GetTickCount64 - StartedAt) div 1000) +
+          ' seconds. This can take a few minutes; please wait.');
       WaitResult := WaitForSingleObject(Info.Process, 100);
     until WaitResult <> WAIT_TIMEOUT;
     if (WaitResult = WAIT_OBJECT_0) and GetExitCodeProcess(Info.Process, ExitCode) then
@@ -189,11 +218,6 @@ begin
   end;
   Log(PrerequisiteStatus + ' finished after ' + IntToStr(GetTickCount64 - StartedAt) +
     ' ms, code ' + IntToStr(ResultCode) + '.');
-end;
-
-function StatePath: String;
-begin
-  Result := ExpandConstant('{tmp}\prerequisites.ini');
 end;
 
 function HelperError: String;
@@ -212,8 +236,27 @@ begin
     ' -ManifestPath "' + ExpandConstant('{tmp}\prerequisites.json') +
     '" -OutputPath "' + StatePath + '" ' + ExtraParameters;
   DeleteFile(StatePath + '.error.ini');
-  Result := RunWithProgress('open', PowerShellPath, Parameters, ResultCode);
+  Result := RunWithProgress('open', PowerShellPath, Parameters, ResultCode, Action = 'Download');
   if Result then Result := ResultCode = 0;
+end;
+
+function DownloadPrerequisite(const Id, Name, PayloadPath: String): Boolean;
+begin
+  DownloadCancelled := False;
+  DownloadPage.AbortButton.Enabled := True;
+  SetPrerequisiteStatus('Downloading ' + Name + '...');
+  DeleteFile(StatePath + '.download.ini');
+  DeleteFile(StatePath + '.download.ini.cancel');
+  DownloadPage.Show;
+  try
+    DownloadPage.Msg2Label.Visible := True;
+    DownloadPage.SetProgress(0, 1000);
+    Result := RunHelper('Download', '-PrerequisiteId "' + Id + '" -PayloadPath "' + PayloadPath + '"');
+    if Result then DownloadPage.SetProgress(1000, 1000);
+    Result := Result and not DownloadCancelled;
+  finally
+    DownloadPage.Hide;
+  end;
 end;
 
 procedure InitializeWizard;
@@ -222,12 +265,13 @@ begin
     'If an administrator prompt appears, choose Yes to continue.');
   DownloadPage := CreateDownloadPage('Downloading required components',
     'Only missing or outdated components will be downloaded.', nil);
+  DownloadPage.AbortButton.OnClick := @StopDownload;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   Index, Count, ResultCode: Integer;
-  Section, Id, Name, FileName, Hash, Kind, PayloadPath: String;
+  Section, Id, Name, FileName, Kind, PayloadPath: String;
   Started: Boolean;
   RestartRequired: array[0..3] of Boolean;
 begin
@@ -238,6 +282,9 @@ begin
   SetPrerequisiteStatus('Checking installed components...');
   ExtractTemporaryFile('prerequisites.json');
   ExtractTemporaryFile('Install-Prerequisites.ps1');
+#if Distribution != "Offline"
+  ExtractTemporaryFile('Download-Prerequisite.cs');
+#endif
   if not RunHelper('Detect', '') then
   begin
     Result := HelperError;
@@ -257,7 +304,6 @@ begin
     Id := GetIniString(Section, 'Id', '', StatePath);
     Name := GetIniString(Section, 'Name', '', StatePath);
     FileName := GetIniString(Section, 'FileName', '', StatePath);
-    Hash := GetIniString(Section, 'Sha256', '', StatePath);
     Kind := GetIniString(Section, 'Kind', '', StatePath);
     PayloadPath := ExpandConstant('{tmp}\') + FileName;
     try
@@ -265,13 +311,11 @@ begin
       SetPrerequisiteStatus('Extracting ' + Name + '...');
       ExtractTemporaryFile(FileName);
 #else
-      DownloadPage.Clear;
-      DownloadPage.Add(GetIniString(Section, 'Uri', '', StatePath), FileName, Hash);
-      DownloadPage.Show;
-      try
-        DownloadPage.Download;
-      finally
-        DownloadPage.Hide;
+      if not DownloadPrerequisite(Id, Name, PayloadPath) then
+      begin
+        if DownloadCancelled then Result := 'Download stopped. Retry to download the required component again.'
+        else Result := HelperError;
+        exit;
       end;
 #endif
       if Kind = 'msixZip' then
@@ -292,7 +336,7 @@ begin
           exit;
         end;
         SetPrerequisiteStatus('Installing ' + Name + '...');
-        Started := RunWithProgress('runas', PayloadPath, '/install /quiet /norestart', ResultCode);
+        Started := RunWithProgress('runas', PayloadPath, '/install /quiet /norestart', ResultCode, False);
         if not Started then
         begin
           Result := Name + ' could not be installed. Allow the administrator prompt or use a machine with the required component installed.';

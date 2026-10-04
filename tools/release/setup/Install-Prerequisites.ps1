@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Detect', 'Verify', 'InstallWindowsRuntime', 'CaptureLegacy', 'CleanupLegacy')]
+    [ValidateSet('Detect', 'Download', 'Verify', 'InstallWindowsRuntime', 'CaptureLegacy', 'CleanupLegacy')]
     [string]$Action = 'Detect',
     [string]$ManifestPath,
     [string]$OutputPath,
@@ -172,8 +172,7 @@ function Write-DetectionResult {
     foreach ($item in $Manifest.prerequisites) {
         $needed = if (Test-SetupPrerequisite $item $Manifest.architecture $aspNetRuntime $runtimeDefinitions) { 0 } else { 1 }
         $lines += @("[$index]", "Id=$($item.id)", "Name=$($item.name)", "Needed=$needed",
-            "FileName=$($item.fileName)", "Uri=$($item.uri)", "Sha256=$($item.sha256)",
-            "Kind=$($item.kind)")
+            "FileName=$($item.fileName)", "Kind=$($item.kind)")
         $index++
     }
     [IO.File]::WriteAllLines($Path, [string[]]$lines, [Text.Encoding]::Unicode)
@@ -192,6 +191,39 @@ function Assert-Payload {
             $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)CN=(?:Microsoft Corporation|\.NET)(?:,|$)' -or
             $signature.SignerCertificate.Subject -notmatch '(?:^|,\s*)O=Microsoft Corporation(?:,|$)') {
             throw "Microsoft signature verification failed for $($Item.name)."
+        }
+    }
+}
+
+function Get-PrerequisiteDownload {
+    param($Item, [string]$Path, [string]$ProgressPath)
+    if (-not ('PrerequisiteDownloader' -as [type])) {
+        Add-Type -Path (Join-Path $PSScriptRoot 'Download-Prerequisite.cs') -ReferencedAssemblies System.Net.Http
+    }
+    $download = New-Object PrerequisiteDownloader
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    $task = $download.DownloadAsync($Item.uri, $Path, [long]$Item.length)
+    try {
+        do {
+            if (Test-Path -LiteralPath "$ProgressPath.cancel") { $download.Cancel() }
+            $bytes = $download.BytesDownloaded
+            $speed = [long]($bytes / [Math]::Max(1, $timer.Elapsed.TotalSeconds))
+            $position = [int]($bytes * 1000 / [long]$Item.length)
+            $detail = '{0:F1} MiB / {1:F1} MiB ({2:F1} MiB/s)' -f ($bytes / 1MB), ($Item.length / 1MB), ($speed / 1MB)
+            $progress = "[Download]`r`nBytes=$bytes`r`nProgress=$position`r`nStatus=$($download.Status)`r`nDetail=$detail`r`n"
+            [IO.File]::WriteAllText("$ProgressPath.new", $progress, [Text.Encoding]::Unicode)
+            if (Test-Path -LiteralPath $ProgressPath) { [IO.File]::Replace("$ProgressPath.new", $ProgressPath, [NullString]::Value) }
+            else { [IO.File]::Move("$ProgressPath.new", $ProgressPath) }
+            if ($task.IsCompleted) { $null = $task.GetAwaiter().GetResult(); break }
+            Start-Sleep -Milliseconds 200
+        } while ($true)
+    }
+    finally {
+        $download.Cancel()
+        try { $null = $task.GetAwaiter().GetResult() } catch { }
+        $download.Dispose()
+        foreach ($temporary in @("$ProgressPath.new", "$ProgressPath.cancel")) {
+            if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
         }
     }
 }
@@ -310,8 +342,11 @@ if ($MyInvocation.InvocationName -ne '.') {
             default {
                 $item = @($manifest.prerequisites | Where-Object id -EQ $PrerequisiteId)
                 if ($item.Count -ne 1) { throw 'Unknown prerequisite requested.' }
-                if ($Action -eq 'Verify') { Assert-Payload $item[0] $PayloadPath }
-                else { Install-WindowsRuntime $item[0] $PayloadPath }
+                switch ($Action) {
+                    'Download' { Get-PrerequisiteDownload $item[0] $PayloadPath "$OutputPath.download.ini" }
+                    'Verify' { Assert-Payload $item[0] $PayloadPath }
+                    'InstallWindowsRuntime' { Install-WindowsRuntime $item[0] $PayloadPath }
+                }
             }
         }
     }
