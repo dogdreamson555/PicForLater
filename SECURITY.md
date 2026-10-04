@@ -8,11 +8,7 @@
 
 ## Reporting a vulnerability
 
-如果你发现了潜在的安全漏洞，请通过以下邮箱进行私密报告：
-
-**Security contact:** zhdds@protonmail.com
-
-请**不要**通过公开 GitHub Issue、Discussion、日志或附件披露尚未修复的安全漏洞或敏感信息。
+请通过 **zhdds@protonmail.com** 私密报告漏洞。请勿公开密钥、私人图片、数据库内容或完整远程请求/响应；修复或协调披露前，也请勿在公开 Issue、Discussion、日志或附件中发布漏洞细节或利用代码。
 
 报告中请避免包含与漏洞分析无关的真实用户数据，并尽可能提供：
 
@@ -22,23 +18,11 @@
 * 相关错误信息或日志片段（请先移除 API key、访问令牌、个人路径及其他敏感信息）；
 * 如适用，可附上缓解建议。
 
-请勿在公开渠道提交 API key、访问令牌、私人图片、数据库内容、完整的远程请求或响应、可直接用于攻击的利用代码，或尚未修复漏洞的详细复现信息。
-
-收到报告后，维护者会尽力确认问题、评估影响并与报告者协调后续披露。在正式公布响应时限之前，本项目不承诺固定的响应或修复 SLA。
-
-如果报告内容涉及可立即被滥用的漏洞，请在问题修复或协调披露之前保持相关技术细节私密。
-
-## Public disclosure
-
-为了给修复和发布安全更新留出合理时间，请不要在问题得到处理之前公开尚未修复漏洞的完整技术细节。
-
-漏洞修复完成后，维护者可根据问题的严重程度，在 Release notes、安全公告或其他适当渠道中说明修复情况。
+维护者会尽力确认问题、评估影响并协调披露，不承诺固定响应或修复 SLA。修复后可在 Release notes 或安全公告中说明处理情况。
 
 ## Release authenticity
 
-请仅从本项目官方 GitHub Releases 页面获取发布文件：
-
-https://github.com/dogdreamson555/PicForLater/releases
+请仅从[官方 GitHub Releases](https://github.com/dogdreamson555/PicForLater/releases) 获取发布文件。
 
 首版 `Setup.exe` 及应用程序**未进行 Authenticode 代码签名**，因此 Windows SmartScreen、防病毒软件或组织安全策略可能显示警告或阻止运行。这种警告本身不能用于证明文件是否来自本项目。
 

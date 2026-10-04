@@ -1,33 +1,32 @@
 # Performance and size notes
 
-This document records public release characteristics rather than development-machine
-benchmarks. Values may change with dependencies and packaging; the files attached to
-each GitHub Release are authoritative for that release.
+This document summarizes public release behavior. Artifact sizes vary by release;
+the matching GitHub Release page is authoritative for its files and sizes.
 
 ## Distribution layout
 
-- PicForLater is published as architecture-specific unpackaged `Setup.exe` installers.
-- The core application is .NET self-contained and uses the architecture-matched Windows
-  App SDK runtime installed by Setup.
-- The core application and Setup do not contain Qwen model weights, PP-OCR model files,
-  ONNX Runtime, CUDA, or DirectML inference payloads.
-- Optional local-analysis components and models are installed only after an explicit user
-  action and remain outside the application installation directory.
-
-Representative pre-release measurements placed the core x64 publish ZIP near 50 MiB and
-the offline x64/ARM64 Setup files near 140 MiB. These are engineering observations, not
-download-size guarantees.
+- Releases provide architecture-specific online and offline `Setup.exe` installers.
+- The unpackaged core app uses framework-dependent .NET and Windows App SDK runtimes.
+  Online Setup installs only missing/incompatible prerequisites; .NET runtimes come from
+  Microsoft. Offline Setup includes the complete prerequisites for installation without
+  network access. See [ADR 0015](adr/0015-github-unpackaged-setup-and-optional-local-runtime.md)
+  for the release policy.
+- Core Setup excludes Qwen and PP-OCR model files and ONNX Runtime, CUDA, and DirectML
+  inference payloads. Optional local-analysis components and models are installed after
+  explicit user action outside the application installation directory.
 
 ## Runtime behavior
 
+- Tray icon creation keeps Windows efficiency mode and process QoS unchanged by
+  disabling the library's automatic efficiency-mode adjustment.
 - Library queries, thumbnails, and background work are bounded so the UI does not load
   the complete library into memory.
 - Local model inference runs outside the main application process. The worker exits after
   a bounded idle period so model and GPU resources can be released.
 - Remote-analysis latency, token usage, and cost depend on the selected provider and model.
-- Local-analysis speed and memory use depend heavily on the selected model, execution
-  provider, available RAM/VRAM, driver, and image contents.
+- Local-analysis speed and memory use depend on the selected model, execution provider,
+  available RAM/VRAM, driver, and image contents.
 
 No hardware-specific performance claim is made. Release verification covers build, tests,
 publish layout, installer construction, and required resource checks; device-specific
-measurements should always identify their own hardware and procedure.
+measurements should identify their hardware and procedure.

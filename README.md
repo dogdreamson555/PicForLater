@@ -66,7 +66,7 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 ### 远程 API
 
-应用内置了常见服务商预设。通常只需选择服务商、填写 API Key 并测试连接即可启用；如果服务商要求通过系统环境变量提供密钥，则需要按对应服务商的要求自行配置。
+选择服务商预设、填写 API Key 并测试连接即可配置远程分析；如果服务商要求通过系统环境变量提供密钥，则需要按对应服务商的要求自行配置。具体接口与能力见[远程 API 说明](docs/remote-api-providers.md)。
 
 | 类型                     | 已内置的服务商 / 接口                                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -85,11 +85,9 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 1. 在“供应商分类”中选择对应类型，并选择服务商。
 2. 填入 API Key，点击“保存凭据”。
 3. 选择发送内容。模型支持视觉输入时，推荐使用“发送图片”，通常能获得更准确的结果。
-4. 选择输出的语言
+4. 选择输出语言。
 5. 点击“测试连接”确认配置可用。
 6. 核对远程分析的数据发送范围并确认启用。
-
-如果测试连接持续失败，可以在“高级设置”中将“思考规模”设为“关闭”后再次测试。若问题仍然存在，请确认 API Key、模型名称、Endpoint、账户余额 / 配额以及服务商当前状态。
 
 ### 本地分析
 
@@ -103,7 +101,7 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 1. 一键下载本地分析组件。
 2. 选择分析方式；如果设备性能允许，推荐使用“始终增强”。
-3. 选择推理设备。若先前没有安装对应的 [CUDA](https://developer.nvidia.com/cuda-12-8-0-download-archive) / [CuDNN](https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/cudnn-windows-x86_64-9.25.0.15_cuda12-archive.zip) 运行库，需要先点击“安装运行库”进行一键安装。
+3. 选择推理设备。使用 NVIDIA GPU 时，若缺少所需运行库，点击“安装运行库”；要求见[本地运行库说明](docs/qwen3-vl-runtime-prerequisites.md)。
 4. 一键下载推荐模型。
 5. 如有需要，在“高级设置”中为不同场景指定不同模型。
 
@@ -139,26 +137,26 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
   </tr>
 </table>
 
-> 左图内容来源：Thariq 的贴文；右图为开发者自己在Blender渲染导出的图片
+> 左图来源：Thariq 的贴文；右图来源：开发者在Blender渲染导出的图片
 
 ## 连接手机
 
 <p align="center">
-  <img src="docs/images/device-connection.png" alt="PicForLater 分析方式选择界面" width="900">
+  <img src="docs/images/device-connection.png" alt="PicForLater 设备连接界面" width="900">
 </p>
 
 启用步骤：
 
-0. 在你的手机 / 平板设备上安装 [LocalSend](https://localsend.org/download)
-1. 打开“允许通过 LocalSend 自动接收图片”
-2. 点击“配对新设备”。在设备发送端发送一张图片，输入PIN码即可完成验证。之后无需二次验证
-3. 配对成功后可以看到你的设备在“已信任设备”栏中（设备名在LocalSend中设置）
+1. 在手机 / 平板上安装 [LocalSend](https://localsend.org/download)。
+2. 打开“允许通过 LocalSend 自动接收图片”。
+3. 点击“配对新设备”，从发送端发送图片并输入 PIN 完成验证。
+4. 配对成功后，设备会出现在“已信任设备”中，后续发送无需 PIN；设备名在 LocalSend 中设置。
 
 ## 常见问题
 
 ### 配置 API 时“测试连接”失败
 
-先检查 API Key、模型名称、Endpoint、网络连接和账户配额。若配置看起来都正确，可以重试；如果仍然失败，再尝试将“高级设置”中的“思考规模”设为“关闭”。
+先检查 API Key、模型名称、Endpoint、网络连接、账户余额 / 配额和服务状态。若配置正确仍然失败，将“高级设置”中的“思考规模”设为“关闭”后重试。
 
 ### API 分析没有返回结果
 
@@ -169,9 +167,9 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 ### 图片导入失败
 
-检查图片后缀名标注的格式与其真实格式是否一致（如jpg是否被错误改写为png），将图片修复后即可导入。动态图片暂不支持导入
+检查扩展名是否与真实格式一致，例如 JPEG 被误改为 PNG。请修复或转存图片；动态图片暂不支持导入。
 
-### 手机接受问题
+### 手机接收问题
 
 > [!CAUTION]
 > 使用 PicForLater 的 LocalSend 时，需要关闭电脑端的官方 LocalSend 应用
@@ -218,9 +216,9 @@ PicForLater 默认在本地处理和保存图片，无账号、无广告、无�
 
 ## Security
 
-- API 凭据仅使用 Windows 当前用户 Credential Locker；日志、持久化错误和自动化测试不应包含 secret 或用户载荷。
+- API 凭据仅使用 Windows 当前用户 Credential Locker；日志、持久化错误和自动化测试不包含 secret 或用户载荷。
 - 模型和可选可执行组件按固定来源、大小、SHA-256 与签名清单验证；核心 Setup 不携带模型权重或本地推理 worker。
-- Setup 由 GitHub Actions 在同一次 Release publish 中生成。首版未签名及 SmartScreen 风险如上所述。
+- Setup 由 GitHub Actions 在同一次 Release publish 中生成。
 - 安全问题的报告方式见 [SECURITY.md](SECURITY.md)。不要在公开 Issue 中粘贴密钥、私人图片、未公开漏洞细节或可利用样本。
 
 ## 从源码构建

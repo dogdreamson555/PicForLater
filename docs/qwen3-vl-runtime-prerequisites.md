@@ -1,9 +1,8 @@
 # Qwen3-VL clean-machine prerequisites
 
 This document is the release checklist for the two publisher-qualified
-PicForLater Qwen3-VL packages. Model inference remains local. The app never
-sends an image, OCR text, file name, path, model output, or hardware-derived
-content to a download endpoint.
+PicForLater Qwen3-VL packages. Local inference and download-data boundaries are
+defined in the [package contract](qwen3-vl-local-package.md).
 
 ## What a user must install
 
@@ -24,11 +23,9 @@ staging is removed, allow about 7.36 GiB free during the first installation.
 
 The CUDA package is currently an x64 path. It accepts any NVIDIA CUDA device in
 the nominal 8 GB class when the driver reports at least 7.5 GiB usable VRAM.
-This tolerance deliberately includes common 8 GB RTX 3060, 4060, and 5060
-devices that report about 7.9 GiB after reserved regions are excluded. It is
-not a GPU-model whitelist. The app records the detected name, memory, compute
-capability, and driver-supported CUDA API, then treats the actual model
-self-test as authoritative.
+This threshold is based on reported usable memory, not a GPU-model whitelist.
+The app records the detected name, memory, compute capability, and
+driver-supported CUDA API, then treats the actual model self-test as authoritative.
 
 ## Pinned app-private NVIDIA runtime
 
@@ -49,10 +46,10 @@ redistributable archives:
 | NVRTC | 12.8.93 | 305,588,898 | `a63302a077f0248a743a1a7caa7dbd80d0fac56c6cfa9c41fa05fac9b7e5eda5` | `nvrtc64_120_0.dll`, `nvrtc-builtins64_128.dll` |
 | cuDNN | 9.25.0.15 for CUDA 12 | 1,904,452,100 | `06e94f70c52d7335b7ed8044eed28ce963b7fd59d8c2c446ffc60e695fccad91` | `cudnn64_9.dll` and the nine cuDNN 9 split runtime DLLs |
 
-Exact runtime download total: **2,967,280,541 bytes (2.76 GiB)**. The UI
-declares a conservative private-install maximum of **2,350,000,000 bytes
-(2.19 GiB)** before the user confirms. A clean first CUDA setup downloads the
-runtime plus model, **5,393,699,646 bytes (5.02 GiB)** in total. Allow at least
+Before confirmation, the UI declares **2,967,280,541 bytes (2.76 GiB)** of runtime
+archive downloads and a conservative **2,350,000,000-byte (2.19 GiB)** installed-size
+maximum for the extracted allowlisted DLLs. A clean first CUDA setup downloads the runtime
+archives and model package, **5,393,699,646 bytes (5.02 GiB)** in total. Allow
 about 7 GiB free at peak, or 8 GiB as an operational margin, because model
 staging and the final verified copy briefly coexist.
 

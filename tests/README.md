@@ -48,11 +48,11 @@ It sends no library image, OCR, file path, hash, internal ID, or database data.
 The test runs the production connection tester and strict parser, reports only
 safe sizes/timing/usage/shape metadata, and may be billed by Alibaba Model Studio.
 
-The current real runners intentionally have no image/library argument. They never
-opens the product database, enumerates the user's managed library, or binds a
-private image to source, fixtures, profiles, snapshots, logs, or release assets.
-If a user explicitly authorizes a particular library image for a future
-one-off `RemoteVision` contract test, the test must require an explicit path,
-copy/re-encode it in a test-only temporary root, upload only the sanitized copy,
-avoid persisting the path/content/body, and remove the copy in `finally`. It
-must never auto-select or commit that image as a reusable golden sample.
+The real runners take no image or library argument: they never open the product
+database, enumerate managed images, or bind a private image to source files,
+fixtures, profiles, snapshots, logs, or release assets. A future one-off
+`RemoteVision` contract test may use a library image only with explicit
+authorization and an explicit path. It must copy/re-encode the image under a
+test-only temporary root, upload only that sanitized copy, avoid persisting the
+original path, content, or request body, and remove the copy in `finally`. The
+runner must never auto-select a library image, make it a reusable golden sample, or commit it.

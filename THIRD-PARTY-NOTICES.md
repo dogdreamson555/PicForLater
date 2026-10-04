@@ -1,6 +1,8 @@
 # Third-party notices
 
-PicForLater uses the following third-party packages. This file is an inventory; fixed upstream license and notice texts carried by distribution builds are under `licenses/` and mapped in `licenses/README.md`. `Build-Setup.ps1` fails if the required core texts are absent from publish output.
+This inventory records attribution, sources and terms. Fixed upstream texts are
+mapped in [licenses/README.md](licenses/README.md); dependency and distribution
+scopes are in [docs/dependencies.md](docs/dependencies.md). Setup builds reject missing core license texts.
 
 ## PicForLater application icon
 
@@ -12,16 +14,10 @@ PicForLater uses the following third-party packages. This file is an inventory; 
 
 ## Optional third-party API services
 
-The remote-analysis presets do not add or redistribute OpenAI, Anthropic,
-Google, xAI, Perplexity, DeepSeek, Moonshot, Tencent, Volcano Engine, Alibaba,
-Zhipu, Baidu, MiniMax, SiliconFlow, OpenRouter, Groq, Together, Ollama, or vLLM
-SDK code. They use framework HTTP/JSON APIs against a user-selected service and
-the user's own credential. Service privacy, terms, retention/training controls,
-model licenses, and charges remain governed by the selected provider and plan;
-the reviewed links and qualification level are inventoried in
-`docs/remote-api-providers.md`. This section is not a claim that any service is
-zero-retention, training-free, continuously available, or compatible with every
-model ID.
+Remote presets use framework HTTP/JSON and the user's credentials, without
+redistributing provider SDKs. Privacy, retention/training controls, model licenses
+and charges depend on the provider and plan; reviewed links and qualification
+limits are in [docs/remote-api-providers.md](docs/remote-api-providers.md).
 
 ## Microsoft.WindowsAppSDK 2.3.1
 
@@ -30,14 +26,19 @@ model ID.
 - Notice: preserve and review the package `NOTICE.txt` when assembling distribution materials.
 - Source: https://github.com/microsoft/WindowsAppSDK and https://www.nuget.org/packages/Microsoft.WindowsAppSDK/2.3.1
 
-The direct dependency is the stable umbrella package, not individually pinned Windows App SDK components. This choice provides the formal Windows App SDK production/distribution terms; the separately evaluated `Microsoft.WindowsAppSDK.WinUI 2.2.1` package was not adopted because its bundled license identified it as Engineering Preview and restricted live-environment use without another agreement.
+The stable umbrella package supplies the production/distribution terms and selects
+these top-level transitive components: `Microsoft.WindowsAppSDK.Base 2.0.4`,
+`Foundation 2.3.5`, `InteractiveExperiences 2.1.3`, `WinUI 2.3.0`, `DWrite 2.1.0`,
+`Widgets 2.0.5`, `AI 2.3.4`, `ML 2.1.74`, and exact `Runtime 2.3.1`.
 
-The umbrella package declares these top-level transitive components: `Microsoft.WindowsAppSDK.Base 2.0.4`, `Foundation 2.3.5`, `InteractiveExperiences 2.1.3`, `WinUI 2.3.0`, `DWrite 2.1.0`, `Widgets 2.0.5`, `AI 2.3.4`, `ML 2.1.74`, and exact `Runtime 2.3.1`. They are implementation dependencies selected by the umbrella package, not separate PicForLater capability commitments. In particular, phase 1 does not invoke the transitive AI/ML APIs or add model downloads or network behavior.
+The evaluated `Microsoft.WindowsAppSDK.WinUI 2.2.1` was not adopted: its bundled
+terms designated it Engineering Preview and restricted production use without another agreement.
 
 ## Microsoft Visual C++ Redistributable 14.51.36247.0
 
-- Purpose: native runtime required by the optional local ONNX Runtime component.
-- Distribution: each architecture-specific Setup includes the matching Microsoft-signed redistributable and installs it with Microsoft's supported installer before copying PicForLater.
+- Purpose: native runtime prerequisite.
+- Distribution: Setup installs the matching Microsoft-signed redistributable only
+  when required; Online Setup downloads it from the same Release, Offline Setup includes it.
 - License and deployment terms: https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
 
 ## Microsoft.Web.WebView2 1.0.3719.77 (transitive)
@@ -66,9 +67,6 @@ The umbrella package declares these top-level transitive components: `Microsoft.
 - Source: https://github.com/HavenDV/H.NotifyIcon and
   https://www.nuget.org/packages/H.NotifyIcon.WinUI/2.4.1
 
-The app calls `TaskbarIcon.ForceCreate(enablesEfficiencyMode: false)` so creating
-the tray icon does not change Windows efficiency mode or background scheduling.
-
 ## LocalSendDotNet.Core 0.2.0-preview.5
 
 - Purpose: independent, UI-free implementation of LocalSend v2.2-compatible LAN
@@ -96,17 +94,14 @@ LocalSend identify protocol compatibility and interoperability only.
 - Packages: `Microsoft.Recognizers.Text.DateTime` and its Recognizers Text
   runtime dependencies (`Definitions`, `Text`, `TimexExpression`, `Number`, and
   `NumberWithUnit`).
-- Purpose: local, auditable recognition and resolution of natural-language
-  dates and times in Chinese, English, Spanish, French, Portuguese, German,
-  Italian, and Turkish.
+- Purpose: local date/time recognition in Chinese, English, Spanish, French,
+  Portuguese, German, Italian, and Turkish.
 - License: MIT.
 - Source: https://github.com/microsoft/Recognizers-Text and
   https://www.nuget.org/packages/Microsoft.Recognizers.Text.DateTime/1.8.13
 
-`NuGet.CommandLine 7.6.0` is a private build-time dependency override. It
-replaces the obsolete vulnerable version declared transitively by the
-Recognizers Text package metadata. Its license is Apache-2.0, and neither
-`nuget.exe` nor `vswhere.exe` is included in the application output.
+`NuGet.CommandLine 7.6.0` (Apache-2.0) overrides the vulnerable transitive build
+dependency; neither `nuget.exe` nor `vswhere.exe` is included in app output.
 
 ## Microsoft.Data.Sqlite 10.0.10
 
@@ -132,9 +127,8 @@ Recognizers Text package metadata. Its license is Apache-2.0, and neither
   `Microsoft.ML.OnnxRuntimeGenAI.DirectML` with
   `Microsoft.ML.OnnxRuntime.DirectML 1.23.0`. Both use the matching
   `Microsoft.ML.OnnxRuntimeGenAI.Managed 0.14.1` projection.
-- Purpose: out-of-process, local-only structured multimodal generation for
-  validated Qwen3-VL packages, plus the architecture-appropriate CUDA/CPU or
-  DirectML/CPU execution providers reused by PP-OCR.
+- Purpose: out-of-process Qwen generation and PP-OCR using architecture-matched
+  CUDA/CPU or DirectML/CPU providers.
 - License: MIT.
 - Source: https://github.com/microsoft/onnxruntime-genai and
   https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.Cuda/0.14.1 and
@@ -142,12 +136,9 @@ Recognizers Text package metadata. Its license is Apache-2.0, and neither
   and
   https://www.nuget.org/packages/Microsoft.ML.OnnxRuntimeGenAI.DirectML/0.14.1
 
-PicForLater redistributes exactly one matching native ONNX Runtime set per
-architecture. The unused `Microsoft.Windows.AI.MachineLearning` build/runtime
-payload is excluded to avoid packaging incompatible ORT binaries. Model weights
-and tokenizer files are separately installed user data and are not covered by
-this runtime notice; each model manifest carries its own license and exact
-source.
+Each architecture redistributes one matching native ORT set; the unused
+`Microsoft.Windows.AI.MachineLearning` payload is excluded. Separate model/tokenizer
+manifests carry their own licenses and sources.
 
 ## NVIDIA CUDA 12.8 and cuDNN 9 on-demand runtime files
 
@@ -190,19 +181,16 @@ then-current redistribution terms before changing any pinned component.
 - Base model: https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct
 - Published ONNX packages: https://huggingface.co/DogDreamson/picforlater-qwen3-vl-2b-onnx/tree/b0ffadcc56e0e736aa1310ff75f7c81147ac50bb
 - Conversion reference: https://huggingface.co/onnx-community/Qwen3-4B-VL-ONNX/tree/697b1606a44266869c10f9b5a857ee6f7af17c5a
-- Distribution: downloaded only after user confirmation and stored outside the
-  core App and Setup. The 3.56 GiB CPU Q4F32 and 2.26 GiB CUDA Q4F16 packages are
-  optional testing paths. Their three-language publisher qualification does
-  not make either one a completed full-golden-set release default.
+- Distribution: downloaded after user confirmation, outside core App/Setup. CPU
+  Q4F32 (3.56 GiB) and CUDA Q4F16 (2.26 GiB) remain optional testing paths;
+  three-language qualification does not establish full-golden-set release qualification.
 
 ## Build-only Microsoft packages
 
 - `Microsoft.Windows.SDK.BuildTools 10.0.26100.8249`
 - `Microsoft.Windows.SDK.BuildTools.WinApp 0.4.0`
 
-These packages are used to compile the unpackaged app and related build tooling.
-They are not shipped as product features. Their Microsoft package/license terms
-still apply to any build assets copied into a distribution.
+Build tooling only; Microsoft terms still apply to any copied distribution assets.
 
 ## Inno Setup
 
@@ -224,6 +212,5 @@ still apply to any build assets copied into a distribution.
   approved for redistribution by the repository owner.
 - Source: [unsplash.com/photos/white-and-brown-long-fur-cat-ZCHj_2lJP00](https://unsplash.com/photos/white-and-brown-long-fur-cat-ZCHj_2lJP00)
 
-The asset is not a library image and contains no PicForLater user data. The
-application does not upload it except during an explicit image-mode connection
-test, whose possible third-party processing and billing are disclosed in UI.
+The asset contains no user data and is uploaded only during an explicit image-mode
+connection test; possible third-party processing and billing are disclosed in UI.
