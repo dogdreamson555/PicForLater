@@ -1,90 +1,90 @@
-# 隐私说明
+# Privacy notice
 
-[返回 README](README.md)
+[Back to README](README.md)
 
-PicForLater 默认在本地处理图片，无账号、无广告、无产品遥测。远程 API 分析需要用户明确启用；检查更新、下载组件和局域网接收也会涉及网络访问，因此应用并非在所有使用方式下都完全离线。
+PicForLater processes images locally by default, with no account, ads, or product telemetry. Remote API analysis requires your explicit consent. Checking for updates, downloading components, and receiving images over the local network also involve network access, so the app is not fully offline in every usage scenario.
 
-## 目录
+## Contents
 
-- [本地数据与凭据](#本地数据与凭据)
-- [图片分析与第三方 API](#图片分析与第三方-api)
-- [手机接收与设备信任](#手机接收与设备信任)
-- [快捷截图与剪贴板](#快捷截图与剪贴板)
-- [更新检查与按需下载](#更新检查与按需下载)
-- [控制与删除数据](#控制与删除数据)
+- [Local data and credentials](#local-data-and-credentials)
+- [Image analysis and third-party APIs](#image-analysis-and-third-party-apis)
+- [Receiving images from phones and device trust](#receiving-images-from-phones-and-device-trust)
+- [Screenshot shortcut and clipboard access](#screenshot-shortcut-and-clipboard-access)
+- [Update checks and on-demand downloads](#update-checks-and-on-demand-downloads)
+- [Controls and data deletion](#controls-and-data-deletion)
 
-## 本地数据与凭据
+## Local data and credentials
 
-生产数据位于 `%LocalAppData%\PicForLater`，包括数据库及备份、原图、缓存、staging、设置、模型和可选组件。API Key 只保存在当前 Windows 用户的 Credential Locker (`PasswordVault`) 中，不进入数据库、设置、任务快照或日志。
+Production data is stored in `%LocalAppData%\PicForLater`, including the database and backups, original images, cache, staging, settings, models, and optional components. API keys are stored only in Windows Credential Locker (`PasswordVault`) for the current user. They are not stored in the database, settings, job snapshots, or logs.
 
-应用是普通 unpackaged 桌面进程，不具有 MSIX 容器隔离；它以当前用户权限访问用户选择或拖放的文件、应用管理的数据目录、用户明确触发的剪贴板读取、网络和 Windows 通知。Credential Locker 保护静态凭据，但不能防御同一用户权限下已经运行的恶意程序。
+The app is a regular unpackaged desktop process without MSIX container isolation. It runs with the current user's permissions and accesses files the user selects or drops, app-managed data directories, the clipboard when explicitly requested by the user, the network, and Windows notifications. Credential Locker protects stored credentials, but cannot defend against malware already running with the same user privileges.
 
-## 图片分析与第三方 API
+## Image analysis and third-party APIs
 
-### 本地分析
+### Local analysis
 
-本地分析使用本机 Windows OCR，或已安装的本地组件和模型，不向远程分析供应商发送图片或 OCR 文字。用户配置的 loopback Ollama / vLLM 接口由本机服务处理。
+Local analysis uses Windows OCR on the device, or installed local components and models. It does not send images or OCR text to remote analysis providers. User-configured loopback Ollama / vLLM endpoints are handled by services on the same device.
 
-### 远程分析的数据范围
+### Data sent for remote analysis
 
-远程请求发送到用户配置的服务，范围如下：
+Remote requests are sent to the service configured by the user, with the following scope:
 
-| 分析方式 | 发送内容 | 不发送的内容 |
+| Analysis mode | Data sent | Data not sent |
 | --- | --- | --- |
-| 仅发送 OCR 文字（`RemoteOcrText`） | 有长度上限的 OCR 纯文本、语言标签、输出语言策略、参考 UTC 时间 / 时区，以及所选模型、prompt / schema 和输出限制 | 图片、缩略图、文件名、路径、内容哈希、内部 ID、框坐标、分类和其他资料库内容 |
-| 发送图片（`RemoteVision`） | 从不可变原图生成的临时 PNG，以及参考时间 / 时区、输出语言策略和固定请求契约 | 原图字节、EXIF / XMP、文件名、路径、哈希、内部 ID、OCR、分类和资料库上下文 |
+| OCR text only (`RemoteOcrText`) | Length-limited OCR plain text, language tags, output language policy, reference UTC time / time zone, the selected model, prompt / schema, and output limits | Images, thumbnails, filenames, paths, content hashes, internal IDs, bounding-box coordinates, categories, and other library content |
+| Send image (`RemoteVision`) | A temporary PNG generated from the immutable original, reference time / time zone, output language policy, and the fixed request contract | Original image bytes, EXIF / XMP, filenames, paths, hashes, internal IDs, OCR, categories, and library context |
 
-发送图片前，应用会解码原图、处理方向、转换到 sRGB 并重新编码。优先保留原分辨率，仅在超过 1600 万像素或请求上限时等比例缩小。临时图片副本只在内存中有界持有，并在调用后释放。
+Before sending an image, the app decodes the original, applies its orientation, converts it to sRGB, and re-encodes it. It preserves the original resolution whenever possible, scaling down proportionally only if the image exceeds 16 million pixels or the request limits. Temporary image copies are held only in memory with bounded memory usage, and are released after the call.
 
-### 连接测试与供应商边界
+### Connection tests and provider boundaries
 
-API 连接测试使用固定合成文字；用户明确运行图片测试时，使用仓库内授权猫图。测试不会发送用户图片、用户 OCR 或资料库内容，但可能产生 API 费用。
+API connection tests use fixed synthetic text. When the user explicitly runs an image test, it uses the licensed cat image in the repository. Tests do not send user images, user OCR, or library content, but may incur API charges.
 
-第三方 API 的数据保留、训练、地域、账号政策和费用取决于用户选择的供应商与计划；PicForLater 不能替供应商承诺零保留或不训练。取消任务可以阻止尚未发送的请求，但不能召回供应商已经收到的数据或费用。应用禁用 HTTP redirect 和 Cookie，不绕过 TLS 证书验证；公共自定义 endpoint 只允许 HTTPS，loopback 服务是受限例外。
+Data retention, training, regions, account policies, and charges for third-party APIs depend on the provider and plan you choose. PicForLater cannot promise zero retention or exclusion from training on a provider's behalf. Cancelling a job can prevent requests that have not yet been sent, but cannot recall data already received by the provider or undo charges already incurred. The app disables HTTP redirects and cookies, and does not bypass TLS certificate validation. Public custom endpoints require HTTPS; loopback services are a restricted exception.
 
-## 手机接收与设备信任
+## Receiving images from phones and device trust
 
-手机接收兼容 LocalSend，默认关闭。开启后，应用在局域网监听 TCP/UDP `53317`，通过本地发现、TLS 和临时 PIN 接收用户选择的图片。传输不经过 PicForLater 或 LocalSend 的云端中继；仅仅接收图片不会自动将图片发送到远程分析 API。
+PicForLater supports LocalSend for receiving images from phones. This feature is disabled by default. When enabled, the app listens on TCP/UDP `53317` on the local network, using local discovery, TLS, and a temporary PIN to receive images selected by the user. Transfers do not pass through a PicForLater or LocalSend cloud relay. Receiving an image alone does not automatically send it to a remote analysis API.
 
-Windows 防火墙可能在首次监听时请求授权。配对经临时 PIN 验证后，应用在本地保存设备 TLS 证书的 SHA-256 指纹，后续发送可免 PIN。手机重装、清除数据或证书变化后需重新配对；用户可随时移除信任。收到的图片成为普通资料库项目，之后若选择并同意远程分析，仍按[上述数据范围](#远程分析的数据范围)发送。
+Windows Firewall may request permission when the app first starts listening. After pairing is verified with a temporary PIN, the app stores the SHA-256 fingerprint of the device's TLS certificate locally, allowing later transfers without a PIN. Reinstalling the phone app, clearing its data, or changing its certificate requires pairing again. You can remove trust at any time. Received images become regular library items. If you later select and consent to remote analysis, they are sent according to the [data scope above](#data-sent-for-remote-analysis).
 
-PicForLater 只是“兼容 LocalSend”并支持“通过 LocalSend 接收”的独立应用，不是 LocalSend 官方产品，也未获得其官方认可或背书。
+PicForLater is an independent app that is compatible with LocalSend and supports receiving images through LocalSend. It is not an official LocalSend product and has not received official approval or endorsement from LocalSend.
 
-## 快捷截图与剪贴板
+## Screenshot shortcut and clipboard access
 
-快捷截图默认关闭，只在功能开启且应用运行时响应快捷键。触发后，应用在最长 60 秒的会话内检测剪贴板变化并读取图片；空闲或关闭时不读取剪贴板，也不记录一般击键。仅启用状态和快捷键保存在本地设置中。
+The screenshot shortcut is disabled by default and responds only while the feature is enabled and the app is running. After it is triggered, the app detects clipboard changes and reads images during a session lasting up to 60 seconds. It does not read the clipboard while idle or when the feature is disabled, and does not record general keystrokes. Only the enabled state and shortcut are stored in local settings.
 
-为判断截图会话是否结束，应用会临时读取前台窗口和进程的标识，包括会话期间切换到的其他应用；不读取窗口标题、进程名称、路径或内容。这些标识和剪贴板变化序号只在会话内使用，不保存或上传；未导入的剪贴板内容和底层异常也不写入状态、错误或日志。
+To determine when a screenshot session has ended, the app temporarily reads foreground window and process identifiers, including those of other apps you switch to during the session. It does not read window titles, process names, paths, or content. These identifiers and clipboard sequence numbers are used only within the session and are not saved or uploaded. Neither clipboard content that was not imported nor underlying exception details are written to status messages, errors, or logs.
 
-剪贴板无法证明图片来源：会话期间从其他应用复制的图片也可能被导入，保存到资料库并按当前[分析配置](#图片分析与第三方-api)处理。
+The clipboard cannot prove where an image came from. Images copied from other apps during the session may also be imported, saved to the library, and processed according to the current [analysis configuration](#image-analysis-and-third-party-apis).
 
 <details>
-<summary>截图会话的实现细节</summary>
+<summary>Screenshot session implementation details</summary>
 
-- 使用 `RegisterHotKey` 注册快捷键，不安装低级键盘 hook；触发后最多约一秒检查相关按键是否释放，再以 `SendInput` 发送 `Win+Shift+S`。
-- 只复制 PNG 或 CF_DIBV5 图片，不读取其他剪贴板格式；解码和导入前已关闭剪贴板，拒绝 linked color profile，不访问其指向的本地或网络文件。
-- 会话只比较前台窗口 HWND / PID 和剪贴板 sequence 数值；截图覆盖层离开前台且没有新图片时，默认约 750 毫秒后结束。
+- The app uses `RegisterHotKey` to register the shortcut without installing a low-level keyboard hook. After it is triggered, the app checks for relevant key releases for up to about one second, then sends `Win+Shift+S` with `SendInput`.
+- It copies only PNG or CF_DIBV5 images from the clipboard and does not read other clipboard formats. The clipboard is closed before decoding and import. Linked color profiles are rejected, and the local or network files they point to are not accessed.
+- The session compares only foreground HWND / PID and clipboard sequence values. If the screenshot overlay leaves the foreground and no new image is available, the session ends after about 750 milliseconds by default.
 
 </details>
 
-应用不会清空剪贴板，也不控制 Windows 剪贴板历史、跨设备同步或截图工具的自动保存。按系统及截图工具设置，图片可能留在剪贴板历史、同步到其他设备或保存到 Screenshots 文件夹；关闭功能、删除应用内图片或卸载均不会删除这些系统副本。可在 Windows 的[剪贴板设置](https://support.microsoft.com/en-us/windows/apps/using-the-clipboard)和[截图工具设置](https://support.microsoft.com/en-us/windows/apps/use-snipping-tool-to-capture-screenshots)中管理。
+The app does not clear the clipboard or control Windows clipboard history, cross-device synchronization, or the snipping tool's automatic saving. Depending on Windows and snipping tool settings, images may remain in clipboard history, synchronize to other devices, or be saved in the Screenshots folder. Disabling the feature, deleting images in the app, or uninstalling it does not delete these system copies. You can manage them in Windows [clipboard settings](https://support.microsoft.com/en-us/windows/apps/using-the-clipboard) and [snipping tool settings](https://support.microsoft.com/en-us/windows/apps/use-snipping-tool-to-capture-screenshots).
 
-## 更新检查与按需下载
+## Update checks and on-demand downloads
 
-### 手动检查更新
+### Manual update checks
 
-只有用户点击“检查更新”后，应用才请求固定的 GitHub Releases API。GitHub 会收到常规网络信息，例如 IP 地址、请求时间和包含当前三段版本号的 `PicForLater/M.m.p` User-Agent；请求不包含图片、OCR 文字、资料库内容、设置、API Key 或其他凭据。
+The app requests the fixed GitHub Releases API only after you click "Check for updates". GitHub receives ordinary network information, such as your IP address, request time, and a `PicForLater/M.m.p` User-Agent containing the current three-part version number. Requests contain no images, OCR text, library content, settings, API keys, or other credentials.
 
-启动、恢复应用或打开设置页均不会检查更新。只有点击“查看发布页”才会打开由已验证版本号构造的 Release 页面；安装程序仍由用户手动下载和运行。
+Starting or resuming the app, or opening the settings page, does not check for updates. Only clicking "View release page" opens the Release page constructed from a verified version number. You still download and run the installer manually.
 
-### 下载组件、模型与运行库
+### Downloading components, models, and runtimes
 
-用户确认后，应用从清单固定的 GitHub Releases、Hugging Face 或 NVIDIA 来源下载所选组件、模型或运行库，不在后台自动下载大型模型。在线 Setup 按需下载缺失的前置运行库，离线 Setup 携带完整前置运行库；来源与安装范围见 [ADR 0015](docs/adr/0015-github-unpackaged-setup-and-optional-local-runtime.md)。
+After you confirm, the app downloads the selected components, models, or runtimes from GitHub Releases, Hugging Face, or NVIDIA sources fixed in the manifests. It does not automatically download large models in the background. Online Setup downloads missing prerequisite runtimes as needed; offline Setup includes all prerequisite runtimes. See [ADR 0015](docs/adr/0015-github-unpackaged-setup-and-optional-local-runtime.md) for sources and installation scope.
 
-## 控制与删除数据
+## Controls and data deletion
 
-用户可切回本地模式、撤销远程同意、删除凭据或取消尚未发送的任务，也可关闭手机接收、移除设备信任或关闭快捷截图。关闭功能不会删除已导入的图片。
+You can switch back to local mode, revoke remote consent, delete credentials, or cancel jobs whose requests have not yet been sent. You can also disable receiving images from phones, remove device trust, or disable the screenshot shortcut. Disabling a feature does not delete images already imported.
 
-普通卸载会删除程序、快捷方式、通知注册和卸载项，但保留 `%LocalAppData%\PicForLater`。如需删除本地资料，先在应用中永久删除相关内容，或退出应用后自行删除整个数据目录；这不是安全擦除承诺。删除远程 profile / 本机凭据也不会吊销供应商后台密钥，必要时还应在供应商控制台撤销。
+Normal uninstallation removes the program, shortcuts, notification registration, and uninstall entry, but preserves `%LocalAppData%\PicForLater`. To delete local data, permanently delete the relevant content in the app, or exit the app and delete the entire data directory yourself. This is not a guarantee of secure erasure. Deleting a remote profile or local credentials also does not revoke the key on the provider's side. Revoke it in the provider's console as well if needed.
 
-实现层面的数据边界见[架构决策记录](docs/adr/)。安全问题的报告方式见 [SECURITY.md](SECURITY.md)，请勿在公开 Issue 中提交密钥、私人图片或未公开漏洞细节。
+For implementation-level data boundaries, see the [architecture decision records](docs/adr/). See [SECURITY.md](SECURITY.md) for reporting security issues. Do not submit keys, private images, or details of undisclosed vulnerabilities in public Issues.

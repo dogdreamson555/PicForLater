@@ -44,7 +44,7 @@ both .NET and ASP.NET Core frameworks; end users do not need the SDK.
   retains a conservative threshold; an earlier compatible toolchain minimum has not
   been established.
 - The installer declares OS build 19041, but .NET 10 supports a narrower set of
-  Windows versions; see [README system requirements](../README.md#系统要求与安装).
+  Windows versions; see [README system requirements](../README.md#system-requirements-and-installation).
 
 ## Dependency boundaries
 
