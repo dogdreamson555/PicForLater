@@ -147,10 +147,10 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 启用步骤：
 
-1. 在手机 / 平板上安装 [LocalSend](https://localsend.org/download)。
-2. 打开“允许通过 LocalSend 自动接收图片”。
-3. 点击“配对新设备”，从发送端发送图片并输入 PIN 完成验证。
-4. 配对成功后，设备会出现在“已信任设备”中，后续发送无需 PIN；设备名在 LocalSend 中设置。
+0. 在手机 / 平板上安装 [LocalSend](https://localsend.org/download)。
+1. 打开“允许通过 LocalSend 自动接收图片”。
+2. 点击“配对新设备”，从发送端发送图片并输入 PIN 完成验证。
+3. 配对成功后，设备会出现在“已信任设备”中，后续发送无需 PIN；设备名在 LocalSend 中设置。
 
 ## 常见问题
 
