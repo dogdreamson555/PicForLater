@@ -1,53 +1,53 @@
-# ADR 0008：本地默认、远程数据边界与显式分析 provenance
+# ADR 0008: Local-First Defaults, Remote Data Boundaries, and Explicit Analysis Provenance
 
-- 状态：Accepted
-- 日期：2026-07-31
+- Status: Accepted
+- Date: 2026-07-31
 
-> 远程 profile、凭据与组合任务快照由 [ADR 0009](0009-remote-profiles-credentials-and-combined-job-snapshots.md) 增量补充；本 ADR 的隐私边界和失败语义继续有效。
+> Remote profiles, credentials, and combined-job snapshots are added incrementally by [ADR 0009](0009-remote-profiles-credentials-and-combined-job-snapshots.md); this ADR's privacy boundaries and failure semantics remain in force.
 
-## 背景
+## Context
 
-导入、受管图片存储、SQLite、持久化 `AnalysisJob`、阶段 checkpoint、`AnalysisWorker`、候选合并、revision/人工修改保护、提醒和回收站已组成主流水线。第三方 API 只能作为可选 Provider 接入，复用该流水线，不能建立第二套导入、结果、提醒或删除架构。`ProviderId` 是审计和适配器选择用的不透明标识，不能决定输出语义。
+Import, managed image storage, SQLite, persisted `AnalysisJob` records, stage checkpoints, `AnalysisWorker`, candidate merging, revision/manual-edit protection, reminders, and the recycle bin already form the main pipeline. Third-party APIs may be integrated only as optional Providers that reuse this pipeline; they must not establish a second import, results, reminders, or deletion architecture. `ProviderId` is an opaque identifier for audit and adapter selection; it does not determine output semantics.
 
-## 决策
+## Decision
 
-### 1. 执行目标与默认值
+### 1. Execution Target and Defaults
 
-新安装、升级用户和缺少未来可选字段的旧任务都以 `Local` 为默认执行目标。`AnalysisMode.OcrOnly/Balanced/AlwaysEnhance` 仅描述本地性能策略，不表达隐私边界。
+New installations, upgraded users, and old jobs missing future optional fields all use `Local` as the default execution target. `AnalysisMode.OcrOnly/Balanced/AlwaysEnhance` describes local performance strategy only; it does not express a privacy boundary.
 
-任务快照正交保存 `AnalysisExecutionBackend { Local, RemoteApi }` 与远程时的 `RemoteInputMode { LocalOcrText, DirectImage }`。新增快照字段须有本地默认值且不改变现有 positional 参数；旧 JSON、数据库默认值和旧设置都解析为本地。设置变化只影响新任务及用户明确发起的重新分析。
+Job snapshots store `AnalysisExecutionBackend { Local, RemoteApi }` and, for remote execution, `RemoteInputMode { LocalOcrText, DirectImage }` as orthogonal fields. New snapshot fields must have local defaults and must not change existing positional parameters; old JSON, database defaults, and old settings all resolve to local. Settings changes affect only new jobs and reanalysis explicitly initiated by the user.
 
-### 2. 远程载荷
+### 2. Remote Payloads
 
-- `RemoteOcrText` 先完成本地 OCR 和确定性实体提取，只发送生成草稿和提醒候选所需的 OCR 纯文本、语言、输出语言策略及已披露的参考日期和时区；不读取或发送图片、缩略图、路径、原文件名、哈希、内部 ID、EXIF 或资料库上下文。
-- `RemoteVision` 只发送从不可变原图解码、重新编码并移除 EXIF/XMP 的一次性分析副本，受像素和字节上限约束；默认不附带 OCR、路径、原文件名、哈希、内部 ID 或资料库上下文，调用结束后清理副本。跳过 OCR 必须记录 `SkippedByRemoteDirectImage`，不能伪装为空 OCR 成功或生成 bbox。
+- `RemoteOcrText` first completes local OCR and deterministic entity extraction, then sends only the OCR plain text, language, output-language strategy, and disclosed reference date and time zone needed to generate draft results and reminder candidates. It does not read or send images, thumbnails, paths, original filenames, hashes, internal IDs, EXIF, or library context.
+- `RemoteVision` sends only a one-time analysis copy decoded from the immutable original, re-encoded with EXIF/XMP removed, and subject to pixel and byte limits. By default it includes no OCR, path, original filename, hash, internal ID, or library context. The copy is cleaned up when the call ends. Skipped OCR must be recorded as `SkippedByRemoteDirectImage`; it must not be represented as successful empty OCR or produce a bounding box.
 
-两种模式都只返回现有结构化草稿和候选；远程类别建议为空。模型不得直接创建提醒、安排通知、调用工具、打开 URL 或发起二次网络请求。
+Both modes return only structured drafts and candidates in the existing formats; remote category suggestions are empty. The model cannot directly create reminders, schedule notifications, call tools, open URLs, or make secondary network requests.
 
-### 3. 凭据、同意与发送前检查
+### 3. Credentials, Consent, and Pre-Send Checks
 
-API key/token 只存于 Windows Credential Locker 或等价的用户级 OS 秘密存储。SQLite、普通设置、任务快照、checkpoint 和日志只保存 credential reference，不保存密钥、Authorization、完整请求/响应、图片或 base64。
+API keys/tokens are stored only in Windows Credential Locker or equivalent user-level OS secret storage. SQLite, ordinary settings, job snapshots, checkpoints, and logs store only credential references; they do not store secrets, Authorization headers, complete requests/responses, images, or base64 data.
 
-首次启用远程分析前必须取得版本化同意，至少说明供应商、endpoint host、model、发送文字或图片、自动处理范围、第三方保留/训练声明及核验日期、可能费用和关闭方式。输入类型、供应商/endpoint、字段范围或政策声明变化会使旧同意失效。
+Before remote analysis is enabled for the first time, versioned consent is required. It must identify at least the provider, endpoint host, model, whether text or images are sent, the scope of automatic processing, third-party retention/training statements and their verification date, possible costs, and how to disable the feature. Changes to the input type, provider/endpoint, field scope, or policy statements invalidate prior consent.
 
-每次发送前重新核验任务明确选择远程、profile 已验证且启用、能力匹配、凭据存在、同意仍有效、任务未撤销。网络可用或已有密钥本身不构成发送授权。
+Before every send, recheck that the job explicitly selected remote execution, the profile is verified and enabled, capabilities match, credentials exist, consent is still valid, and the job has not been revoked. Network availability or the mere presence of a secret does not authorize sending.
 
-### 4. 失败不跨隐私边界回退
+### 4. Failures Do Not Fall Back Across Privacy Boundaries
 
-本地失败不得上传；远程失败不得静默换供应商、把 OCR 文字升级为图片、改用本地模型，或自动重发结果不确定且可能计费的请求。文字模式失败保留已提交 OCR、确定性候选和抽取式草稿；图片模式失败保留原图及已有结果，等待用户明确重试 API 或改用本地重新分析。取消只能阻止尚未发送的数据和后续提交，不能召回第三方已收到的数据或费用。
+A local failure must not upload data. A remote failure must not silently switch providers, upgrade OCR text to an image, use a local model, or automatically retry a request whose outcome is uncertain and that may incur a charge. A text-mode failure retains submitted OCR, deterministic candidates, and the extractive draft. An image-mode failure retains the original and existing results, and waits for the user to explicitly retry the API or reanalyze locally. Cancellation can prevent data not yet sent and subsequent commits, but cannot recall data already received by a third party or charges already incurred.
 
-### 5. 主流水线与历史数据
+### 5. Main Pipeline and Historical Data
 
-远程 Provider 复用任务租约、stage checkpoint、结构化 parser/draft、`ReminderCandidateMerger`、revision/人工字段保护和原子完成路径。不得重写 `AnalysisWorker` 主干、增加平行数据库，或让供应商 DTO/错误码穿透到 Core、App 或 SQLite。profile 与 Provider 的具体契约由 ADR 0009–0012 补充。
+Remote Providers reuse job leases, stage checkpoints, the structured parser/draft, `ReminderCandidateMerger`, revision/manual-field protection, and the atomic completion path. Do not rewrite the `AnalysisWorker` main flow, add a parallel database, or allow provider DTOs/error codes to leak into Core, App, or SQLite. The specific profile and Provider contracts are supplemented by ADRs 0009–0012.
 
-迁移 7 只给 `AnalysisStageResults` 增加显式 stage provenance，不改写 `AnalysisJobs.ModelProfileSnapshotJson`；迁移前创建可验证备份，失败时回滚并保留原库。旧 stage 行保守回填为 `ExecutionLocation=Local`；OCR、确定性实体、无模型路由和抽取式组合分别标记为 `OcrFacts`、`DeterministicEntityCandidates`、`RoutingDecision`、`ExtractiveDraft`，带模型身份的旧结果标记为 `ModelGeneratedDraft`。
+Migration 7 adds explicit stage provenance only to `AnalysisStageResults`; it does not rewrite `AnalysisJobs.ModelProfileSnapshotJson`. Create a verifiable backup before migration; on failure, roll back and preserve the original database. Conservatively backfill old stage rows with `ExecutionLocation=Local`. Mark OCR, deterministic entities, model-free routing, and extractive composition as `OcrFacts`, `DeterministicEntityCandidates`, `RoutingDecision`, and `ExtractiveDraft`, respectively; mark old results with model identity as `ModelGeneratedDraft`.
 
-### 6. 显式输出语义
+### 6. Explicit Output Semantics
 
-`AnalysisProvenance` 记录 `ExecutionLocation`（`Local`/`RemoteApi`）、`OutputKind`（`OcrFacts`、`DeterministicEntityCandidates`、`RoutingDecision`、`ModelGeneratedDraft`、`ExtractiveDraft`，以及仅供旧/未知数据使用的 `Unspecified`）和原有 Provider/model/hash/schema 字段。业务行为按这些显式字段决定；`ProviderId` 仅用于审计、显示、适配器选择和能力 profile 标识。禁止按 ID 前缀或具体供应商推断草稿来源、上传范围、候选资格或失败回退。
+`AnalysisProvenance` records `ExecutionLocation` (`Local`/`RemoteApi`), `OutputKind` (`OcrFacts`, `DeterministicEntityCandidates`, `RoutingDecision`, `ModelGeneratedDraft`, `ExtractiveDraft`, and `Unspecified` for legacy/unknown data only), and the existing Provider/model/hash/schema fields. Business behavior is determined by these explicit fields; `ProviderId` is used only for audit, display, adapter selection, and capability-profile identification. Do not infer draft source, upload scope, candidate eligibility, or failure fallback from an ID prefix or specific provider.
 
-## 影响
+## Consequences
 
-- 本地行为和默认执行目标不变；本 ADR 本身不启用网络、不增加凭据存储，也不改变上传范围。
-- provenance 不依赖供应商字符串来表达执行位置和输出性质。未声明 `OutputKind` 的新 Provider 按 `Unspecified` 处理，不获得模型建议语义；Provider 必须显式声明输出类型。
-- 迁移 7 是向后兼容的增量迁移；远程快照字段、凭据服务和 API profile 由后续纵向切片实现。
+- Local behavior and the default execution target are unchanged. This ADR itself does not enable networking, add credential storage, or change upload scope.
+- Provenance does not rely on provider strings to express execution location or output kind. A new Provider that does not declare `OutputKind` is treated as `Unspecified` and receives no model-suggestion semantics; Providers must explicitly declare output types.
+- Migration 7 is a backward-compatible incremental migration. Remote snapshot fields, the credential service, and API profiles are implemented in later vertical slices.

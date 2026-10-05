@@ -1,25 +1,25 @@
-# ADR 0009：远程 profile、凭据与组合任务快照
+# ADR 0009: Remote Profiles, Credentials, and Combined Job Snapshots
 
-- 状态：Accepted
-- 日期：2026-07-31
+- Status: Accepted
+- Date: 2026-07-31
 
-## 背景
+## Context
 
-[ADR 0008](0008-local-default-remote-boundaries-and-explicit-provenance.md) 已确定本地默认、两种载荷边界、版本化同意和禁止跨模式回退。本 ADR 为本地与远程配置定义共同任务快照，同时保持旧任务兼容。远程 API 配置不属于具有本地文件语义的 `ModelPackages`，API key 也不能进入 SQLite、普通设置或任务快照。
+[ADR 0008](0008-local-default-remote-boundaries-and-explicit-provenance.md) established local-by-default behavior, two payload boundaries, versioned consent, and a prohibition on cross-mode fallback. This ADR defines a shared job snapshot for local and remote configurations while preserving compatibility with existing jobs. Remote API configuration does not belong in `ModelPackages`, which has local-file semantics, and API keys must not enter SQLite, ordinary settings, or job snapshots.
 
-## 决策
+## Decision
 
-1. Core 增加 `AnalysisExecutionBackend { Local = 0, RemoteApi = 1 }` 和 `RemoteInputMode { LocalOcrText = 1, DirectImage = 2 }`。`Local = 0` 使缺少该字段的旧 JSON 按 CLR 默认值解析为本地。
-2. 保持 `ModelProfileSnapshot(AnalysisMode, Revision, Slots)` 的 positional 构造不变，仅增加带默认值的 init-only `ExecutionBackend`、可空 `RemoteInputMode` 和可空 `RemoteApiProfileSnapshot`。本地快照的远程字段必须为空。
-3. `RemoteApiProfileSnapshot` 固定任务创建时的非秘密配置：profile/provider/endpoint、base URI、model、prompt/schema、载荷与超时上限、credential reference 和同意版本；不含 API key、Authorization、请求正文或完整响应。
-4. 迁移 8 新建 `RemoteApiProfiles`，并只向唯一 `AnalysisSettings` 行追加 `ExecutionBackend`、`RemoteInputMode`、`RemoteApiProfileId`，默认分别为 `Local/NULL/NULL`。不修改已发布迁移 1–7 或重写旧任务快照 JSON。
-5. `AnalysisSettings.ProfileRevision` 是唯一配置 revision；本地模式、模型槽位、执行目标或所选远程 profile 变更时递增，不另建远程 revision。
-6. `CombinedAnalysisProfileSnapshotProvider` 合并本地 capability snapshot 与远程执行状态，仅在 revision 一致时返回，冲突时有限重试。远程快照仅能由已启用、已验证、支持所选输入模式且同意版本/模式匹配的 profile 创建。
-7. 本阶段的 profile 只保存 HTTPS endpoint、能力/限制、政策链接及核验时间、验证状态、版本化披露/同意和 credential reference。扩大数据范围、切换供应商/endpoint、修改 prompt/schema/政策或提高载荷范围都会清除旧同意。当前选中的 profile 若将不可用，保存前必须显式切回本地，不能静默切换。
-8. `IRemoteApiCredentialService` 定义在 Core，Windows 实现使用当前用户的 Credential Locker (`PasswordVault`)，不依赖 package identity。所有操作只通过稳定 reference 保存、读取、检查或删除密钥，不缓存或记录明文；SQLite、`settings.json` 和旧 `ApplicationData.LocalSettings` 均不保存 secret。Unpackaged 进程没有 MSIX 容器隔离，此边界保护静态存储，不能抵御同一用户权限下已运行的恶意进程。
+1. Core adds `AnalysisExecutionBackend { Local = 0, RemoteApi = 1 }` and `RemoteInputMode { LocalOcrText = 1, DirectImage = 2 }`. `Local = 0` makes legacy JSON that lacks this field resolve to local through the CLR default value.
+2. Keep the positional constructor of `ModelProfileSnapshot(AnalysisMode, Revision, Slots)` unchanged, adding only init-only `ExecutionBackend` with a default value, nullable `RemoteInputMode`, and nullable `RemoteApiProfileSnapshot`. Remote fields must be empty in local snapshots.
+3. `RemoteApiProfileSnapshot` freezes the non-secret configuration at job creation: profile/provider/endpoint, base URI, model, prompt/schema, payload and timeout limits, credential reference, and consent version. It excludes API keys, Authorization, request bodies, and full responses.
+4. Migration 8 creates `RemoteApiProfiles` and adds only `ExecutionBackend`, `RemoteInputMode`, and `RemoteApiProfileId` to the single `AnalysisSettings` row, defaulting to `Local/NULL/NULL` respectively. Do not modify released migrations 1–7 or rewrite legacy job snapshot JSON.
+5. `AnalysisSettings.ProfileRevision` remains the sole configuration revision. Increment it when the local mode, model slots, execution target, or selected remote profile changes; do not create a separate remote revision.
+6. `CombinedAnalysisProfileSnapshotProvider` combines the local capability snapshot with remote execution state and returns a result only when revisions match, with bounded retries on conflict. A remote snapshot can be created only from a profile that is enabled, verified, supports the selected input mode, and has a matching consent version/mode.
+7. At this stage, profiles store only HTTPS endpoints, capabilities/limits, policy links and verification time, verification status, versioned disclosures/consent, and credential references. Expanding the data scope, switching provider/endpoint, changing the prompt/schema/policy, or increasing payload scope clears prior consent. If the currently selected profile would become unavailable, the user must explicitly switch back to local before saving; do not switch silently.
+8. `IRemoteApiCredentialService` is defined in Core, and the Windows implementation uses the current user's Credential Locker (`PasswordVault`) without depending on package identity. All operations save, read, check, or delete secrets only through stable references; they do not cache or log plaintext. SQLite, `settings.json`, and legacy `ApplicationData.LocalSettings` do not store secrets. An unpackaged process lacks MSIX container isolation. This boundary protects data at rest but cannot defend against a malicious process already running with the same user's permissions.
 
-## 影响
+## Consequences
 
-- 新安装、升级用户及旧任务 JSON 都解析为 `Local`；远程选择只影响其后创建的任务，旧任务继续使用自己的快照。
-- 新增独立 profile 表和少量设置列，不引入 SDK、请求、账号、遥测、模型文件或常驻服务。
-- Credential Locker 的密钥生命周期独立于 profile 行；删除 profile 不会吊销供应商侧密钥，后续 UI 必须分别说明并协调处理。
+- New installations, upgraded users, and legacy job JSON all resolve to `Local`. A remote selection affects only jobs created afterward; existing jobs continue to use their own snapshots.
+- Adds a separate profile table and a small number of settings columns; does not introduce an SDK, requests, accounts, telemetry, model files, or a resident service.
+- Credential Locker secret lifecycles are independent of profile rows. Deleting a profile does not revoke the provider-side key; future UI must explain this separately and coordinate the handling.

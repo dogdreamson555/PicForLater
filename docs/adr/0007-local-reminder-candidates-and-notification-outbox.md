@@ -1,35 +1,35 @@
-# ADR 0007: 本地提醒候选、人工确认与通知 outbox
+# ADR 0007: Local Reminder Candidates, User Confirmation, and Notification Outbox
 
-- 状态：Accepted
-- 日期：2026-07-28
-- 修订：2026-07-30、2026-08-13（unpackaged 通知路径见 ADR 0015）
+- Status: Accepted
+- Date: 2026-07-28
+- Revised: 2026-07-30, 2026-08-13 (see ADR 0015 for the unpackaged notification path)
 
-## 背景
+## Context
 
-图片中的日期和地点可能来自 OCR、可信元数据或本地模型，并带有日期顺序、缺少年份、时区及夏令时歧义。系统通知也不是事实源：设备关闭或休眠超过投递窗口后，通知可能不会补发。
+Dates and locations in images may come from OCR, trusted metadata, or a local model, and may be ambiguous because of date ordering, missing years, time zones, or daylight saving time. System notifications are not a source of truth either: after a device is shut down or asleep beyond the delivery window, a notification may not be delivered later.
 
-## 决策
+## Decision
 
-1. 每种分析模式都先运行 OCR；本地视觉模型仍按既有路由条件运行。提醒发现独立合并确定性 OCR 候选与视觉模型候选，不依赖标题/简介最终采用的 composer。模型补充但无法由 OCR 逐字复核的候选标为低信任 `ModelOnlyInterpretation`，在 UI 明示其来源并要求对照原图；它不是 OCR 事实，也不会自动创建提醒。
-2. OCR 后由确定性实体抽取生成日期和地点候选。日期时间使用本地 `Microsoft.Recognizers.Text.DateTime`，当前支持已正式声明并通过测试的中文、英语、西班牙语、法语、葡萄牙语、德语、意大利语和土耳其语；不继续扩张应用自有场景正则。候选保存原文、规范化值、来源、OCR 证据与边界框、参考时间、时区和歧义。模型可补充其他语言或语义场景，但不能覆盖 OCR 事实，也不能将未安装的能力伪装为可用。
+1. Every analysis mode runs OCR first; the local vision model continues to run under its existing routing conditions. Reminder discovery independently merges deterministic OCR candidates with vision-model candidates and does not depend on the composer ultimately used for the title/summary. A model-supplemented candidate that OCR cannot verify verbatim is marked as low-confidence `ModelOnlyInterpretation`; the UI identifies its source and requires the user to compare it with the original image. It is not an OCR fact and does not create a reminder automatically.
+2. After OCR, deterministic entity extraction generates date and location candidates. Date/time parsing uses the local `Microsoft.Recognizers.Text.DateTime`, which currently supports the formally declared and tested languages: Chinese, English, Spanish, French, Portuguese, German, Italian, and Turkish. Do not continue expanding application-specific scenario regexes. Candidates retain the original text, normalized value, source, OCR evidence and bounding box, reference time, time zone, and ambiguity. A model may supplement other languages or semantic scenarios, but cannot overwrite OCR facts or claim a capability that is not installed.
 
-   未定语言但已知文字体系的 BCP-47 标签（如 `und-Hani`、`und-Latn`）按文字体系选择本地解析能力。日期与时间只可在同一文本证据中按受限规则合并：同一行被星期附注或轻量标点拆分，或同一文本块内相邻、左对齐且间距较小的两行分别只有一个日期和一个时间；不得跨逗号、分号、句界、远距离行或多个事件拼接。OCR 与模型给出的同一时区时刻合并，完整日期时间可吸收同一证据中重复的日期/时间片段，不同时刻仍是独立候选。两种证据都缺少年份时使用参考时区的分析当年并标记 `MissingYear`，即使日期已过也不滚到下一年。
-3. 候选只供用户确认。用户须核对日期、时间、Windows 时区并可编辑地点。缺少时间的完整日期暂填 `10:00`；只有年月时暂填该月 1 日 `10:00`，只有年份时暂填当年 1 月 1 日 `10:00`。界面说明默认字段；确认前不写入提醒或安排通知。无效日期、数字日期顺序歧义以及夏令时缺口或重叠均不自动选择。
-4. 提醒页采用响应式列表与编辑器布局；窄窗口可在两者间切换，并为键盘及自动化操作保留稳定标识。
-5. SQLite `Reminders` 是事实源。确认或编辑先提交数据库并写入 `ReminderNotificationOutbox`；数据库提交与系统调度不是同一事务。稳定 scheduler ID 使调度、重试、编辑和取消可幂等处理。
-6. 系统通知是本地投影，点击后用稳定 reminder/image ID 打开资料库项。启动和进入提醒页时对账：恢复中断的 outbox、为缺失调度的未来提醒重新排队、取消无活动记录的孤立通知；逾期超过五分钟仍未激活的提醒标记为“已错过”，不承诺补发。
-7. 软删除图片时写入取消 outbox 并暂停提醒。恢复后，未来提醒要求用户重新确认；过去提醒标记为“已错过”，都不自动重排。
-8. 用户可从详情或右键菜单手动添加提醒，即使图片没有识别候选。编辑器以标题、缩略图和本地时区为起点；`SourceDateCandidateId` 与 `SourceLocationCandidateId` 可为空，但保存仍通过相同的事实记录、outbox、未来时间与夏令时校验。
-9. 分析完成事件唤醒当前提醒页刷新查询，连续事件合并处理；SQLite 仍是候选事实源，不使用后台轮询。
-10. “待确认候选”是 SQLite 事实的可操作投影。按暂填规则可确定为过期的绝对日期时间不进入队列；缺少日期的时间和无法安全解释的值保留证据，但不推测为未来提醒。重新分析只原子替换仍为 `Pending` 的旧候选，已确认或忽略的决定不重置。提醒标题取各候选证据行，多个提醒不会共用首个事件标题；资料库标题与简介仍按原分析逻辑保存。
+   For BCP-47 tags whose language is undetermined but writing system is known (such as `und-Hani` and `und-Latn`), select local parsing capabilities by writing system. A date and time may be combined only under restricted rules within the same text evidence: either (a) the date and time appear on the same line, separated by a weekday annotation or light punctuation, or (b) two adjacent, left-aligned lines with a small gap in the same text block contain only one date and one time, respectively. Do not combine across commas, semicolons, sentence boundaries, distant lines, or multiple events. Merge OCR and model results only when they resolve to the same instant in the same time zone. A complete date/time may absorb repeated date/time fragments in the same evidence; different instants remain separate candidates. If both types of evidence omit the year, use the current analysis year in the reference time zone and mark `MissingYear`; do not roll a past date into the next year.
+3. Candidates are for user confirmation only. The user must verify the date, time, and Windows time zone, and may edit the location. A complete date without a time is provisionally set to `10:00`; a year and month only is provisionally set to the first day of that month at `10:00`; a year only is provisionally set to January 1 of that year at `10:00`. The UI explains these default fields; no reminder is written or notification scheduled before confirmation. Invalid dates, ambiguous numeric date ordering, and daylight-saving gaps or overlaps are never resolved automatically.
+4. The reminders page uses a responsive list-and-editor layout. In a narrow window, the user can switch between the two views, and stable identifiers are retained for keyboard and automation interactions.
+5. SQLite `Reminders` is the source of truth. Confirmation or editing first commits to the database and writes to `ReminderNotificationOutbox`; the database commit and system scheduling are not one transaction. A stable scheduler ID allows scheduling, retries, edits, and cancellations to be handled idempotently.
+6. System notifications are a local projection. Clicking one opens the library item using stable reminder/image IDs. Reconcile on startup and when entering the reminders page: recover interrupted outbox work, requeue future reminders whose schedules are missing, and cancel orphan notifications with no active record. A reminder more than five minutes overdue without activation is marked “missed”; redelivery is not promised.
+7. Soft-deleting an image writes a cancellation to the outbox and pauses its reminders. After restoration, future reminders require the user to confirm them again; past reminders are marked “missed.” Neither is rescheduled automatically.
+8. The user may add a reminder manually from the detail view or context menu, even if the image has no recognized candidates. The editor starts with the title, thumbnail, and local time zone. `SourceDateCandidateId` and `SourceLocationCandidateId` may be null, but saving still uses the same fact records, outbox, future-time validation, and daylight-saving validation.
+9. Analysis-completed events wake the current reminders page to refresh its query, with consecutive events coalesced. SQLite remains the source of candidate facts; background polling is not used.
+10. “Candidates awaiting confirmation” is an actionable projection of SQLite facts. Absolute date-times that are known to have expired under the provisional defaults do not enter the queue. Times without a date and values that cannot be interpreted safely retain their evidence, but are not assumed to represent future reminders. Reanalysis atomically replaces only old candidates that are still `Pending`; confirmed or ignored decisions are not reset. Reminder titles come from each candidate's evidence line, so multiple reminders do not share the first event's title; the library title and summary continue to be saved by the existing analysis logic.
 
-## 影响
+## Consequences
 
-- 流程保持本地，不增加在线地理编码、云推理、遥测或账号依赖。通知不可用时，图片、候选和提醒仍可查看与编辑，界面说明投递限制。
-- 模式迁移升级到版本 6，继续在迁移前备份并在失败时回滚。提醒标题单独保存在 `Reminders`；旧空标题回退显示资料库标题，编辑提醒不改写资料库。
-- 实体解析不增加模型、网络能力或常驻服务；确定性地点抽取只保留地址片段，不在线补全或反向地理编码。
+- The workflow stays local; it adds no online geocoding, cloud inference, telemetry, or account dependency. If notifications are unavailable, images, candidates, and reminders remain viewable and editable, and the UI explains delivery limitations.
+- The schema migration upgrades to version 6, continuing to back up before migration and roll back on failure. Reminder titles are stored separately in `Reminders`; old blank titles fall back to the library title for display, and editing a reminder does not rewrite the library item.
+- Entity parsing adds no model, network capability, or resident service. Deterministic location extraction retains only address snippets; it does not complete addresses online or perform reverse geocoding.
 
-## 平台依据
+## Platform References
 
 - [Scheduled app notifications](https://learn.microsoft.com/windows/apps/develop/notifications/app-notifications/app-notifications-scheduled)
 - [App notifications quickstart](https://learn.microsoft.com/windows/apps/develop/notifications/app-notifications/app-notifications-quickstart)
