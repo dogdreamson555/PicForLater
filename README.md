@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md) | [繁體中文（台灣）](README.zh-TW.md)
 
-PicForLater is an image organizer for Windows, designed for saving images you do not have time to read now but want to revisit later.
+PicForLater is an image organizer for Windows, designed for saving images you do not have time to look at now but want to revisit later.
 
 When you import an image, PicForLater preserves an immutable original and can use **local analysis** or a **third-party API** you explicitly enable to generate a title, summary, categories, and suggested reminders. You confirm the analysis results before they are saved to the library or used to create reminders.
 
@@ -68,7 +68,7 @@ PicForLater supports two main analysis methods: **local analysis** and **remote 
 
 ### Remote API
 
-Select a provider preset, enter your API key, and test the connection to configure remote analysis. If your provider requires the key to be supplied through a system environment variable, configure it according to that provider's instructions. See [Remote API providers](docs/remote-api-providers.md) for supported interfaces and capabilities.
+Select a provider preset, enter your API key, and test the connection to configure remote analysis. If your provider requires the key to be supplied through a system environment variable, configure it according to that provider's instructions. See [Remote API providers (in Chinese)](docs/remote-api-providers.md) for supported interfaces and capabilities.
 
 | Category | Built-in providers / interfaces |
 | --- | --- |
@@ -152,7 +152,7 @@ Setup steps:
 0. Install [LocalSend](https://localsend.org/download) on your phone or tablet.
 1. Enable "Automatically receive images through LocalSend".
 2. Click "Pair a new device", send an image from the sending device, and enter the PIN to complete verification.
-3. Once paired, the device appears under "Trusted devices" and future transfers do not require a PIN. Set the device name in LocalSend.
+3. Once paired, the device appears under "Trusted devices" and future transfers do not require a PIN. The device name is configured in LocalSend.
 
 ## Frequently asked questions
 
@@ -179,9 +179,9 @@ Check whether the file extension matches the actual format, such as a JPEG incor
 | Problem | Common causes | Suggested solution |
 | --- | --- | --- |
 | Your phone cannot find `PicForLater` at all | Different local networks, guest Wi-Fi / AP isolation, VPN, blocked UDP discovery, or disabled local network permission on iOS | Connect both devices to the same non-guest network; temporarily disable the VPN; disable AP Isolation on the router; or test with a personal hotspot |
-| "Listening (discovery limited)" is displayed | UDP 53317 / multicast discovery failed, but the TCP service may still work | Check the firewall, VPN, and virtual network adapters; turn phone reception off and on again |
+| "Listening (discovery limited)" is displayed | UDP 53317 / multicast discovery failed, but the TCP service may still work | Check the firewall, VPN, and virtual network adapters; turn "Automatically receive images through LocalSend" off and on again |
 | Your phone can find the app, but the connection times out or fails | TCP 53317 is blocked by the firewall or security software | Allow `PicForLater.App.exe` through the firewall on private networks first; do not permanently disable the firewall |
-| "Service fault" is displayed | Port 53317 is in use by the desktop LocalSend app, another PicForLater instance, or another program | Fully exit the desktop LocalSend app and duplicate instances, then turn phone reception off and on again |
+| "Service fault" is displayed | Port 53317 is in use by the desktop LocalSend app, another PicForLater instance, or another program | Fully exit the desktop LocalSend app and any extra PicForLater instances, then turn "Automatically receive images through LocalSend" off and on again |
 | Your phone is rejected after selecting PicForLater | The new device is not paired, trust was removed, or the phone's certificate identity changed | Click "Pair a new device", enter the PIN within two minutes, and send at least one supported image |
 | Transfer succeeds but import fails | HEIC / GIF / PDF, a mismatched extension, a damaged image, or exceeded limits | Re-export as a genuine JPEG / PNG / WebP; do not just rename the extension; split large batches |
 | "Already exists" is displayed | The image content duplicates a file already in the library | This is normal deduplication, not a connection failure |
@@ -214,14 +214,14 @@ In "Advanced settings" → "Inbound Rules", allow:
 
 PicForLater processes and stores images locally by default, with no account, ads, or product telemetry. Remote API analysis requires your explicit consent and sends OCR text or processed images according to the selected mode. Checking for updates, downloading components, and receiving images over the local network also involve network access.
 
-For full details on what data is sent, local storage and credential protection, screenshot and clipboard access, deletion, and uninstallation, see the [Privacy policy (PRIVACY.md)](PRIVACY.md).
+For full details on what data is sent, local storage and credential protection, screenshot and clipboard access, deletion, and uninstallation, see the [Privacy notice (PRIVACY.md, in Chinese)](PRIVACY.md).
 
 ## Security
 
 - API credentials are stored only in Windows Credential Locker for the current user. Logs, persisted errors, and automated tests exclude secrets and user payloads.
 - Models and optional executable components are verified against fixed sources, sizes, SHA-256 hashes, and signed manifests. The core installer does not include model weights or the local inference worker.
 - Installers are generated by GitHub Actions as part of the same release publication workflow.
-- See [SECURITY.md](SECURITY.md) for reporting security issues. Do not paste keys, private images, details of undisclosed vulnerabilities, or exploit samples into public Issues.
+- See [SECURITY.md (in Chinese)](SECURITY.md) for reporting security issues. Do not paste keys, private images, details of undisclosed vulnerabilities, or exploit samples into public Issues.
 
 ## Build from source
 
@@ -246,4 +246,4 @@ See [docs/performance.md](docs/performance.md) for performance baselines.
 
 ## License
 
-PicForLater is released under the [MIT License](LICENSE.txt). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for the purposes and sources of third-party dependencies, assets, and optional components. Original upstream licenses retained with distributions are listed in [licenses/README.md](licenses/README.md). Models and third-party services remain subject to their own terms.
+PicForLater is released under the [MIT License](LICENSE.txt). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for the purposes and sources of third-party dependencies, assets, and optional components. Original upstream licenses retained with distributions are listed in [licenses/README.md (in Chinese)](licenses/README.md). Models and third-party services remain subject to their own terms.
