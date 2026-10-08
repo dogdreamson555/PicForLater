@@ -254,21 +254,34 @@ public sealed class LocalSendReceiverServiceTests
     {
         using var root = new TemporaryAppDataRoot();
         var factory = new FakeNodeFactory();
+        var clock = new PairingTimeProvider();
         await using var receiver = CreateReceiver(
             root,
             factory,
-            pairingDuration: TimeSpan.FromMilliseconds(40));
+            timeProvider: clock);
         await receiver.StartAsync();
 
         await receiver.BeginPairingAsync();
-        await WaitUntilAsync(() =>
-            factory.Nodes.Count == 3
-            && receiver.Snapshot.Status == LocalSendReceiverStatus.Listening);
+        var restored = NewCompletion<LocalSendReceiverSnapshot>();
+        receiver.SnapshotChanged += snapshot =>
+        {
+            if (snapshot.Status is LocalSendReceiverStatus.Listening or LocalSendReceiverStatus.Faulted)
+            {
+                restored.TrySetResult(snapshot);
+            }
+        };
+        clock.ExpirePairing();
+        var snapshot = await restored.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
+        Assert.Equal(LocalSendReceiverStatus.Listening, snapshot.Status);
+        Assert.Equal(3, factory.Nodes.Count);
         Assert.Null(factory.Nodes[2].Options.ReceivePin);
         await receiver.BeginPairingAsync();
         Assert.Equal(4, factory.Nodes.Count);
+        Assert.True(clock.HasPendingPairingTimeout);
         await receiver.CancelPairingAsync();
+        Assert.False(clock.HasPendingPairingTimeout);
+        clock.ExpirePairing();
 
         Assert.Equal(5, factory.Nodes.Count);
         Assert.Null(factory.Nodes[4].Options.ReceivePin);
@@ -290,11 +303,12 @@ public sealed class LocalSendReceiverServiceTests
             },
         };
         var factory = new FakeNodeFactory();
+        var clock = new PairingTimeProvider();
         await using var receiver = CreateReceiver(
             root,
             factory,
             trustedDevices,
-            pairingDuration: TimeSpan.FromMilliseconds(40));
+            timeProvider: clock);
         await receiver.StartAsync();
         await receiver.BeginPairingAsync();
         var pairingNode = factory.Nodes[1];
@@ -305,10 +319,19 @@ public sealed class LocalSendReceiverServiceTests
 
         await pairingNode.EnqueueAsync(request);
         await addStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await WaitUntilAsync(() =>
-            factory.Nodes.Count == 3
-            && receiver.Snapshot.Status == LocalSendReceiverStatus.Listening);
+        var restored = NewCompletion<LocalSendReceiverSnapshot>();
+        receiver.SnapshotChanged += snapshot =>
+        {
+            if (snapshot.Status is LocalSendReceiverStatus.Listening or LocalSendReceiverStatus.Faulted)
+            {
+                restored.TrySetResult(snapshot);
+            }
+        };
+        clock.ExpirePairing();
+        var snapshot = await restored.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
+        Assert.Equal(LocalSendReceiverStatus.Listening, snapshot.Status);
+        Assert.Equal(3, factory.Nodes.Count);
         Assert.Contains(request.RequestId, pairingNode.DeclinedRequestIds);
         Assert.Empty(pairingNode.AcceptedRequests);
         Assert.Null(await trustedDevices.FindAsync(OtherFingerprint));
@@ -413,13 +436,15 @@ public sealed class LocalSendReceiverServiceTests
         FakeNodeFactory factory,
         ILocalSendTrustedDeviceStore? trustedDevices = null,
         ILocalSendInboxImportService? inbox = null,
-        TimeSpan? pairingDuration = null)
+        TimeSpan? pairingDuration = null,
+        TimeProvider? timeProvider = null)
     {
         return new(
             root.Paths,
             factory,
             trustedDevices ?? new FakeTrustedDeviceStore(),
             inbox ?? new FakeInboxImporter(),
+            timeProvider: timeProvider,
             pairingDuration: pairingDuration);
     }
 
@@ -449,6 +474,57 @@ public sealed class LocalSendReceiverServiceTests
         while (!condition())
         {
             await Task.Delay(10, timeout.Token);
+        }
+    }
+
+    private sealed class PairingTimeProvider : TimeProvider
+    {
+        private DateTimeOffset _utcNow = DateTimeOffset.UnixEpoch;
+        private PairingTimer? _timer;
+
+        public bool HasPendingPairingTimeout => _timer is { IsStopped: false };
+
+        public override DateTimeOffset GetUtcNow() => _utcNow;
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            Assert.Equal(Timeout.InfiniteTimeSpan, period);
+            return _timer = new PairingTimer(callback, state, _utcNow + dueTime);
+        }
+
+        public void ExpirePairing()
+        {
+            var timer = _timer ?? throw new InvalidOperationException("No pairing timeout is scheduled.");
+            _utcNow = timer.ExpiresAtUtc;
+            timer.Fire();
+        }
+
+        private sealed class PairingTimer(TimerCallback callback, object? state, DateTimeOffset expiresAtUtc) : ITimer
+        {
+            private int _finished;
+
+            public DateTimeOffset ExpiresAtUtc { get; } = expiresAtUtc;
+
+            public bool IsStopped => Volatile.Read(ref _finished) != 0;
+
+            public void Fire()
+            {
+                if (Interlocked.Exchange(ref _finished, 1) == 0)
+                {
+                    callback(state);
+                }
+            }
+
+            public bool Change(TimeSpan dueTime, TimeSpan period) =>
+                throw new NotSupportedException("This test timer only supports its initial one-shot schedule.");
+
+            public void Dispose() => Interlocked.Exchange(ref _finished, 1);
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
         }
     }
 
