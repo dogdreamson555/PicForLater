@@ -510,6 +510,9 @@ public sealed class ReminderWorkflowTests
             root.Paths,
             new ManagedImageStorage(root.Paths),
             service);
+        var entry = (await library.GetAsync(seeded.ImageItemId))!;
+        await File.WriteAllBytesAsync(root.Paths.Resolve(entry.Asset.OriginalRelativePath),
+            Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="));
 
         await library.SoftDeleteAsync(seeded.ImageItemId).WaitAsync(TimeSpan.FromSeconds(5));
         clock.SetUtcNow(DateTimeOffset.UtcNow.AddSeconds(1));

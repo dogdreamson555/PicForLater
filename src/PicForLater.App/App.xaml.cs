@@ -1389,6 +1389,7 @@ public partial class App : Application
                 var paths = AppRuntimePaths.Paths;
                 var storage = new ManagedImageStorage(paths);
                 var result = await new SqliteDatabaseInitializer(paths).InitializeAsync().ConfigureAwait(false);
+                storage.CleanupAbandonedStagingFiles(AnalysisCancellation.Token);
                 var remoteApiProfiles = new SqliteRemoteApiProfileService(paths);
                 try
                 {
@@ -1422,8 +1423,9 @@ public partial class App : Application
                     paths,
                     reminderScheduler,
                     workflowTimeProvider);
-                Reminders = reminderService;
                 var library = new LibraryService(paths, storage, reminderService);
+                await library.ReconcilePendingDeletionsAsync(AnalysisCancellation.Token).ConfigureAwait(false);
+                Reminders = reminderService;
                 Library = library;
                 _analysisWakeSignal = new AnalysisQueueWakeSignal();
 #if PICFORLATER_UI_TESTING

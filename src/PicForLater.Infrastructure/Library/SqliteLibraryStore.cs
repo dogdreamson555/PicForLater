@@ -637,6 +637,17 @@ internal sealed class SqliteLibraryStore
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection
             .BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using (var deletion = connection.CreateCommand())
+        {
+            deletion.Transaction = transaction;
+            deletion.CommandText = "SELECT EXISTS (SELECT 1 FROM DeletionJobs WHERE ImageItemId = @id);";
+            deletion.Parameters.AddWithValue("@id", ToDb(imageItemId));
+            if (Convert.ToInt64(await deletion.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) != 0)
+            {
+                throw new InvalidOperationException("An image whose permanent deletion has started cannot be restored.");
+            }
+        }
+
         var affected = await ExecuteAsync(
             connection,
             transaction,
@@ -664,6 +675,38 @@ internal sealed class SqliteLibraryStore
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<Guid>> PrepareDeletionReconciliationAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection
+            .BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync(
+            connection,
+            transaction,
+            "DELETE FROM DeletionJobs WHERE ImageItemId IN (SELECT Id FROM ImageItems WHERE DeletedAtUtc IS NULL);",
+            cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT DISTINCT j.ImageItemId
+            FROM DeletionJobs j
+            INNER JOIN ImageItems i ON i.Id = j.ImageItemId
+            WHERE j.State IN (1, 3) AND i.DeletedAtUtc IS NOT NULL
+            ORDER BY j.ImageItemId;
+            """;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        var imageItemIds = new List<Guid>();
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            imageItemIds.Add(Guid.Parse(reader.GetString(0)));
+        }
+
+        await reader.DisposeAsync().ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return imageItemIds;
+    }
+
     public async Task<DeletionPlan?> PrepareDeletionAsync(
         Guid imageItemId,
         DateTimeOffset now,
@@ -677,7 +720,10 @@ internal sealed class SqliteLibraryStore
         command.CommandText =
             """
             SELECT i.AssetId, a.OriginalRelativePath, a.ThumbnailRelativePath,
-                   (SELECT COUNT(*) FROM ImageItems refs WHERE refs.AssetId = i.AssetId)
+                   (SELECT COUNT(*) FROM ImageItems refs WHERE refs.AssetId = i.AssetId),
+                   (SELECT j.Id FROM DeletionJobs j
+                    WHERE j.ImageItemId = i.Id AND j.State IN (1, 3)
+                    ORDER BY j.CreatedAtUtc, j.Id LIMIT 1)
             FROM ImageItems i
             INNER JOIN ImageAssets a ON a.Id = i.AssetId
             WHERE i.Id = @id AND i.DeletedAtUtc IS NOT NULL;
@@ -693,9 +739,10 @@ internal sealed class SqliteLibraryStore
         var original = ManagedRelativePath.Parse(reader.GetString(1));
         var thumbnail = reader.IsDBNull(2) ? null : ManagedRelativePath.Parse(reader.GetString(2));
         var deleteAssetFiles = reader.GetInt64(3) == 1;
+        var pendingJobId = reader.IsDBNull(4) ? (Guid?)null : Guid.Parse(reader.GetString(4));
         await reader.DisposeAsync().ConfigureAwait(false);
 
-        var jobId = Guid.NewGuid();
+        var jobId = pendingJobId ?? Guid.NewGuid();
         await ExecuteAsync(
             connection,
             transaction,
@@ -704,7 +751,8 @@ internal sealed class SqliteLibraryStore
                 Id, ImageItemId, AssetId, OriginalRelativePath, ThumbnailRelativePath,
                 State, AttemptCount, LastErrorCode, CreatedAtUtc, UpdatedAtUtc, CompletedAtUtc)
             VALUES (@id, @itemId, @assetId, @original, @thumbnail,
-                    1, 0, NULL, @created, @updated, NULL);
+                    1, 0, NULL, @created, @updated, NULL)
+            ON CONFLICT(Id) DO UPDATE SET State = 1, LastErrorCode = NULL, UpdatedAtUtc = @updated;
             """,
             cancellationToken,
             ("@id", ToDb(jobId)),
@@ -726,12 +774,24 @@ internal sealed class SqliteLibraryStore
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection
             .BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        await ExecuteAsync(
+        var affected = await ExecuteAsync(
             connection,
             transaction,
             "DELETE FROM ImageItems WHERE Id = @id AND DeletedAtUtc IS NOT NULL;",
             cancellationToken,
             ("@id", ToDb(plan.ImageItemId))).ConfigureAwait(false);
+        if (affected == 0)
+        {
+            await using var remaining = connection.CreateCommand();
+            remaining.Transaction = transaction;
+            remaining.CommandText = "SELECT EXISTS (SELECT 1 FROM ImageItems WHERE Id = @id);";
+            remaining.Parameters.AddWithValue("@id", ToDb(plan.ImageItemId));
+            if (Convert.ToInt64(await remaining.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) != 0)
+            {
+                throw new InvalidOperationException("An active image cannot be permanently deleted.");
+            }
+        }
+
         await ExecuteAsync(
             connection,
             transaction,
@@ -766,7 +826,7 @@ internal sealed class SqliteLibraryStore
             UPDATE DeletionJobs
             SET State = 3, AttemptCount = AttemptCount + 1,
                 LastErrorCode = @error, UpdatedAtUtc = @updated
-            WHERE Id = @id;
+            WHERE Id = @id AND State <> 2;
             """,
             cancellationToken,
             ("@error", errorCode),

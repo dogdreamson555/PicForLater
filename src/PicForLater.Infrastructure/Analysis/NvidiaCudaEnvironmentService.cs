@@ -239,6 +239,7 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
     private readonly SemaphoreSlim _operationGate = new(1, 1);
     private readonly TimeSpan _downloadInactivityTimeout;
     private readonly TimeProvider _timeProvider;
+    private readonly Func<string, long> _availableFreeSpaceProvider;
 
     public NvidiaCudaEnvironmentService(
         AppDataPaths paths,
@@ -256,7 +257,8 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
         IReadOnlyList<NvidiaCudaRuntimeArchiveDefinition>? archives = null,
         NvidiaCudaRuntimePackageInfo? runtimePackage = null,
         Func<string, NvidiaCudaRuntimeLocation?>? runtimeLocator = null,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        Func<string, long>? availableFreeSpaceProvider = null)
     {
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -265,6 +267,7 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
         RuntimePackage = runtimePackage ?? ProductionRuntimePackage;
         _runtimeLocator = runtimeLocator ?? NvidiaCudaRuntimeLocator.Locate;
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _availableFreeSpaceProvider = availableFreeSpaceProvider ?? GetAvailableFreeSpace;
         if (_archives.Count == 0
             || _archives.Sum(archive => archive.ByteLength) != RuntimePackage.DownloadBytes)
         {
@@ -403,18 +406,32 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
                     });
             }
 
-            EnsureDiskSpace();
             progress?.Report(Progress(ModelDownloadStage.Preparing, 0));
             var recoveryDirectoryPath = GetRecoveryDirectoryPath();
             Directory.CreateDirectory(recoveryDirectoryPath);
-            var downloadedBytes = 0L;
-            foreach (var archive in _archives)
+            var verifiedArchives = new bool[_archives.Count];
+            var verifiedDownloadBytes = 0L;
+            for (var index = 0; index < _archives.Count; index++)
             {
+                var archive = _archives[index];
                 var archivePath = Path.Combine(recoveryDirectoryPath, archive.FileName);
-                if (!await IsVerifiedArchiveAsync(
+                if (await IsVerifiedArchiveAsync(
                         archivePath,
                         archive,
                         cancellationToken).ConfigureAwait(false))
+                {
+                    verifiedArchives[index] = true;
+                    verifiedDownloadBytes = checked(verifiedDownloadBytes + archive.ByteLength);
+                }
+            }
+
+            EnsureDiskSpace(verifiedDownloadBytes);
+            var downloadedBytes = 0L;
+            for (var index = 0; index < _archives.Count; index++)
+            {
+                var archive = _archives[index];
+                var archivePath = Path.Combine(recoveryDirectoryPath, archive.FileName);
+                if (!verifiedArchives[index])
                 {
                     await DownloadArchiveWithRetriesAsync(
                         archive,
@@ -525,15 +542,23 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
         driverCudaVersion,
         NvidiaCudaRuntimeLocator.GetMissingManagedFiles(ManagedRuntimeDirectoryPath));
 
-    private void EnsureDiskSpace()
+    private void EnsureDiskSpace(long verifiedDownloadBytes)
     {
-        var root = Path.GetPathRoot(_paths.RootPath)
-            ?? throw new IOException("The application data volume could not be determined.");
-        var required = checked(RuntimePackage.DownloadBytes + RuntimePackage.InstalledBytes + DiskMarginBytes);
-        if (new DriveInfo(root).AvailableFreeSpace < required)
+        var required = checked(
+            RuntimePackage.DownloadBytes - verifiedDownloadBytes
+            + RuntimePackage.InstalledBytes
+            + DiskMarginBytes);
+        if (_availableFreeSpaceProvider(_paths.RootPath) < required)
         {
             throw new RecommendedModelInstallException("model.insufficient-disk-space");
         }
+    }
+
+    private static long GetAvailableFreeSpace(string path)
+    {
+        var root = Path.GetPathRoot(path)
+            ?? throw new IOException("The application data volume could not be determined.");
+        return new DriveInfo(root).AvailableFreeSpace;
     }
 
     private string GetRecoveryDirectoryPath()
@@ -721,16 +746,20 @@ public sealed class NvidiaCudaEnvironmentService : INvidiaCudaEnvironmentService
             return false;
         }
 
-        await using var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            1024 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        var actualHash = Convert.ToHexString(
-            await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false))
-            .ToLowerInvariant();
+        string actualHash;
+        await using (var stream = new FileStream(
+                         path,
+                         FileMode.Open,
+                         FileAccess.Read,
+                         FileShare.Read,
+                         1024 * 1024,
+                         FileOptions.Asynchronous | FileOptions.SequentialScan))
+        {
+            actualHash = Convert.ToHexString(
+                await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false))
+                .ToLowerInvariant();
+        }
+
         if (actualHash.Equals(archive.Sha256, StringComparison.Ordinal))
         {
             return true;

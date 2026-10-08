@@ -32,6 +32,24 @@ public sealed class ManagedImageStorage : IManagedImageStorage
 
     public long MaximumStagedBytes { get; }
 
+    public void CleanupAbandonedStagingFiles(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _paths.EnsureSafePath(_paths.StagingDirectoryPath);
+        foreach (var path in Directory.EnumerateFiles(_paths.StagingDirectoryPath, "*.tmp"))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var name = Path.GetFileNameWithoutExtension(path);
+            if (name.StartsWith("import-", StringComparison.Ordinal)
+                && Guid.TryParseExact(name.AsSpan(7), "N", out _)
+                || name.StartsWith("thumbnail-", StringComparison.Ordinal)
+                && Guid.TryParseExact(name.AsSpan(10), "N", out _))
+            {
+                TryDelete(ManagedRelativePath.Parse($"staging/{Path.GetFileName(path)}"));
+            }
+        }
+    }
+
     public async Task<StagedImage> StageAsync(
         Stream source,
         CancellationToken cancellationToken = default)

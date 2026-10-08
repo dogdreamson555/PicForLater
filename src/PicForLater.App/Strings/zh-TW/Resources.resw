@@ -249,6 +249,7 @@
   <data name="RecycleBinLoadMoreButton.Content" xml:space="preserve"><value>載入更多</value></data>
   <data name="RecycleBinLoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>載入更多資源回收筒圖片</value></data>
   <data name="RecycleBinLoadMoreFailedStatus" xml:space="preserve"><value>無法載入更多資源回收筒圖片，請重試。</value></data>
+  <data name="RecycleBinActionFailedStatus" xml:space="preserve"><value>無法完成資源回收筒操作，請重試。</value></data>
   <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>資源回收筒圖片</value></data>
   <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>選擇</value></data>
   <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>選擇多個資源回收筒圖片</value></data>
@@ -274,6 +275,7 @@
   <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>無法儲存變更，目前輸入仍會保留。</value></data>
   <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>變更已儲存，但無法載入最新詳細資料。</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>圖片已還原；未來提醒需要重新確認後才會排程。</value></data>
+  <data name="RestoreFailedStatus" xml:space="preserve"><value>無法還原圖片。若已開始永久刪除，請繼續完成刪除。</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>已還原 {0}/{1} 張圖片；未來提醒需要重新確認後才會排程。</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>圖片及無其他引用的受管檔案已永久刪除。</value></data>
   <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>永久刪除尚未完成，應用程式已保留刪除計畫以便安全重試。</value></data>
