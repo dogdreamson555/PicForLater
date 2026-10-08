@@ -119,18 +119,34 @@ public partial class RecycleBinPageViewModel : ObservableObject
 
     public async Task<PermanentDeleteResult?> PermanentlyDeleteSelectedAsync()
     {
-        if (SelectedItem is null)
+        if (SelectedItem is null || IsWorking)
         {
             return null;
         }
 
         var loadedCount = Items.Count;
-        var result = await GetLibrary().PermanentlyDeleteAsync(SelectedItem.Id).ConfigureAwait(true);
-        var completedCount = result.Status == PermanentDeleteStatus.Completed ? 1 : 0;
-        SetPermanentDeleteStatus(completedCount, 1);
-        SetSelectionMode(isActive: false);
-        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
-        return result;
+        IsWorking = true;
+        try
+        {
+            PermanentDeleteResult? result = null;
+            try
+            {
+                result = await GetLibrary().PermanentlyDeleteAsync(SelectedItem.Id).ConfigureAwait(true);
+            }
+            catch (Exception)
+            {
+            }
+
+            var completedCount = result?.Status == PermanentDeleteStatus.Completed ? 1 : 0;
+            SetPermanentDeleteStatus(completedCount, 1);
+            SetSelectionMode(isActive: false);
+            await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
+            return result;
+        }
+        finally
+        {
+            IsWorking = false;
+        }
     }
 
     public void SetSelectionMode(bool isActive)
@@ -147,6 +163,11 @@ public partial class RecycleBinPageViewModel : ObservableObject
 
     public async Task<int> RestoreItemsAsync(IReadOnlyCollection<Guid> imageItemIds)
     {
+        if (IsWorking)
+        {
+            return 0;
+        }
+
         var ids = imageItemIds.Distinct().ToArray();
         if (ids.Length == 0)
         {
@@ -155,26 +176,47 @@ public partial class RecycleBinPageViewModel : ObservableObject
 
         var loadedCount = Items.Count;
         var restoredCount = 0;
-        foreach (var id in ids)
+        IsWorking = true;
+        try
         {
-            await GetLibrary().RestoreAsync(id).ConfigureAwait(true);
-            restoredCount++;
-        }
+            foreach (var id in ids)
+            {
+                try
+                {
+                    await GetLibrary().RestoreAsync(id).ConfigureAwait(true);
+                    restoredCount++;
+                }
+                catch (Exception)
+                {
+                }
+            }
 
-        StatusMessage = ids.Length == 1
-            ? _resources.GetString("RestoreCompletedStatus")
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                _resources.GetString("RestoreBatchCompletedStatusFormat"),
-                restoredCount,
-                ids.Length);
-        SetSelectionMode(isActive: false);
-        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - restoredCount)).ConfigureAwait(true);
-        return restoredCount;
+            StatusMessage = ids.Length == 1
+                ? restoredCount == 1
+                    ? _resources.GetString("RestoreCompletedStatus")
+                    : _resources.GetString("RestoreFailedStatus")
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    _resources.GetString("RestoreBatchCompletedStatusFormat"),
+                    restoredCount,
+                    ids.Length);
+            SetSelectionMode(isActive: false);
+            await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - restoredCount)).ConfigureAwait(true);
+            return restoredCount;
+        }
+        finally
+        {
+            IsWorking = false;
+        }
     }
 
     public async Task<int> PermanentlyDeleteItemsAsync(IReadOnlyCollection<Guid> imageItemIds)
     {
+        if (IsWorking)
+        {
+            return 0;
+        }
+
         var ids = imageItemIds.Distinct().ToArray();
         if (ids.Length == 0)
         {
@@ -183,19 +225,33 @@ public partial class RecycleBinPageViewModel : ObservableObject
 
         var loadedCount = Items.Count;
         var completedCount = 0;
-        foreach (var id in ids)
+        IsWorking = true;
+        try
         {
-            var result = await GetLibrary().PermanentlyDeleteAsync(id).ConfigureAwait(true);
-            if (result.Status == PermanentDeleteStatus.Completed)
+            foreach (var id in ids)
             {
-                completedCount++;
+                try
+                {
+                    var result = await GetLibrary().PermanentlyDeleteAsync(id).ConfigureAwait(true);
+                    if (result.Status == PermanentDeleteStatus.Completed)
+                    {
+                        completedCount++;
+                    }
+                }
+                catch (Exception)
+                {
+                }
             }
-        }
 
-        SetPermanentDeleteStatus(completedCount, ids.Length);
-        SetSelectionMode(isActive: false);
-        await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
-        return completedCount;
+            SetPermanentDeleteStatus(completedCount, ids.Length);
+            SetSelectionMode(isActive: false);
+            await ReloadToDepthAsync(Math.Max(PageSize, loadedCount - completedCount)).ConfigureAwait(true);
+            return completedCount;
+        }
+        finally
+        {
+            IsWorking = false;
+        }
     }
 
     private async Task ReloadToDepthAsync(int targetCount)
@@ -217,6 +273,7 @@ public partial class RecycleBinPageViewModel : ObservableObject
     private async Task LoadPageAsync(bool reset)
     {
         var previousHasMore = HasMore;
+        var wasWorking = IsWorking;
         IsWorking = true;
         try
         {
@@ -259,7 +316,7 @@ public partial class RecycleBinPageViewModel : ObservableObject
         }
         finally
         {
-            IsWorking = false;
+            IsWorking = wasWorking;
         }
     }
 

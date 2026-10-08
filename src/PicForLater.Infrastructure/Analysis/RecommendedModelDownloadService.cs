@@ -35,6 +35,7 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
     private readonly TimeSpan _downloadInactivityTimeout;
     private readonly int _downloadRetryCount;
     private readonly TimeSpan _downloadRetryBaseDelay;
+    private readonly Func<string, long> _availableFreeSpaceProvider;
     private readonly SemaphoreSlim _operationGate = new(1, 1);
 
     public RecommendedModelDownloadService(
@@ -46,7 +47,8 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
         TimeSpan? downloadInactivityTimeout = null,
         int downloadRetryCount = 3,
         TimeSpan? downloadRetryBaseDelay = null,
-        IReadOnlySet<string>? availableQwenExecutionProviders = null)
+        IReadOnlySet<string>? availableQwenExecutionProviders = null,
+        Func<string, long>? availableFreeSpaceProvider = null)
     {
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -81,6 +83,7 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
             throw new ArgumentOutOfRangeException(nameof(downloadRetryBaseDelay));
         }
 
+        _availableFreeSpaceProvider = availableFreeSpaceProvider ?? GetAvailableFreeSpace;
         ValidateCatalog(_catalog);
     }
 
@@ -146,7 +149,6 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
             var downloadWasRequired = !current.IsInstalled;
             if (downloadWasRequired)
             {
-                EnsureDiskSpace(definition);
                 stagingDirectoryPath = CreateStagingDirectory();
                 var downloadedBytes = await RestoreVerifiedDownloadsAsync(
                     definition,
@@ -154,6 +156,7 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
                     completedDownloads,
                     progress,
                     cancellationToken).ConfigureAwait(false);
+                EnsureDiskSpace(definition, downloadedBytes);
                 foreach (var file in definition.Files)
                 {
                     if (completedDownloads.Contains(file.RelativePath))
@@ -609,20 +612,28 @@ public sealed class RecommendedModelDownloadService : IRecommendedModelService
         }
     }
 
-    private void EnsureDiskSpace(RecommendedModelDownloadDefinition definition)
+    private void EnsureDiskSpace(
+        RecommendedModelDownloadDefinition definition,
+        long restoredDownloadBytes)
     {
-        var pathRoot = Path.GetPathRoot(_paths.RootPath)
-            ?? throw new IOException("The local application data volume could not be determined.");
-        var drive = new DriveInfo(pathRoot);
         var importCopyBytes = definition.Descriptor.Kind == RecommendedModelPackageKind.Qwen3Vl2BInstruct
             ? definition.Descriptor.InstalledBytes
             : 0;
         var required = checked(
-            definition.Descriptor.DownloadBytes + importCopyBytes + DownloadDiskMarginBytes);
-        if (drive.AvailableFreeSpace < required)
+            definition.Descriptor.DownloadBytes - restoredDownloadBytes
+            + importCopyBytes
+            + DownloadDiskMarginBytes);
+        if (_availableFreeSpaceProvider(_paths.RootPath) < required)
         {
             throw new RecommendedModelInstallException("model.insufficient-disk-space");
         }
+    }
+
+    private static long GetAvailableFreeSpace(string path)
+    {
+        var pathRoot = Path.GetPathRoot(path)
+            ?? throw new IOException("The local application data volume could not be determined.");
+        return new DriveInfo(pathRoot).AvailableFreeSpace;
     }
 
     private void TryDeleteStagingDirectory(string path)

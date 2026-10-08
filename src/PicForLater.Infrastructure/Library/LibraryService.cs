@@ -148,26 +148,50 @@ public sealed class LibraryService : ILibraryService
         TryNotifyReminderOutbox();
     }
 
-    public Task RestoreAsync(
+    public async Task RestoreAsync(
         Guid imageItemId,
-        CancellationToken cancellationToken = default) =>
-        _store.RestoreAsync(imageItemId, DateTimeOffset.UtcNow, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        var entry = await _store.GetAsync(imageItemId, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("The image item was not found.");
+        try
+        {
+            await using var original = await _storage.OpenReadAsync(
+                entry.Asset.OriginalRelativePath,
+                cancellationToken).ConfigureAwait(false);
+            await _store.RestoreAsync(imageItemId, DateTimeOffset.UtcNow, cancellationToken).ConfigureAwait(false);
+        }
+        catch (IOException exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+        {
+            throw new InvalidOperationException("The original image is unavailable and cannot be restored.", exception);
+        }
+    }
+
+    public async Task ReconcilePendingDeletionsAsync(CancellationToken cancellationToken = default)
+    {
+        var imageItemIds = await _store.PrepareDeletionReconciliationAsync(cancellationToken).ConfigureAwait(false);
+        foreach (var imageItemId in imageItemIds)
+        {
+            await PermanentlyDeleteAsync(imageItemId, cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     public async Task<PermanentDeleteResult> PermanentlyDeleteAsync(
         Guid imageItemId,
         CancellationToken cancellationToken = default)
     {
-        var plan = await _store.PrepareDeletionAsync(
-            imageItemId,
-            DateTimeOffset.UtcNow,
-            cancellationToken).ConfigureAwait(false);
-        if (plan is null)
-        {
-            return new PermanentDeleteResult(PermanentDeleteStatus.NotFound);
-        }
-
+        DeletionPlan? plan = null;
         try
         {
+            plan = await _store.PrepareDeletionAsync(
+                imageItemId,
+                DateTimeOffset.UtcNow,
+                cancellationToken).ConfigureAwait(false);
+            if (plan is null)
+            {
+                return new PermanentDeleteResult(PermanentDeleteStatus.NotFound);
+            }
+
             if (plan.DeleteAssetFiles)
             {
                 if (plan.ThumbnailRelativePath is not null)
@@ -205,11 +229,14 @@ public sealed class LibraryService : ILibraryService
             };
             try
             {
-                await _store.FailDeletionAsync(
-                    plan.JobId,
-                    errorCode,
-                    DateTimeOffset.UtcNow,
-                    cancellationToken).ConfigureAwait(false);
+                if (plan is not null)
+                {
+                    await _store.FailDeletionAsync(
+                        plan.JobId,
+                        errorCode,
+                        DateTimeOffset.UtcNow,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
             catch
             {

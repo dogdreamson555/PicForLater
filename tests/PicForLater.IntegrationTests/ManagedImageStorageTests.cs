@@ -164,6 +164,70 @@ public sealed class ManagedImageStorageTests
         }
     }
 
+    [Fact]
+    public async Task CleanupAbandonedStagingFiles_RemovesOnlyGeneratedImportAndThumbnailFiles()
+    {
+        using var root = new TemporaryAppDataRoot();
+        var storage = new ManagedImageStorage(root.Paths);
+        var originalStage = await storage.StageAsync(new MemoryStream(PngBytes));
+        var original = await storage.PromoteAsync(originalStage, ManagedImageFormat.Png);
+        var thumbnail = await storage.StoreThumbnailAsync(original.ContentHash, PngBytes);
+        var abandoned = await storage.StageAsync(new MemoryStream(PngBytes));
+        var thumbnailTemporaryPath = Path.Combine(root.Paths.StagingDirectoryPath, $"thumbnail-{Guid.NewGuid():N}.tmp");
+        var unrelatedPath = Path.Combine(root.Paths.StagingDirectoryPath, "import-not-a-generated-id.tmp");
+        var nestedPath = Path.Combine(root.Paths.ModelDownloadStagingDirectoryPath, $"import-{Guid.NewGuid():N}.tmp");
+        await File.WriteAllTextAsync(thumbnailTemporaryPath, "synthetic thumbnail");
+        await File.WriteAllTextAsync(unrelatedPath, "preserve unrelated file");
+        await File.WriteAllTextAsync(nestedPath, "preserve model staging");
+
+        new ManagedImageStorage(root.Paths).CleanupAbandonedStagingFiles();
+
+        Assert.False(File.Exists(root.Paths.Resolve(abandoned.RelativePath)));
+        Assert.False(File.Exists(thumbnailTemporaryPath));
+        Assert.True(await storage.VerifyAsync(original.RelativePath, original.ContentHash));
+        Assert.True(File.Exists(root.Paths.Resolve(thumbnail)));
+        Assert.True(File.Exists(unrelatedPath));
+        Assert.True(File.Exists(nestedPath));
+    }
+
+    [Fact]
+    public async Task CleanupAbandonedStagingFiles_PreservesSymbolicLinkTargetsAndCleansOtherFiles()
+    {
+        using var root = new TemporaryAppDataRoot();
+        var storage = new ManagedImageStorage(root.Paths);
+        var target = Path.Combine(root.Paths.RootPath, "synthetic-link-target.tmp");
+        var link = Path.Combine(root.Paths.StagingDirectoryPath, $"import-{Guid.NewGuid():N}.tmp");
+        await File.WriteAllTextAsync(target, "preserve target");
+        File.CreateSymbolicLink(link, target);
+        var abandoned = await storage.StageAsync(new MemoryStream(PngBytes));
+        try
+        {
+            storage.CleanupAbandonedStagingFiles();
+
+            Assert.Equal("preserve target", await File.ReadAllTextAsync(target));
+            Assert.False(File.Exists(root.Paths.Resolve(abandoned.RelativePath)));
+            Assert.True(File.Exists(link));
+        }
+        finally
+        {
+            File.Delete(link);
+        }
+    }
+
+    [Fact]
+    public async Task CleanupAbandonedStagingFiles_CancellationPreservesStaging()
+    {
+        using var root = new TemporaryAppDataRoot();
+        var storage = new ManagedImageStorage(root.Paths);
+        var abandoned = await storage.StageAsync(new MemoryStream(PngBytes));
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        Assert.ThrowsAny<OperationCanceledException>(() => storage.CleanupAbandonedStagingFiles(cancellation.Token));
+
+        Assert.True(File.Exists(root.Paths.Resolve(abandoned.RelativePath)));
+    }
+
     private sealed class CancelAfterFirstReadStream : MemoryStream
     {
         private readonly CancellationTokenSource _cancellationSource;

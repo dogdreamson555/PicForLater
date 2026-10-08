@@ -15,6 +15,7 @@ public sealed partial class RecycleBinPage : Page
     private static readonly ResourceLoader _resources = new();
     private readonly HashSet<Guid> _selectedItemIds = [];
     private bool _synchronizingSelection;
+    private bool _isPermanentDeleteDialogOpen;
     private ItemsWrapGrid? _itemsPanel;
 
     public RecycleBinPageViewModel ViewModel { get; } = new(
@@ -151,50 +152,69 @@ public sealed partial class RecycleBinPage : Page
 
     private async Task RestoreItemsAsync(IReadOnlyList<LibraryItem> items)
     {
-        if (items.Count == 0)
+        if (items.Count == 0 || ViewModel.IsWorking)
         {
             return;
         }
 
-        var ids = items.Select(item => item.Id).ToArray();
-        SetSelectionMode(isActive: false);
-        await ViewModel.RestoreItemsAsync(ids);
+        try
+        {
+            var ids = items.Select(item => item.Id).ToArray();
+            SetSelectionMode(isActive: false);
+            await ViewModel.RestoreItemsAsync(ids);
+        }
+        catch (Exception)
+        {
+            ViewModel.StatusMessage = _resources.GetString("RecycleBinActionFailedStatus");
+        }
     }
 
     private async Task ConfirmPermanentDeleteAsync(IReadOnlyList<LibraryItem> items)
     {
-        if (items.Count == 0)
+        if (items.Count == 0 || ViewModel.IsWorking || _isPermanentDeleteDialogOpen)
         {
             return;
         }
 
-        var title = items.Count == 1
-            ? _resources.GetString("PermanentDeleteDialogTitle")
-            : _resources.GetString("PermanentDeleteBatchDialogTitle");
-        var message = items.Count == 1
-            ? string.Format(
-                System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString("PermanentDeleteDialogMessageFormat"),
-                items[0].Title)
-            : string.Format(
-                System.Globalization.CultureInfo.CurrentCulture,
-                _resources.GetString("PermanentDeleteBatchDialogMessageFormat"),
-                items.Count);
-        var dialog = new ContentDialog
+        _isPermanentDeleteDialogOpen = true;
+        try
         {
-            XamlRoot = XamlRoot,
-            RequestedTheme = ActualTheme,
-            Title = title,
-            Content = message,
-            PrimaryButtonText = _resources.GetString("PermanentDeleteDialogPrimary"),
-            CloseButtonText = _resources.GetString("CancelButtonText"),
-            DefaultButton = ContentDialogButton.Close,
-        };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            var title = items.Count == 1
+                ? _resources.GetString("PermanentDeleteDialogTitle")
+                : _resources.GetString("PermanentDeleteBatchDialogTitle");
+            var message = items.Count == 1
+                ? string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    _resources.GetString("PermanentDeleteDialogMessageFormat"),
+                    items[0].Title)
+                : string.Format(
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    _resources.GetString("PermanentDeleteBatchDialogMessageFormat"),
+                    items.Count);
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                RequestedTheme = ActualTheme,
+                Title = title,
+                Content = message,
+                PrimaryButtonText = _resources.GetString("PermanentDeleteDialogPrimary"),
+                CloseButtonText = _resources.GetString("CancelButtonText"),
+                DefaultButton = ContentDialogButton.Close,
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary && !ViewModel.IsWorking)
+            {
+                var ids = items.Select(item => item.Id).ToArray();
+                SetSelectionMode(isActive: false);
+                await ViewModel.PermanentlyDeleteItemsAsync(ids);
+            }
+        }
+        catch (Exception)
         {
-            var ids = items.Select(item => item.Id).ToArray();
-            SetSelectionMode(isActive: false);
-            await ViewModel.PermanentlyDeleteItemsAsync(ids);
+            ViewModel.StatusMessage = _resources.GetString("RecycleBinActionFailedStatus");
+        }
+        finally
+        {
+            _isPermanentDeleteDialogOpen = false;
         }
     }
 

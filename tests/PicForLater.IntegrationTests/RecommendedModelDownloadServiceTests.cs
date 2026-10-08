@@ -9,6 +9,8 @@ namespace PicForLater.IntegrationTests;
 
 public sealed class RecommendedModelDownloadServiceTests
 {
+    private const long DiskMarginBytes = 256L * 1024 * 1024;
+
     [Fact]
     public void ProductionCatalog_PinsBothPublishedPicForLaterQwenVariants()
     {
@@ -197,7 +199,8 @@ public sealed class RecommendedModelDownloadServiceTests
             new EmptyModelPackageService(),
             installer,
             [definition],
-            downloadRetryBaseDelay: TimeSpan.Zero);
+            downloadRetryBaseDelay: TimeSpan.Zero,
+            availableFreeSpaceProvider: _ => secondPayload.LongLength + DiskMarginBytes);
 
         var result = await retryService.DownloadInstallAndEnableAsync(definition.Descriptor.Id);
 
@@ -205,6 +208,70 @@ public sealed class RecommendedModelDownloadServiceTests
         Assert.False(firstFileWasRequestedAgain);
         Assert.Equal(firstPayload, installer.InstalledBytes);
         Assert.Empty(Directory.EnumerateFileSystemEntries(root.Paths.ModelDownloadRecoveryDirectoryPath));
+    }
+
+    [Fact]
+    public async Task DownloadInstallAndEnable_DoesNotCreditCorruptedRecoveryFilesDuringDiskPreflight()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var payload = "pinned-pp-ocr-model"u8.ToArray();
+        var corruptedPayload = payload.ToArray();
+        corruptedPayload[0] ^= 0xff;
+        var definition = CreateDefinition(payload, Hash(payload));
+        var cachePath = GetRecoveryFilePath(root.Paths, definition, "model.onnx");
+        Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
+        await File.WriteAllBytesAsync(cachePath, corruptedPayload);
+        var requestCount = 0;
+        using var httpClient = new HttpClient(new DelegateResponseHandler(request =>
+        {
+            requestCount++;
+            return Response(request, payload);
+        }));
+        var service = new RecommendedModelDownloadService(
+            root.Paths,
+            httpClient,
+            new EmptyModelPackageService(),
+            new RecordingOcrInstaller(),
+            [definition],
+            availableFreeSpaceProvider: _ => DiskMarginBytes);
+
+        var exception = await Assert.ThrowsAsync<RecommendedModelInstallException>(
+            () => service.DownloadInstallAndEnableAsync(definition.Descriptor.Id));
+
+        Assert.Equal("model.insufficient-disk-space", exception.ErrorCode);
+        Assert.Equal(0, requestCount);
+        Assert.False(File.Exists(cachePath));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(root.Paths.ModelDownloadStagingDirectoryPath));
+    }
+
+    [Fact]
+    public async Task DownloadInstallAndEnable_RejectsInsufficientSpaceWithoutRecoveryFilesBeforeNetwork()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var payload = "pinned-pp-ocr-model"u8.ToArray();
+        var definition = CreateDefinition(payload, Hash(payload));
+        var requestCount = 0;
+        using var httpClient = new HttpClient(new DelegateResponseHandler(request =>
+        {
+            requestCount++;
+            return Response(request, payload);
+        }));
+        var service = new RecommendedModelDownloadService(
+            root.Paths,
+            httpClient,
+            new EmptyModelPackageService(),
+            new RecordingOcrInstaller(),
+            [definition],
+            availableFreeSpaceProvider: _ => DiskMarginBytes);
+
+        var exception = await Assert.ThrowsAsync<RecommendedModelInstallException>(
+            () => service.DownloadInstallAndEnableAsync(definition.Descriptor.Id));
+
+        Assert.Equal("model.insufficient-disk-space", exception.ErrorCode);
+        Assert.Equal(0, requestCount);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(root.Paths.ModelDownloadStagingDirectoryPath));
     }
 
     [Fact]
@@ -329,6 +396,20 @@ public sealed class RecommendedModelDownloadServiceTests
                 payload.LongLength,
                 sha256)],
             null);
+    }
+
+    private static string GetRecoveryFilePath(
+        AppDataPaths paths,
+        RecommendedModelDownloadDefinition definition,
+        string relativePath)
+    {
+        var identity = Convert.ToHexString(
+            SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(definition.Descriptor.Id)))
+            .ToLowerInvariant();
+        return Path.Combine(
+            paths.ModelDownloadRecoveryDirectoryPath,
+            identity,
+            relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static RecommendedModelDownloadDefinition CreateTwoFileDefinition(

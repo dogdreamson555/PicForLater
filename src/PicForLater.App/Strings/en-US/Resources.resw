@@ -249,6 +249,7 @@
   <data name="RecycleBinLoadMoreButton.Content" xml:space="preserve"><value>Load more</value></data>
   <data name="RecycleBinLoadMoreButton.AutomationProperties.Name" xml:space="preserve"><value>Load more recycle bin images</value></data>
   <data name="RecycleBinLoadMoreFailedStatus" xml:space="preserve"><value>Could not load more recycle bin images. Try again.</value></data>
+  <data name="RecycleBinActionFailedStatus" xml:space="preserve"><value>The Recycle Bin action could not be completed. Try again.</value></data>
   <data name="RecycleBinGridView.AutomationProperties.Name" xml:space="preserve"><value>Recycle bin images</value></data>
   <data name="RecycleBinSelectionModeButton.Label" xml:space="preserve"><value>Select</value></data>
   <data name="RecycleBinSelectionModeButton.AutomationProperties.Name" xml:space="preserve"><value>Select multiple recycle bin images</value></data>
@@ -274,6 +275,7 @@
   <data name="DetailsSaveFailedStatus" xml:space="preserve"><value>Could not save changes. Your edits are still here.</value></data>
   <data name="DetailsSavedRefreshFailedStatus" xml:space="preserve"><value>Changes were saved, but the latest details could not be loaded.</value></data>
   <data name="RestoreCompletedStatus" xml:space="preserve"><value>Image restored. Future reminders must be confirmed before they are scheduled again.</value></data>
+  <data name="RestoreFailedStatus" xml:space="preserve"><value>The image could not be restored. If permanent deletion has already started, finish deleting the image.</value></data>
   <data name="RestoreBatchCompletedStatusFormat" xml:space="preserve"><value>Restored {0} of {1} images. Future reminders must be confirmed before they are scheduled again.</value></data>
   <data name="PermanentDeleteCompletedStatus" xml:space="preserve"><value>The image and any files stored by the app that were no longer used by other images were permanently deleted.</value></data>
   <data name="PermanentDeleteRetryStatus" xml:space="preserve"><value>Permanent deletion is incomplete. You can safely retry the remaining steps.</value></data>

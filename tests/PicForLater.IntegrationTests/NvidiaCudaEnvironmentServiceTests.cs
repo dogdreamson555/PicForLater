@@ -3,11 +3,14 @@ using System.Net;
 using System.Security.Cryptography;
 using PicForLater.Core.Analysis;
 using PicForLater.Infrastructure.Analysis;
+using PicForLater.Infrastructure.Storage;
 
 namespace PicForLater.IntegrationTests;
 
 public sealed class NvidiaCudaEnvironmentServiceTests
 {
+    private const long DiskMarginBytes = 256L * 1024 * 1024;
+
     [Fact]
     public async Task Detect_QualifiedGpuWithoutRuntime_OffersPrivateInstallation()
     {
@@ -102,6 +105,104 @@ public sealed class NvidiaCudaEnvironmentServiceTests
         Assert.Empty(Directory.EnumerateFileSystemEntries(root.Paths.ModelRuntimeStagingDirectoryPath));
         Assert.Empty(Directory.EnumerateFileSystemEntries(
             root.Paths.ModelRuntimeDownloadRecoveryDirectoryPath));
+    }
+
+    [Fact]
+    public async Task DownloadAndInstallRuntime_UsesVerifiedRecoveryArchivesForDiskPreflight()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var fixture = CreateRuntimeFixture();
+        var firstArchive = fixture.Archives[0];
+        var failedHandler = new ArchiveMapHandler(
+            fixture.ArchivePayloads,
+            fixture.Archives[1].FileName);
+        using (var failedClient = new HttpClient(failedHandler))
+        {
+            var failedService = CreateRuntimeService(
+                root.Paths,
+                failedClient,
+                fixture,
+                _ => long.MaxValue);
+            await Assert.ThrowsAsync<RecommendedModelInstallException>(
+                () => failedService.DownloadAndInstallRuntimeAsync());
+        }
+
+        var cachedPath = Path.Combine(
+            GetRuntimeRecoveryDirectoryPath(root.Paths),
+            firstArchive.FileName);
+        Assert.True(File.Exists(cachedPath));
+        var retryHandler = new ArchiveMapHandler(fixture.ArchivePayloads);
+        using var retryClient = new HttpClient(retryHandler);
+        var retryService = CreateRuntimeService(
+            root.Paths,
+            retryClient,
+            fixture,
+            _ => fixture.Archives[1].ByteLength
+                + fixture.Package.InstalledBytes
+                + DiskMarginBytes);
+
+        var result = await retryService.DownloadAndInstallRuntimeAsync();
+
+        Assert.True(result.Status.CanUseCudaModel);
+        Assert.Equal([fixture.Archives[1].FileName], retryHandler.RequestedFileNames);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(
+            root.Paths.ModelRuntimeDownloadRecoveryDirectoryPath));
+    }
+
+    [Fact]
+    public async Task DownloadAndInstallRuntime_DoesNotCreditCorruptedRecoveryArchives()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var fixture = CreateRuntimeFixture();
+        var firstArchive = fixture.Archives[0];
+        var cachedPath = Path.Combine(
+            GetRuntimeRecoveryDirectoryPath(root.Paths),
+            firstArchive.FileName);
+        Directory.CreateDirectory(Path.GetDirectoryName(cachedPath)!);
+        var corruptedPayload = fixture.ArchivePayloads[firstArchive.FileName].ToArray();
+        corruptedPayload[^1] ^= 0xff;
+        await File.WriteAllBytesAsync(cachedPath, corruptedPayload);
+        var handler = new ArchiveMapHandler(fixture.ArchivePayloads);
+        using var httpClient = new HttpClient(handler);
+        var service = CreateRuntimeService(
+            root.Paths,
+            httpClient,
+            fixture,
+            _ => fixture.Archives[1].ByteLength
+                + fixture.Package.InstalledBytes
+                + DiskMarginBytes);
+
+        var exception = await Assert.ThrowsAsync<RecommendedModelInstallException>(
+            () => service.DownloadAndInstallRuntimeAsync());
+
+        Assert.Equal("model.insufficient-disk-space", exception.ErrorCode);
+        Assert.Empty(handler.RequestedFileNames);
+        Assert.False(File.Exists(cachedPath));
+    }
+
+    [Fact]
+    public async Task DownloadAndInstallRuntime_RejectsInsufficientSpaceWithoutRecoveryArchivesBeforeNetwork()
+    {
+        using var root = new TemporaryAppDataRoot();
+        root.Paths.EnsureCreated();
+        var fixture = CreateRuntimeFixture();
+        var handler = new ArchiveMapHandler(fixture.ArchivePayloads);
+        using var httpClient = new HttpClient(handler);
+        var service = CreateRuntimeService(
+            root.Paths,
+            httpClient,
+            fixture,
+            _ => fixture.Package.DownloadBytes
+                + fixture.Package.InstalledBytes
+                + DiskMarginBytes - 1);
+
+        var exception = await Assert.ThrowsAsync<RecommendedModelInstallException>(
+            () => service.DownloadAndInstallRuntimeAsync());
+
+        Assert.Equal("model.insufficient-disk-space", exception.ErrorCode);
+        Assert.Empty(handler.RequestedFileNames);
     }
 
     [Fact]
@@ -219,6 +320,73 @@ public sealed class NvidiaCudaEnvironmentServiceTests
     private static string Hash(byte[] bytes) =>
         Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
+    private static RuntimeArchiveFixture CreateRuntimeFixture()
+    {
+        var requiredFiles = NvidiaCudaRuntimeLocator.CudaFiles
+            .Concat(NvidiaCudaRuntimeLocator.CudnnFiles)
+            .ToArray();
+        var split = requiredFiles.Length / 2;
+        var fileGroups = new[]
+        {
+            requiredFiles[..split],
+            requiredFiles[split..],
+        };
+        var archives = new List<NvidiaCudaRuntimeArchiveDefinition>();
+        var archivePayloads = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < fileGroups.Length; index++)
+        {
+            var fileName = $"runtime-{index + 1}.zip";
+            var payload = CreateArchive(fileGroups[index]);
+            archives.Add(new NvidiaCudaRuntimeArchiveDefinition(
+                fileName,
+                new Uri($"https://developer.download.nvidia.com/compute/cuda/redist/test/{fileName}"),
+                payload.LongLength,
+                Hash(payload),
+                fileGroups[index]));
+            archivePayloads.Add(fileName, payload);
+        }
+
+        var package = new NvidiaCudaRuntimePackageInfo(
+            "12.8-test",
+            "9-test",
+            archives.Sum(archive => archive.ByteLength),
+            12L * requiredFiles.LongLength,
+            "https://example.invalid/cuda-license",
+            "https://example.invalid/cudnn-license",
+            "https://developer.download.nvidia.com/compute/cuda/redist/");
+        return new RuntimeArchiveFixture(requiredFiles, archives, archivePayloads, package);
+    }
+
+    private static NvidiaCudaEnvironmentService CreateRuntimeService(
+        AppDataPaths paths,
+        HttpClient httpClient,
+        RuntimeArchiveFixture fixture,
+        Func<string, long> availableFreeSpaceProvider)
+    {
+        NvidiaCudaRuntimeLocation? LocateManaged(string path) =>
+            fixture.RequiredFiles.All(fileName => File.Exists(Path.Combine(path, fileName)))
+                ? new NvidiaCudaRuntimeLocation(path, path, NvidiaCudaRuntimeSource.AppManaged)
+                : null;
+        return new NvidiaCudaEnvironmentService(
+            paths,
+            httpClient,
+            new FakeHardwareProbe(),
+            archives: fixture.Archives,
+            runtimePackage: fixture.Package,
+            runtimeLocator: LocateManaged,
+            availableFreeSpaceProvider: availableFreeSpaceProvider);
+    }
+
+    private static string GetRuntimeRecoveryDirectoryPath(AppDataPaths paths) => Path.Combine(
+        paths.ModelRuntimeDownloadRecoveryDirectoryPath,
+        "nvidia-cuda-12.8.2-cudnn-9.25.0.15");
+
+    private sealed record RuntimeArchiveFixture(
+        IReadOnlyList<string> RequiredFiles,
+        IReadOnlyList<NvidiaCudaRuntimeArchiveDefinition> Archives,
+        IReadOnlyDictionary<string, byte[]> ArchivePayloads,
+        NvidiaCudaRuntimePackageInfo Package);
+
     private sealed class FakeHardwareProbe(
         long dedicatedMemoryBytes = 12L * 1024 * 1024 * 1024) : INvidiaCudaHardwareProbe
     {
@@ -241,6 +409,32 @@ public sealed class NvidiaCudaEnvironmentServiceTests
             {
                 RequestMessage = request,
                 Content = new ByteArrayContent(payload),
+            });
+        }
+    }
+
+    private sealed class ArchiveMapHandler(
+        IReadOnlyDictionary<string, byte[]> archivePayloads,
+        string? failOnFileName = null) : HttpMessageHandler
+    {
+        public List<string> RequestedFileNames { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var fileName = Path.GetFileName(request.RequestUri!.AbsolutePath);
+            RequestedFileNames.Add(fileName);
+            if (fileName.Equals(failOnFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Simulated interrupted archive download.");
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new ByteArrayContent(archivePayloads[fileName]),
             });
         }
     }
