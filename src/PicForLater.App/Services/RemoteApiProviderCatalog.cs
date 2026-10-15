@@ -69,6 +69,15 @@ public static class RemoteApiProviderCatalog
         OpenAiPreset("google-gemini-official", "google.gemini", "Google Gemini", RemoteApiProviderCategory.InternationalOfficial,
             "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-3.5-flash", TextAndImage,
             "https://policies.google.com/privacy", "https://ai.google.dev/gemini-api/terms", "https://ai.google.dev/gemini-api/docs/pricing"),
+        OpenAiPreset("meta-ai-official", "meta.ai", "Meta AI", RemoteApiProviderCategory.InternationalOfficial,
+            "https://api.meta.ai/v1/chat/completions", "muse-spark-1.3", TextAndImage,
+            "https://www.facebook.com/privacy/policy/", "https://dev.meta.ai/legal/terms-of-service", "https://dev.meta.ai/docs/pricing-rate-limits",
+            reasoningMode: RemoteReasoningMode.Low,
+            reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
+            supportedReasoningModes: EffortReasoning) with
+        {
+            PolicyVerifiedAtUtc = new(2026, 10, 15, 0, 0, 0, TimeSpan.Zero),
+        },
         OpenAiPreset("xai-official", "xai.grok", "xAI / Grok", RemoteApiProviderCategory.InternationalOfficial,
             "https://api.x.ai/v1/chat/completions", "grok-4.5", TextAndImage,
             "https://x.ai/legal/privacy-policy", "https://x.ai/legal/terms-of-service", "https://docs.x.ai/docs/models",
@@ -133,6 +142,15 @@ public static class RemoteApiProviderCatalog
             RemoteApiAuthenticationKind.Bearer, RemoteStructuredOutputMode.PromptOnly) with
         {
             RetiredDefaultModelIds = ["MiniMax-M2.7"],
+        },
+        OpenAiPreset("xiaomi-mimo-official", "xiaomi.mimo", "小米 / Xiaomi MiMo", RemoteApiProviderCategory.ChinaOfficial,
+            "https://api.xiaomimimo.com/v1/chat/completions", "mimo-v2.6-flash", TextAndImage,
+            "https://privacy.mi.com/XiaomiMiMoPlatform/zh_CN", "https://mimo.mi.com/docs/terms/user-agreement", "https://mimo.mi.com/docs/zh-CN/price/pay-as-you-go", RemoteStructuredOutputMode.JsonObject,
+            reasoningMode: RemoteReasoningMode.Disabled,
+            reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
+            supportedReasoningModes: ToggleReasoning) with
+        {
+            PolicyVerifiedAtUtc = new(2026, 10, 15, 0, 0, 0, TimeSpan.Zero),
         },
 
         OpenAiPreset("siliconflow-official", "siliconflow.cloud", "硅基流动 SiliconFlow / SiliconCloud", RemoteApiProviderCategory.Aggregator,
