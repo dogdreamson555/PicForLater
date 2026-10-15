@@ -1,6 +1,6 @@
 # Remote API Presets, Third-Party Policies, and Contract Verification
 
-Full verification: 2026-08-01; incremental preset updates: 2026-09-21. This document records engineering facts; it does not guarantee provider privacy, pricing, availability, or model lifetime. Before user content is sent, the synthetic connection test must succeed and the user must give consent for the current version.
+Full verification: 2026-08-01; incremental preset updates: 2026-10-15. This document records engineering facts; it does not guarantee provider privacy, pricing, availability, or model lifetime. Before user content is sent, the synthetic connection test must succeed and the user must give consent for the current version.
 
 Except for custom interfaces, presets fix the endpoint, protocol, authentication, and secure request policies. Users provide an API key (Ollama/vLLM can work without one) and model ID, and can adjust explicitly supported reasoning levels, token limits, and timeouts. Changes to fixed fields or advanced parameters switch execution back to `Local` and invalidate connection verification and prior consent.
 
@@ -11,6 +11,7 @@ Except for custom interfaces, presets fix the endpoint, protocol, authentication
 | Official international providers | OpenAI | `api.openai.com/v1/chat/completions` | `gpt-4.1-mini-2025-04-14` | Text, image | OpenAI / JSON Schema | Provider default |
 | Official international providers | Anthropic / Claude | `api.anthropic.com/v1/messages` | `claude-sonnet-4-5-20250929` | Text, image | Messages / JSON Schema | Provider default |
 | Official international providers | Google Gemini | `generativelanguage.googleapis.com/v1beta/openai/chat/completions` | `gemini-3.5-flash` | Text, image | OpenAI / JSON Schema | Provider default |
+| Official international providers | Meta AI | `api.meta.ai/v1/chat/completions` | `muse-spark-1.3` | Text, image | OpenAI / JSON Schema | `reasoning_effort=low`; optional low/medium/high/default |
 | Official international providers | xAI / Grok | `api.x.ai/v1/chat/completions` | `grok-4.5` | Text, image | OpenAI / JSON Schema | `reasoning_effort=low`; optional low/medium/high/default |
 | Official international providers | Perplexity Sonar | `api.perplexity.ai/v1/sonar` | `sonar` | Text, image (gated by connection test) | Sonar OpenAI-compatible / JSON Schema | Default; `disable_search=true` explicitly |
 | Official Chinese providers | DeepSeek | `api.deepseek.com/chat/completions` | `deepseek-flash` | Text, image | OpenAI / JSON Object + full prompt contract | `thinking.type=disabled`; can return to default |
@@ -21,6 +22,7 @@ Except for custom interfaces, presets fix the endpoint, protocol, authentication
 | Official Chinese providers | Zhipu BigModel / GLM | `open.bigmodel.cn/api/paas/v4/chat/completions` | `glm-5.2` | Text | OpenAI / JSON Object | `thinking.type=disabled`; can return to default |
 | Official Chinese providers | Baidu AI Cloud Qianfan / ERNIE | `qianfan.baidubce.com/v2/chat/completions` | `ernie-5.0` | Text, image | OpenAI / JSON Object | Provider default |
 | Official Chinese providers | MiniMax | `api.minimax.cn/anthropic/v1/messages` | `MiniMax-M3` | Text, image | Anthropic-compatible / prompt contract only; reads the first text block | Provider default |
+| Official Chinese providers | Xiaomi MiMo | `api.xiaomimimo.com/v1/chat/completions` | `mimo-v2.6-flash` | Text, image | OpenAI / JSON Object | `thinking.type=disabled`; can return to default |
 | Aggregators / inference | SiliconFlow | `api.siliconflow.cn/v1/chat/completions` | `Pro/zai-org/GLM-5.1` | Text | OpenAI / JSON Object | `enable_thinking=false`; can return to default |
 | Aggregators / inference | OpenRouter | `openrouter.ai/api/v1/chat/completions` | `openai/gpt-4.1-mini` | Text, image | OpenAI / JSON Schema | Default; upstream fallback disabled and parameters required |
 | Aggregators / inference | Groq | `api.groq.com/openai/v1/chat/completions` | `qwen/qwen3.8-27b` | Text, image | OpenAI / JSON Object | `reasoning_effort=none`; optional disabled/low/medium/high/default |
@@ -42,6 +44,7 @@ Policies depend on the provider, plan, region, and account controls. Links do no
 | OpenAI | [Privacy](https://openai.com/policies/privacy-policy/) | [Services agreement](https://openai.com/policies/services-agreement/) | [API pricing](https://openai.com/api/pricing/) |
 | Anthropic | [Privacy](https://www.anthropic.com/legal/privacy) | [Commercial terms](https://www.anthropic.com/legal/commercial-terms) | [Pricing](https://platform.claude.com/docs/en/about-claude/pricing/overview) |
 | Google Gemini | [Privacy](https://policies.google.com/privacy) | [Gemini API terms](https://ai.google.dev/gemini-api/terms) | [Pricing](https://ai.google.dev/gemini-api/docs/pricing) |
+| Meta AI | [Privacy](https://www.facebook.com/privacy/policy/) | [Model API terms](https://dev.meta.ai/legal/terms-of-service) | [Pricing](https://dev.meta.ai/docs/pricing-rate-limits) |
 | xAI | [Privacy](https://x.ai/legal/privacy-policy) | [Terms](https://x.ai/legal/terms-of-service) | [Models](https://docs.x.ai/docs/models) |
 | Perplexity | [Privacy](https://www.perplexity.ai/hub/legal/privacy-policy) | [Terms](https://www.perplexity.ai/hub/legal/terms-of-service) | [Pricing](https://docs.perplexity.ai/getting-started/pricing) |
 | DeepSeek | [Privacy](https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html) | [Terms](https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html) | [Pricing](https://api-docs.deepseek.com/quick_start/pricing) |
@@ -52,6 +55,7 @@ Policies depend on the provider, plan, region, and account controls. Links do no
 | Zhipu | [Privacy](https://www.zhipuai.cn/privacy) | [Terms](https://www.zhipuai.cn/terms) | [Pricing](https://open.bigmodel.cn/pricing) |
 | Baidu AI Cloud Qianfan | [Privacy](https://cloud.baidu.com/doc/Agreements/s/Kjwvy245m) | [Terms](https://cloud.baidu.com/doc/Agreements/s/2jwvx9m0a) | [Pricing](https://cloud.baidu.com/doc/qianfan-docs/s/6m9l6p8iw) |
 | MiniMax | [Privacy](https://www.minimaxi.com/privacy) | [Terms](https://www.minimaxi.com/terms) | [Pricing](https://platform.minimaxi.com/docs/guides/pricing) |
+| Xiaomi MiMo | [Privacy](https://privacy.mi.com/XiaomiMiMoPlatform/zh_CN) | [Terms](https://mimo.mi.com/docs/terms/user-agreement) | [API pricing](https://mimo.mi.com/docs/zh-CN/price/pay-as-you-go) |
 | SiliconFlow | [Privacy](https://siliconflow.cn/privacy-policy) | [Terms](https://siliconflow.cn/terms-of-service) | [Models](https://cloud.siliconflow.cn/me/models) |
 | OpenRouter | [Privacy](https://openrouter.ai/privacy) | [Terms](https://openrouter.ai/terms) | [Models/pricing](https://openrouter.ai/models) |
 | Groq | [Privacy](https://groq.com/privacy-policy/) | [Terms](https://groq.com/terms-of-use/) | [Pricing](https://groq.com/pricing/) |
@@ -73,6 +77,13 @@ Loopback only means the network target is on the local machine; logging and rete
 A 1×1 PNG used in that Qwen test once returned HTTP 400. Subsequent image connection tests use the verified licensed cat image above.
 
 Real tests use dedicated credentials and fixed samples; see [tests/README.md](../tests/README.md) for how to run them. Price estimates are valid only when usage data is reliable and pricing has been verified; aggregators are also affected by upstream providers, region, caching, and plans.
+
+## New Presets (2026-10-15)
+
+- Meta AI uses the current Model API and the standard `muse-spark-1.3` model, Bearer authentication, [Chat Completions](https://dev.meta.ai/docs/protocols/chat-completions), base64 [image input](https://dev.meta.ai/docs/image-understanding), and [JSON Schema output](https://dev.meta.ai/docs/structured-output). Reasoning defaults to low; disabling reasoning is not supported by Muse Spark. Contributor model IDs have different data policies and are not the default.
+- Xiaomi MiMo uses the pay-as-you-go OpenAI-compatible endpoint and `mimo-v2.6-flash`, with Bearer authentication via the [documented OpenAI SDK configuration](https://mimo.mi.com/models/zh-CN/mimo-v2.6-flash), base64 [image input](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/multimodal-understanding/image-understanding), [JSON Object output](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output), and [thinking disabled](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/deep-thinking). Token Plan keys require their own endpoint and cannot be used with this default endpoint.
+
+Official contracts and policy links were reviewed on 2026-10-15; no paid API calls were made. The new entries retain the existing connection-test and consent requirements. Existing presets and user configurations are unchanged.
 
 ## Preset Migration Record (2026-09-21)
 

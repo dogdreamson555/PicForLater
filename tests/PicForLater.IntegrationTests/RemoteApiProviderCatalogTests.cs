@@ -83,6 +83,8 @@ public sealed class RemoteApiProviderCatalogTests
     [InlineData("baidu-qianfan-official")]
     [InlineData("minimax-official")]
     [InlineData("perplexity-sonar-official")]
+    [InlineData("meta-ai-official")]
+    [InlineData("xiaomi-mimo-official")]
     public async Task StartupSync_PreservesUserModelOnUpdatedPresets(string profileId)
     {
         using var root = new TemporaryAppDataRoot();
@@ -304,6 +306,8 @@ public sealed class RemoteApiProviderCatalogTests
     [Theory]
     [InlineData("openai-official")]
     [InlineData("custom-interface")]
+    [InlineData("meta-ai-official")]
+    [InlineData("xiaomi-mimo-official")]
     public async Task StartupSync_PreservesUserEndpoint(string profileId)
     {
         using var root = new TemporaryAppDataRoot();
