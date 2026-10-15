@@ -22,6 +22,11 @@ HTTP server through the production safe handler. It verifies exact JSON
 Schema/JSON Object/prompt-only payloads, all supported reasoning wire formats,
 Anthropic thinking/text blocks, bounded responses, endpoint policy, credential
 redaction, and that `RemoteOcrText` never opens or serializes an image.
+Provider catalog migration checks cover matching only an unchanged endpoint
+and listed old default, preserving custom models/endpoints, credentials, token
+limits, timeouts, and explicit reasoning, applying the new safe default when
+reasoning was `ProviderDefault`, and clearing verification/consent when a
+migration returns execution to `Local`.
 
 `RealRemoteApiContractTests` is marked `ExplicitRealApiContract` and skipped by
 default. Run it only after deliberately supplying a dedicated test credential:

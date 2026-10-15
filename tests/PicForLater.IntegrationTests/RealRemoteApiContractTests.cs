@@ -154,9 +154,9 @@ public sealed class RealRemoteApiContractTests(ITestOutputHelper output)
             MaxOutputTokens = 1_024,
             TimeoutSeconds = 90,
             PrivacyUrl = new Uri(
-                "https://terms.alicdn.com/legal-agreement/terms/privacy_policy_full/20221129171420545/20221129171420545.html"),
+                "https://terms.alicdn.com/legal-agreement/terms/privacy_policy_full/20230801173543354/20230801173543354.html"),
             TermsUrl = new Uri(
-                "https://terms.alicdn.com/legal-agreement/terms/suit_bu1_ali_cloud/suit_bu1_ali_cloud202112211045_86198.html"),
+                "https://terms.alicdn.com/legal-agreement/terms/common_platform_service/20230728213935489/20230728213935489.html"),
             RetentionTrainingStatement = "Explicit contract test only.",
             RetentionTrainingVerifiedAtUtc = DateTimeOffset.Parse(
                 "2026-08-01T00:00:00Z",
