@@ -9,6 +9,11 @@ namespace PicForLater.IntegrationTests;
 public sealed class RemoteApiProviderCatalogTests
 {
     [Theory]
+    [InlineData("openai-official", "gpt-4.1-mini-2025-04-14", "gpt-6-luna", true)]
+    [InlineData("anthropic-official", "claude-sonnet-4-5-20250929", "claude-sonnet-4-6", true)]
+    [InlineData("google-gemini-official", "gemini-3.5-flash", "gemini-3.6-flash", true)]
+    [InlineData("kimi-official", "kimi-k2.5", "kimi-k2.6", true)]
+    [InlineData("volcengine-doubao-official", "doubao-seed-2-0-lite-260215", "doubao-seed-2-1-lite-260915", true)]
     [InlineData("deepseek-official", "deepseek-v4-flash", "deepseek-flash", true)]
     [InlineData("deepseek-official", "deepseek-v4-flash-vision-exp", "deepseek-flash", true)]
     [InlineData("tencent-hunyuan-official", "hy3-preview", "hy3", false)]
@@ -30,6 +35,7 @@ public sealed class RemoteApiProviderCatalogTests
             UPDATE RemoteApiProfiles
             SET ModelId = @model,
                 SupportedInputModesJson = @modes,
+                ReasoningMode = @reasoningMode,
                 ValidationState = @valid,
                 LastVerifiedAtUtc = @verifiedAt,
                 ConsentedInputMode = @inputMode,
@@ -45,6 +51,7 @@ public sealed class RemoteApiProviderCatalogTests
             """,
             ("@model", oldModel),
             ("@modes", """["localOcrText"]"""),
+            ("@reasoningMode", (int)RemoteReasoningMode.ProviderDefault),
             ("@valid", (int)RemoteApiProfileValidationState.Valid),
             ("@verifiedAt", "2026-08-01T00:00:00.0000000+00:00"),
             ("@inputMode", (int)RemoteInputMode.LocalOcrText),
@@ -56,6 +63,7 @@ public sealed class RemoteApiProviderCatalogTests
         var updated = await profiles.GetProfileAsync(profileId);
         Assert.NotNull(updated);
         Assert.Equal(newModel, updated.ModelId);
+        Assert.Equal(RemoteApiProviderCatalog.GetPreset(profileId).ReasoningMode, updated.ReasoningMode);
         Assert.Equal(supportsImage, updated.SupportedInputModes.Contains(RemoteInputMode.DirectImage));
         Assert.Equal(RemoteApiProfileValidationState.Unverified, updated.ValidationState);
         Assert.Null(updated.LastVerifiedAtUtc);
@@ -76,16 +84,23 @@ public sealed class RemoteApiProviderCatalogTests
     }
 
     [Theory]
-    [InlineData("deepseek-official")]
-    [InlineData("tencent-hunyuan-official")]
-    [InlineData("siliconflow-official")]
-    [InlineData("groq-official")]
-    [InlineData("baidu-qianfan-official")]
-    [InlineData("minimax-official")]
-    [InlineData("perplexity-sonar-official")]
-    [InlineData("meta-ai-official")]
-    [InlineData("xiaomi-mimo-official")]
-    public async Task StartupSync_PreservesUserModelOnUpdatedPresets(string profileId)
+    [InlineData("openai-official", "user-selected-model")]
+    [InlineData("openai-official", "gpt-4.1-mini")]
+    [InlineData("anthropic-official", "user-selected-model")]
+    [InlineData("anthropic-official", "claude-sonnet-4-5")]
+    [InlineData("google-gemini-official", "user-selected-model")]
+    [InlineData("kimi-official", "user-selected-model")]
+    [InlineData("volcengine-doubao-official", "user-selected-model")]
+    [InlineData("deepseek-official", "user-selected-model")]
+    [InlineData("tencent-hunyuan-official", "user-selected-model")]
+    [InlineData("siliconflow-official", "user-selected-model")]
+    [InlineData("groq-official", "user-selected-model")]
+    [InlineData("baidu-qianfan-official", "user-selected-model")]
+    [InlineData("minimax-official", "user-selected-model")]
+    [InlineData("perplexity-sonar-official", "user-selected-model")]
+    [InlineData("meta-ai-official", "user-selected-model")]
+    [InlineData("xiaomi-mimo-official", "user-selected-model")]
+    public async Task StartupSync_PreservesUserModelOnUpdatedPresets(string profileId, string modelId)
     {
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
@@ -93,11 +108,52 @@ public sealed class RemoteApiProviderCatalogTests
         await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
         var existing = await profiles.GetProfileAsync(profileId);
         Assert.NotNull(existing);
-        await profiles.SaveProfileAsync(existing with { ModelId = "user-selected-model" });
+        await profiles.SaveProfileAsync(existing with
+        {
+            ModelId = modelId,
+            ReasoningMode = RemoteReasoningMode.ProviderDefault,
+            MaxOutputTokens = 2_345,
+            TimeoutSeconds = 234,
+        });
 
         await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
 
-        Assert.Equal("user-selected-model", (await profiles.GetProfileAsync(profileId))!.ModelId);
+        var synchronized = await profiles.GetProfileAsync(profileId);
+        Assert.NotNull(synchronized);
+        Assert.Equal(modelId, synchronized.ModelId);
+        Assert.Equal(RemoteReasoningMode.ProviderDefault, synchronized.ReasoningMode);
+        Assert.Equal(2_345, synchronized.MaxOutputTokens);
+        Assert.Equal(234, synchronized.TimeoutSeconds);
+    }
+
+    [Theory]
+    [InlineData("openai-official", "gpt-4.1-mini-2025-04-14", RemoteReasoningMode.High)]
+    [InlineData("deepseek-official", "deepseek-v4-flash", RemoteReasoningMode.Disabled)]
+    public async Task StartupSync_PreservesExplicitReasoningAndLimitsWhenMigratingDefaultModel(
+        string profileId, string oldModel, RemoteReasoningMode reasoningMode)
+    {
+        using var root = new TemporaryAppDataRoot();
+        await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
+        using var profiles = new SqliteRemoteApiProfileService(root.Paths);
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+        var existing = await profiles.GetProfileAsync(profileId);
+        Assert.NotNull(existing);
+        await profiles.SaveProfileAsync(existing with
+        {
+            ModelId = oldModel,
+            ReasoningMode = reasoningMode,
+            MaxOutputTokens = 2_345,
+            TimeoutSeconds = 234,
+        });
+
+        await RemoteApiProviderCatalog.EnsureProfilesAsync(profiles);
+
+        var synchronized = await profiles.GetProfileAsync(profileId);
+        Assert.NotNull(synchronized);
+        Assert.Equal(RemoteApiProviderCatalog.GetPreset(profileId).DefaultModelId, synchronized.ModelId);
+        Assert.Equal(reasoningMode, synchronized.ReasoningMode);
+        Assert.Equal(2_345, synchronized.MaxOutputTokens);
+        Assert.Equal(234, synchronized.TimeoutSeconds);
     }
 
     [Fact]
@@ -304,11 +360,13 @@ public sealed class RemoteApiProviderCatalogTests
     }
 
     [Theory]
-    [InlineData("openai-official")]
-    [InlineData("custom-interface")]
-    [InlineData("meta-ai-official")]
-    [InlineData("xiaomi-mimo-official")]
-    public async Task StartupSync_PreservesUserEndpoint(string profileId)
+    [InlineData("openai-official", null)]
+    [InlineData("openai-official", "gpt-4.1-mini-2025-04-14")]
+    [InlineData("kimi-official", "kimi-k2.5")]
+    [InlineData("custom-interface", null)]
+    [InlineData("meta-ai-official", null)]
+    [InlineData("xiaomi-mimo-official", null)]
+    public async Task StartupSync_PreservesUserEndpoint(string profileId, string? modelId)
     {
         using var root = new TemporaryAppDataRoot();
         await new SqliteDatabaseInitializer(root.Paths).InitializeAsync();
@@ -323,6 +381,8 @@ public sealed class RemoteApiProviderCatalogTests
         {
             EndpointId = RemoteApiProviderCatalog.GetEndpointId(preset, userEndpoint),
             BaseUri = userEndpoint,
+            ModelId = modelId ?? existing.ModelId,
+            ReasoningMode = RemoteReasoningMode.ProviderDefault,
             EndpointTrustMode = RemoteEndpointTrustMode.PublicHttps,
         });
 
@@ -331,6 +391,8 @@ public sealed class RemoteApiProviderCatalogTests
         var synchronized = await profiles.GetProfileAsync(profileId);
         Assert.NotNull(synchronized);
         Assert.Equal(userEndpoint, synchronized.BaseUri);
+        Assert.Equal(modelId ?? existing.ModelId, synchronized.ModelId);
+        Assert.Equal(RemoteReasoningMode.ProviderDefault, synchronized.ReasoningMode);
         Assert.EndsWith(".user-endpoint", synchronized.EndpointId, StringComparison.Ordinal);
         Assert.Equal(RemoteEndpointTrustMode.PublicHttps, synchronized.EndpointTrustMode);
     }

@@ -786,12 +786,12 @@
   <data name="OpenAiRetentionStatement" xml:space="preserve"><value>OpenAI 声明 API 数据默认不用于训练，除非账户主动选择加入。滥用监控日志可能保留内容最多 30 天，仍受账户控制及法律、安全例外约束。</value></data>
   <data name="GoogleGeminiRetentionStatement" xml:space="preserve"><value>Google 对 Gemini API 付费与免费服务采用不同数据规则。付费服务的提示和响应不用于改进产品；有限期安全日志和当前条款仍然适用。</value></data>
   <data name="XaiRetentionStatement" xml:space="preserve"><value>xAI 的保留和训练处理取决于当前 API 条款与账户控制。PicForLater 不承诺更短保留期或不训练；同意前请查看链接政策。</value></data>
-  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>隐私</value></data>
-  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商隐私政策</value></data>
-  <data name="ApiTermsLink.Content" xml:space="preserve"><value>条款</value></data>
-  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商条款</value></data>
-  <data name="ApiPricingLink.Content" xml:space="preserve"><value>价格</value></data>
-  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商价格页</value></data>
+  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>隐私 / 安全</value></data>
+  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商隐私政策或安全文档</value></data>
+  <data name="ApiTermsLink.Content" xml:space="preserve"><value>条款 / 许可</value></data>
+  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商条款或许可协议</value></data>
+  <data name="ApiPricingLink.Content" xml:space="preserve"><value>价格 / 文档</value></data>
+  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>打开供应商价格页或文档</value></data>
   <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>连接测试只使用内置测试内容：文字模式发送固定短句，图片模式发送内置授权猫图；不会读取用户图片、OCR 或资料库。供应商可能对测试和分析收费；超时或取消时也可能已经处理并计费。</value></data>
   <data name="ApiConnectionSectionTitle.Text" xml:space="preserve"><value>连接测试</value></data>
   <data name="TestApiConnectionButton.Content" xml:space="preserve"><value>测试连接</value></data>

@@ -72,7 +72,7 @@ Select a provider preset, enter your API key, and test the connection to configu
 
 | Category | Built-in providers / interfaces |
 | --- | --- |
-| Official APIs from major international providers | OpenAI, Anthropic / Claude, Google Gemini, Meta AI, xAI / Grok, Perplexity Sonar |
+| Official APIs from major international providers | OpenAI, Anthropic / Claude, Google Gemini, Meta AI, xAI / Grok, Perplexity Sonar (Legacy) |
 | Official APIs from major Chinese providers | DeepSeek, Moonshot AI / Kimi, Tencent Hunyuan, Volcengine / Doubao, Alibaba Cloud Model Studio / Tongyi Qianwen Qwen, Zhipu BigModel / GLM, Baidu AI Cloud Qianfan / ERNIE, MiniMax, Xiaomi MiMo |
 | Multi-model aggregators and fast inference platforms | SiliconFlow / SiliconCloud, OpenRouter, Groq, Together AI |
 | Local and private deployments | Ollama, vLLM |

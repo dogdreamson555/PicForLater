@@ -786,12 +786,12 @@
   <data name="OpenAiRetentionStatement" xml:space="preserve"><value>OpenAI says API data is not used for training by default unless the account opts in. Abuse-monitoring logs may retain content for up to 30 days, subject to account controls and legal or security exceptions.</value></data>
   <data name="GoogleGeminiRetentionStatement" xml:space="preserve"><value>Google's rules differ between paid and unpaid Gemini API services. Paid prompts and responses are not used to improve products; limited safety logging and the current terms still apply.</value></data>
   <data name="XaiRetentionStatement" xml:space="preserve"><value>xAI retention and training treatment depends on current API terms and account controls. PicForLater makes no shorter-retention or no-training promise; review the linked policies before consenting.</value></data>
-  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>Privacy</value></data>
-  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider privacy policy</value></data>
-  <data name="ApiTermsLink.Content" xml:space="preserve"><value>Terms</value></data>
-  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider terms</value></data>
-  <data name="ApiPricingLink.Content" xml:space="preserve"><value>Pricing</value></data>
-  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider pricing</value></data>
+  <data name="ApiPrivacyLink.Content" xml:space="preserve"><value>Privacy / security</value></data>
+  <data name="ApiPrivacyLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider privacy policy or security documentation</value></data>
+  <data name="ApiTermsLink.Content" xml:space="preserve"><value>Terms / license</value></data>
+  <data name="ApiTermsLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider terms or license</value></data>
+  <data name="ApiPricingLink.Content" xml:space="preserve"><value>Pricing / docs</value></data>
+  <data name="ApiPricingLink.AutomationProperties.Name" xml:space="preserve"><value>Open provider pricing or documentation</value></data>
   <data name="ApiCostDisclosureText.Text" xml:space="preserve"><value>Connection tests use only built-in test content: a fixed phrase in text mode or the bundled licensed cat image in image mode. They never read user images, OCR, or the library. Providers may charge even when a request times out or is canceled.</value></data>
   <data name="ApiConnectionSectionTitle.Text" xml:space="preserve"><value>Connection test</value></data>
   <data name="TestApiConnectionButton.Content" xml:space="preserve"><value>Test connection</value></data>

@@ -46,6 +46,8 @@ public static class RemoteApiProviderCatalog
         "Retention and training treatment depends on the provider, plan, region, and current account controls. Review the linked provider policies before consenting.";
     private static readonly DateTimeOffset PolicyVerifiedAtUtc =
         new(2026, 8, 1, 0, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset PolicyReviewedAtUtc =
+        new(2026, 10, 15, 0, 0, 0, TimeSpan.Zero);
     private static readonly RemoteInputMode[] TextOnly = [RemoteInputMode.LocalOcrText];
     private static readonly RemoteInputMode[] TextAndImage =
         [RemoteInputMode.LocalOcrText, RemoteInputMode.DirectImage];
@@ -63,12 +65,21 @@ public static class RemoteApiProviderCatalog
     public static IReadOnlyList<RemoteApiProviderPreset> Presets { get; } =
     [
         OpenAiPreset("openai-official", "openai.official", "OpenAI", RemoteApiProviderCategory.InternationalOfficial,
-            "https://api.openai.com/v1/chat/completions", "gpt-4.1-mini-2025-04-14", TextAndImage,
-            "https://openai.com/policies/privacy-policy/", "https://openai.com/policies/services-agreement/", "https://openai.com/api/pricing/"),
+            "https://api.openai.com/v1/chat/completions", "gpt-6-luna", TextAndImage,
+            "https://openai.com/policies/privacy-policy/", "https://openai.com/policies/services-agreement/", "https://openai.com/api/pricing/",
+            reasoningMode: RemoteReasoningMode.Disabled,
+            reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
+            supportedReasoningModes: AllReasoning) with
+        {
+            RetiredDefaultModelIds = ["gpt-4.1-mini-2025-04-14"],
+        },
         AnthropicPreset(),
         OpenAiPreset("google-gemini-official", "google.gemini", "Google Gemini", RemoteApiProviderCategory.InternationalOfficial,
-            "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-3.5-flash", TextAndImage,
-            "https://policies.google.com/privacy", "https://ai.google.dev/gemini-api/terms", "https://ai.google.dev/gemini-api/docs/pricing"),
+            "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-3.6-flash", TextAndImage,
+            "https://policies.google.com/privacy", "https://ai.google.dev/gemini-api/terms", "https://ai.google.dev/gemini-api/docs/pricing") with
+        {
+            RetiredDefaultModelIds = ["gemini-3.5-flash"],
+        },
         OpenAiPreset("meta-ai-official", "meta.ai", "Meta AI", RemoteApiProviderCategory.InternationalOfficial,
             "https://api.meta.ai/v1/chat/completions", "muse-spark-1.3", TextAndImage,
             "https://www.facebook.com/privacy/policy/", "https://dev.meta.ai/legal/terms-of-service", "https://dev.meta.ai/docs/pricing-rate-limits",
@@ -76,72 +87,95 @@ public static class RemoteApiProviderCatalog
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
             supportedReasoningModes: EffortReasoning) with
         {
-            PolicyVerifiedAtUtc = new(2026, 10, 15, 0, 0, 0, TimeSpan.Zero),
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("xai-official", "xai.grok", "xAI / Grok", RemoteApiProviderCategory.InternationalOfficial,
             "https://api.x.ai/v1/chat/completions", "grok-4.5", TextAndImage,
-            "https://x.ai/legal/privacy-policy", "https://x.ai/legal/terms-of-service", "https://docs.x.ai/docs/models",
+            "https://x.ai/legal/data-processing-addendum", "https://x.ai/legal/terms-of-service-enterprise", "https://docs.x.ai/developers/models",
             reasoningMode: RemoteReasoningMode.Low,
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
-            supportedReasoningModes: EffortReasoning),
-        OpenAiPreset("perplexity-sonar-official", "perplexity.sonar", "Perplexity Sonar", RemoteApiProviderCategory.InternationalOfficial,
+            supportedReasoningModes: EffortReasoning) with
+        {
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
+        OpenAiPreset("perplexity-sonar-official", "perplexity.sonar", "Perplexity Sonar (Legacy)", RemoteApiProviderCategory.InternationalOfficial,
             "https://api.perplexity.ai/v1/sonar", "sonar", TextAndImage,
             "https://www.perplexity.ai/hub/legal/privacy-policy", "https://www.perplexity.ai/hub/legal/terms-of-service", "https://docs.perplexity.ai/getting-started/pricing", disableExternalSearch: true),
 
         OpenAiPreset("deepseek-official", "deepseek.official", "DeepSeek", RemoteApiProviderCategory.ChinaOfficial,
             "https://api.deepseek.com/chat/completions", "deepseek-flash", TextAndImage,
-            "https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html", "https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html", "https://api-docs.deepseek.com/quick_start/pricing", RemoteStructuredOutputMode.JsonObject,
+            "https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html", "https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html", "https://api-docs.deepseek.com/quick_start/pricing", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
             supportedReasoningModes: ToggleReasoning) with
         {
             RetiredDefaultModelIds = ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash", "deepseek-v4-flash-vision-exp"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("kimi-official", "moonshot.kimi", "月之暗面 / Kimi", RemoteApiProviderCategory.ChinaOfficial,
-            "https://api.moonshot.cn/v1/chat/completions", "kimi-k2.5", TextAndImage,
-            "https://www.moonshot.cn/privacy-policy", "https://www.moonshot.cn/terms-of-service", "https://platform.kimi.com/docs/pricing/chat", RemoteStructuredOutputMode.PromptOnly),
+            "https://api.moonshot.cn/v1/chat/completions", "kimi-k2.6", TextAndImage,
+            "https://platform.kimi.com/docs/agreement/userprivacy", "https://platform.kimi.com/docs/agreement/modeluse", "https://platform.kimi.com/docs/pricing/chat", RemoteStructuredOutputMode.PromptOnly,
+            reasoningMode: RemoteReasoningMode.Disabled,
+            reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
+            supportedReasoningModes: ToggleReasoning) with
+        {
+            RetiredDefaultModelIds = ["kimi-k2.5"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
         OpenAiPreset("tencent-hunyuan-official", "tencent.hunyuan", "腾讯混元", RemoteApiProviderCategory.ChinaOfficial,
             "https://tokenhub.tencentmaas.com/v1/chat/completions", "hy3", TextOnly,
-            "https://www.tencentcloud.com/document/product/301/17345", "https://www.tencentcloud.com/document/product/301/9247", "https://cloud.tencent.com/document/product/1823/130051", RemoteStructuredOutputMode.JsonSchema,
+            "https://cloud.tencent.com/document/product/1823/130108", "https://cloud.tencent.com/document/product/301/129852", "https://cloud.tencent.com/document/product/1823/130055", RemoteStructuredOutputMode.JsonSchema,
             reasoningMode: RemoteReasoningMode.Low,
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
             supportedReasoningModes: EffortReasoning,
             disclosureVersion: "tencent.hunyuan.disclosure.v2") with
         {
             RetiredDefaultModelIds = ["hunyuan-turbos-latest", "hy3-preview"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("volcengine-doubao-official", "volcengine.doubao", "火山引擎 / 豆包", RemoteApiProviderCategory.ChinaOfficial,
-            "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "doubao-seed-2-0-lite-260215", TextAndImage,
-            "https://www.volcengine.com/docs/6256/64902", "https://www.volcengine.com/docs/6256/64903", "https://www.volcengine.com/docs/82379/1099320", RemoteStructuredOutputMode.JsonObject,
+            "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "doubao-seed-2-1-lite-260915", TextAndImage,
+            "https://www.volcengine.com/docs/6256/64902", "https://www.volcengine.com/docs/6256/64903", "https://docs.volcengine.com/docs/ark/model-pricing?lang=zh", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
             supportedReasoningModes: ToggleReasoning,
-            disclosureVersion: "volcengine.doubao.disclosure.v2"),
+            disclosureVersion: "volcengine.doubao.disclosure.v2") with
+        {
+            RetiredDefaultModelIds = ["doubao-seed-2-0-lite-260215"],
+        },
         OpenAiPreset("alibaba-bailian-qwen-official", "alibaba.bailian.qwen", "阿里云百炼 / 通义千问 Qwen", RemoteApiProviderCategory.ChinaOfficial,
             "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", "qwen3.5-plus", TextAndImage,
-            "https://terms.alicdn.com/legal-agreement/terms/privacy_policy_full/20221129171420545/20221129171420545.html", "https://terms.alicdn.com/legal-agreement/terms/suit_bu1_ali_cloud/suit_bu1_ali_cloud202112211045_86198.html", "https://help.aliyun.com/zh/model-studio/model-pricing", RemoteStructuredOutputMode.JsonObject,
+            "https://terms.alicdn.com/legal-agreement/terms/privacy_policy_full/20230801173543354/20230801173543354.html", "https://terms.alicdn.com/legal-agreement/terms/common_platform_service/20230728213935489/20230728213935489.html", "https://help.aliyun.com/zh/model-studio/model-pricing", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.EnableThinkingBoolean,
-            supportedReasoningModes: ToggleReasoning),
+            supportedReasoningModes: ToggleReasoning) with
+        {
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
         OpenAiPreset("zhipu-glm-official", "zhipu.glm", "智谱 BigModel / GLM", RemoteApiProviderCategory.ChinaOfficial,
             "https://open.bigmodel.cn/api/paas/v4/chat/completions", "glm-5.2", TextOnly,
-            "https://www.zhipuai.cn/privacy", "https://www.zhipuai.cn/terms", "https://open.bigmodel.cn/pricing", RemoteStructuredOutputMode.JsonObject,
+            "https://docs.bigmodel.cn/cn/terms/privacy-policy", "https://docs.bigmodel.cn/cn/terms/service-agreement", "https://open.bigmodel.cn/pricing", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
-            supportedReasoningModes: ToggleReasoning),
+            supportedReasoningModes: ToggleReasoning) with
+        {
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
         OpenAiPreset("baidu-qianfan-official", "baidu.qianfan", "百度智能云千帆 / 文心", RemoteApiProviderCategory.ChinaOfficial,
             "https://qianfan.baidubce.com/v2/chat/completions", "ernie-5.0", TextAndImage,
-            "https://cloud.baidu.com/doc/Agreements/s/Kjwvy245m", "https://cloud.baidu.com/doc/Agreements/s/2jwvx9m0a", "https://cloud.baidu.com/doc/qianfan-docs/s/6m9l6p8iw", RemoteStructuredOutputMode.JsonObject) with
+            "https://cloud.baidu.com/doc/Agreements/s/Plr0fi68q", "https://cloud.baidu.com/doc/qianfan/s/Cmh4stmpy", "https://cloud.baidu.com/doc/qianfan/s/wmh4sv6ya", RemoteStructuredOutputMode.JsonObject) with
         {
             RetiredDefaultModelIds = ["ernie-4.5-turbo-128k"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         AnthropicCompatiblePreset(
             "minimax-official", "minimax.official", "MiniMax", RemoteApiProviderCategory.ChinaOfficial,
             "https://api.minimax.cn/anthropic/v1/messages", "MiniMax-M3", TextAndImage,
-            "https://www.minimaxi.com/privacy", "https://www.minimaxi.com/terms", "https://platform.minimaxi.com/docs/guides/pricing",
+            "https://design.minimax.cn/protocol/privacy-policy", "https://design.minimax.cn/protocol/user-agreement", "https://platform.minimax.cn/docs/pricing/overview",
             RemoteApiAuthenticationKind.Bearer, RemoteStructuredOutputMode.PromptOnly) with
         {
             RetiredDefaultModelIds = ["MiniMax-M2.7"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("xiaomi-mimo-official", "xiaomi.mimo", "小米 / Xiaomi MiMo", RemoteApiProviderCategory.ChinaOfficial,
             "https://api.xiaomimimo.com/v1/chat/completions", "mimo-v2.6-flash", TextAndImage,
@@ -150,29 +184,34 @@ public static class RemoteApiProviderCatalog
             reasoningWireFormat: RemoteReasoningWireFormat.ThinkingObject,
             supportedReasoningModes: ToggleReasoning) with
         {
-            PolicyVerifiedAtUtc = new(2026, 10, 15, 0, 0, 0, TimeSpan.Zero),
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
 
         OpenAiPreset("siliconflow-official", "siliconflow.cloud", "硅基流动 SiliconFlow / SiliconCloud", RemoteApiProviderCategory.Aggregator,
             "https://api.siliconflow.cn/v1/chat/completions", "Pro/zai-org/GLM-5.1", TextOnly,
-            "https://siliconflow.cn/privacy-policy", "https://siliconflow.cn/terms-of-service", "https://cloud.siliconflow.cn/me/models", RemoteStructuredOutputMode.JsonObject,
+            "https://api-docs.siliconflow.cn/docs/legals/privacy-policy", "https://api-docs.siliconflow.cn/docs/legals/terms-of-service", "https://cloud.siliconflow.cn/me/models", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.EnableThinkingBoolean,
             supportedReasoningModes: ToggleReasoning) with
         {
             RetiredDefaultModelIds = ["Pro/zai-org/GLM-4.7"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("openrouter-official", "openrouter.official", "OpenRouter", RemoteApiProviderCategory.Aggregator,
             "https://openrouter.ai/api/v1/chat/completions", "openai/gpt-4.1-mini", TextAndImage,
-            "https://openrouter.ai/privacy", "https://openrouter.ai/terms", "https://openrouter.ai/models", disableProviderFallbacks: true),
+            "https://openrouter.ai/privacy", "https://openrouter.ai/terms", "https://openrouter.ai/models", disableProviderFallbacks: true) with
+        {
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
         OpenAiPreset("groq-official", "groq.official", "Groq", RemoteApiProviderCategory.Aggregator,
             "https://api.groq.com/openai/v1/chat/completions", "qwen/qwen3.8-27b", TextAndImage,
-            "https://groq.com/privacy-policy/", "https://groq.com/terms-of-use/", "https://groq.com/pricing/", RemoteStructuredOutputMode.JsonObject,
+            "https://console.groq.com/docs/legal/customer-data-processing-addendum", "https://console.groq.com/docs/legal/services-agreement", "https://groq.com/pricing/", RemoteStructuredOutputMode.JsonObject,
             reasoningMode: RemoteReasoningMode.Disabled,
             reasoningWireFormat: RemoteReasoningWireFormat.ReasoningEffort,
             supportedReasoningModes: AllReasoning) with
         {
             RetiredDefaultModelIds = ["meta-llama/llama-4-scout-17b-16e-instruct"],
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
         },
         OpenAiPreset("together-ai-official", "together.official", "Together AI", RemoteApiProviderCategory.Aggregator,
             "https://api.together.xyz/v1/chat/completions", "Qwen/Qwen3.5-9B", TextAndImage,
@@ -183,10 +222,13 @@ public static class RemoteApiProviderCatalog
             disclosureVersion: "together.official.disclosure.v2"),
 
         LoopbackPreset("ollama-local", "ollama.local", "Ollama", "http://127.0.0.1:11434/v1/chat/completions", "qwen3-vl:4b",
-            "https://ollama.com/privacy", "https://ollama.com/terms", "https://ollama.com/search"),
+            "https://ollama.com/privacy", "https://ollama.com/terms", "https://ollama.com/library/qwen3-vl"),
         LoopbackPreset("vllm-local", "vllm.local", "vLLM", "http://127.0.0.1:8000/v1/chat/completions", "Qwen/Qwen3-VL-4B-Instruct",
-            "https://docs.vllm.ai/en/latest/security.html", "https://docs.vllm.ai/en/latest/community/governance.html",
-            "https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html"),
+            "https://docs.vllm.ai/en/latest/usage/security/", "https://github.com/vllm-project/vllm/blob/main/LICENSE",
+            "https://docs.vllm.ai/en/latest/serving/online_serving/openai_compatible_server/") with
+        {
+            PolicyVerifiedAtUtc = PolicyReviewedAtUtc,
+        },
         CustomPreset(),
     ];
 
@@ -243,6 +285,9 @@ public static class RemoteApiProviderCatalog
         var hasUserEndpointOverride = existing is not null
             && existing.EndpointId.EndsWith(UserEndpointSuffix, StringComparison.Ordinal)
             && existing.BaseUri != preset.BaseUri;
+        var migrateDefaultModel = existing is not null
+            && !hasUserEndpointOverride
+            && preset.RetiredDefaultModelIds.Contains(existing.ModelId, StringComparer.Ordinal);
         return new RemoteApiProfile
         {
             ProfileId = preset.ProfileId,
@@ -250,10 +295,7 @@ public static class RemoteApiProviderCatalog
             DisplayName = preset.DisplayName,
             EndpointId = hasUserEndpointOverride ? existing!.EndpointId : preset.EndpointId,
             BaseUri = hasUserEndpointOverride ? existing!.BaseUri : preset.BaseUri,
-            ModelId = existing is not null
-                && !preset.RetiredDefaultModelIds.Contains(existing.ModelId, StringComparer.Ordinal)
-                    ? existing.ModelId
-                    : preset.DefaultModelId,
+            ModelId = existing is null || migrateDefaultModel ? preset.DefaultModelId : existing.ModelId,
             SupportedInputModes = preset.SupportedInputModes,
             PromptVersion = PromptVersion,
             OutputSchemaVersion = QwenStructuredOutputParser.SchemaVersion,
@@ -278,6 +320,7 @@ public static class RemoteApiProviderCatalog
             DisableProviderFallbacks = preset.DisableProviderFallbacks,
             DisableExternalSearch = preset.DisableExternalSearch,
             ReasoningMode = existing is not null
+                && (!migrateDefaultModel || existing.ReasoningMode != RemoteReasoningMode.ProviderDefault)
                 && preset.SupportedReasoningModes.Contains(existing.ReasoningMode)
                     ? existing.ReasoningMode
                     : preset.ReasoningMode,
@@ -335,17 +378,20 @@ public static class RemoteApiProviderCatalog
         "anthropic-official", "anthropic.claude", "Anthropic / Claude",
         RemoteApiProviderCategory.InternationalOfficial, false,
         "anthropic.messages.v1", new Uri("https://api.anthropic.com/v1/messages"),
-        "claude-sonnet-4-5-20250929", TextAndImage,
+        "claude-sonnet-4-6", TextAndImage,
         RemoteApiProtocol.AnthropicMessages, RemoteApiAuthenticationKind.XApiKey,
         RemoteStructuredOutputMode.JsonSchema, RemoteEndpointTrustMode.FixedHttps,
         "2023-06-01", false, false, RemoteReasoningMode.ProviderDefault,
         RemoteReasoningWireFormat.None, ProviderDefaultReasoning,
         new Uri("https://www.anthropic.com/legal/privacy"),
         new Uri("https://www.anthropic.com/legal/commercial-terms"),
-        new Uri("https://platform.claude.com/docs/en/about-claude/pricing/overview"),
+        new Uri("https://platform.claude.com/docs/en/about-claude/pricing"),
         GenericRetention, GenericRetentionResource, PolicyVerifiedAtUtc,
         "picforlater.remote.anthropic.claude", "anthropic.claude.disclosure.v1",
-        "claude-sonnet-4-5-20250929");
+        "claude-sonnet-4-6")
+    {
+        RetiredDefaultModelIds = ["claude-sonnet-4-5-20250929"],
+    };
 
     private static RemoteApiProviderPreset AnthropicCompatiblePreset(
         string profileId,

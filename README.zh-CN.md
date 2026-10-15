@@ -72,7 +72,7 @@ PicForLater 支持两种主要分析方式：**本地分析**与**远程 API**�
 
 | 类型                     | 已内置的服务商 / 接口                                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 国际主流模型官方 API     | OpenAI、Anthropic / Claude、Google Gemini、Meta AI、xAI / Grok、Perplexity Sonar                                                               |
+| 国际主流模型官方 API     | OpenAI、Anthropic / Claude、Google Gemini、Meta AI、xAI / Grok、Perplexity Sonar (Legacy)                                                               |
 | 中国主流模型官方 API     | DeepSeek、月之暗面 / Kimi、腾讯混元、火山引擎 / 豆包、阿里云百炼 / 通义千问 Qwen、智谱 BigModel / GLM、百度智能云千帆 / 文心、MiniMax、小米 / Xiaomi MiMo |
 | 多模型聚合与高速推理平台 | SiliconFlow / SiliconCloud、OpenRouter、Groq、Together AI                                                                             |
 | 本地运行与私有化部署     | Ollama、vLLM                                                                                                                          |
